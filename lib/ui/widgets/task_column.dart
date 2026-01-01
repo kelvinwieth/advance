@@ -110,7 +110,6 @@ class TaskColumn extends StatelessWidget {
                       final assignment = assignments[index];
                       return MemberCard(
                         member: assignment.member,
-                        showStatus: true,
                         dense: true,
                       );
                     },
