@@ -152,6 +152,25 @@ ORDER BY m.name;
     }
   }
 
+  void updateMember({
+    required int id,
+    required String name,
+    required int age,
+    required String gender,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'UPDATE members SET name = ?, age = ?, gender = ? WHERE id = ?;',
+        [name, age, gender, id],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void insertTask({
     required String name,
     required String? genderConstraint,

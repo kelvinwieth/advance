@@ -308,6 +308,208 @@ class _HomeScreenState extends State<HomeScreen> {
     ageController.dispose();
   }
 
+  Future<void> _openEditMemberDialog(Member member) async {
+    final nameController = TextEditingController(text: member.name);
+    final ageController = TextEditingController(text: member.age.toString());
+    String? selectedGender = member.gender;
+    String? errorText;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: 420,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Edit Member',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Full Name',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. John Doe',
+                        suffixIcon: const Icon(Icons.person_outline),
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Age',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: ageController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  hintText: 'e.g. 24',
+                                  filled: true,
+                                  fillColor: const Color(0xFFF7F8FB),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Gender',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Radio<String>(
+                                    value: 'M',
+                                    groupValue: selectedGender,
+                                    onChanged: (value) => setModalState(() {
+                                      selectedGender = value;
+                                    }),
+                                  ),
+                                  const Text('Male'),
+                                  const SizedBox(width: 12),
+                                  Radio<String>(
+                                    value: 'F',
+                                    groupValue: selectedGender,
+                                    onChanged: (value) => setModalState(() {
+                                      selectedGender = value;
+                                    }),
+                                  ),
+                                  const Text('Female'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorText!,
+                        style: const TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            final name = nameController.text.trim();
+                            final age = int.tryParse(ageController.text.trim());
+
+                            if (name.isEmpty) {
+                              setModalState(() {
+                                errorText = 'Please enter a full name.';
+                              });
+                              return;
+                            }
+                            if (age == null || age <= 0) {
+                              setModalState(() {
+                                errorText = 'Please enter a valid age.';
+                              });
+                              return;
+                            }
+                            if (selectedGender == null) {
+                              setModalState(() {
+                                errorText = 'Please select a gender.';
+                              });
+                              return;
+                            }
+
+                            try {
+                              widget.database.updateMember(
+                                id: member.id,
+                                name: name,
+                                age: age,
+                                gender: selectedGender!,
+                              );
+                              Navigator.of(dialogContext).pop();
+                              _loadData();
+                            } catch (e) {
+                              setModalState(() {
+                                errorText = 'Failed to update member.';
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.save),
+                          label: const Text('Save Changes'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
+    ageController.dispose();
+  }
+
   Future<void> _confirmClearDatabase() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -798,7 +1000,11 @@ class _HomeScreenState extends State<HomeScreen> {
                     opacity: 0.5,
                     child: MemberCard(member: member, dense: true),
                   ),
-                  child: MemberCard(member: member, dense: true),
+                  child: MemberCard(
+                    member: member,
+                    dense: true,
+                    onDoubleTap: () => _openEditMemberDialog(member),
+                  ),
                 );
               },
             ),
@@ -894,6 +1100,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           accentColor: color,
                           assignments: assignments,
                           onMemberDropped: (member) => _handleDrop(task, member),
+                          onMemberDoubleTap: _openEditMemberDialog,
                         ),
                       );
                     },

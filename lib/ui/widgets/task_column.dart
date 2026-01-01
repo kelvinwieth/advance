@@ -8,6 +8,7 @@ class TaskColumn extends StatelessWidget {
   final Color accentColor;
   final List<TaskAssignment> assignments;
   final void Function(Member member) onMemberDropped;
+  final void Function(Member member)? onMemberDoubleTap;
 
   const TaskColumn({
     super.key,
@@ -15,6 +16,7 @@ class TaskColumn extends StatelessWidget {
     required this.accentColor,
     required this.assignments,
     required this.onMemberDropped,
+    this.onMemberDoubleTap,
   });
 
   @override
@@ -111,6 +113,9 @@ class TaskColumn extends StatelessWidget {
                       return MemberCard(
                         member: assignment.member,
                         dense: true,
+                        onDoubleTap: onMemberDoubleTap == null
+                            ? null
+                            : () => onMemberDoubleTap!(assignment.member),
                       );
                     },
                   ),
