@@ -383,6 +383,76 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _confirmMockDatabase() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Mock Database',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                const Text(
+                  'This will add 30 members and 8 tasks to the database.',
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      child: const Text('Add Mock Data'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        widget.database.insertMockData();
+        await _loadData();
+        _showMessage('Mock data added.');
+      } catch (e) {
+        _showMessage('Failed to add mock data.');
+      }
+    }
+  }
+
   Future<void> _openAddTaskDialog() async {
     final taskController = TextEditingController();
     bool limitByGender = false;
@@ -605,12 +675,18 @@ class _HomeScreenState extends State<HomeScreen> {
             onSelected: (value) {
               if (value == 'clear') {
                 _confirmClearDatabase();
+              } else if (value == 'mock') {
+                _confirmMockDatabase();
               }
             },
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'clear',
                 child: Text('Clear Database'),
+              ),
+              const PopupMenuItem(
+                value: 'mock',
+                child: Text('Mock Database'),
               ),
             ],
           ),

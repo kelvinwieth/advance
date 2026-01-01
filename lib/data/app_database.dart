@@ -181,4 +181,58 @@ ORDER BY m.name;
       rethrow;
     }
   }
+
+  void insertMockData() {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute('''
+INSERT INTO members (name, age, gender) VALUES
+  ('Joao Silva', 24, 'M'),
+  ('Maria Souza', 22, 'F'),
+  ('Pedro Lima', 28, 'M'),
+  ('Ana Costa', 26, 'F'),
+  ('Lucas Mendes', 21, 'M'),
+  ('Beatriz Ramos', 27, 'F'),
+  ('Gabriel Rocha', 23, 'M'),
+  ('Larissa Almeida', 25, 'F'),
+  ('Rafael Oliveira', 29, 'M'),
+  ('Juliana Barros', 24, 'F'),
+  ('Matheus Ferreira', 20, 'M'),
+  ('Carla Nunes', 31, 'F'),
+  ('Bruno Cardoso', 27, 'M'),
+  ('Paula Pereira', 23, 'F'),
+  ('Diego Martins', 26, 'M'),
+  ('Fernanda Dias', 28, 'F'),
+  ('Tiago Araujo', 30, 'M'),
+  ('Camila Teixeira', 22, 'F'),
+  ('Henrique Melo', 25, 'M'),
+  ('Mariana Pires', 29, 'F'),
+  ('Andre Ribeiro', 24, 'M'),
+  ('Patricia Sousa', 33, 'F'),
+  ('Felipe Santos', 21, 'M'),
+  ('Aline Brito', 27, 'F'),
+  ('Eduardo Castro', 32, 'M'),
+  ('Renata Farias', 26, 'F'),
+  ('Vitor Moreira', 23, 'M'),
+  ('Isabela Lopes', 24, 'F'),
+  ('Leandro Freitas', 28, 'M'),
+  ('Tatiana Cunha', 30, 'F');
+''');
+      _db.execute('''
+INSERT INTO tasks (name, gender_constraint) VALUES
+  ('Lavar Louca', NULL),
+  ('Limpar Salao', NULL),
+  ('Preparar Jantar', NULL),
+  ('Recepcao', NULL),
+  ('Organizar Materiais', NULL),
+  ('Som e Midia', 'M'),
+  ('Decoracao', 'F'),
+  ('Apoio Logistico', NULL);
+''');
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
 }
