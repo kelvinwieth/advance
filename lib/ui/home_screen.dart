@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 
 import '../data/app_database.dart';
 import '../data/models.dart';
@@ -106,6 +107,491 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
+  Future<void> _openAddMemberDialog() async {
+    final nameController = TextEditingController();
+    final ageController = TextEditingController();
+    String? selectedGender;
+    String? errorText;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: 420,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Add New Member',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const Divider(height: 1),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Full Name',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: nameController,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. John Doe',
+                        suffixIcon: const Icon(Icons.person_outline),
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Age',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              TextField(
+                                controller: ageController,
+                                keyboardType: TextInputType.number,
+                                inputFormatters: [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                ],
+                                decoration: InputDecoration(
+                                  hintText: 'e.g. 24',
+                                  filled: true,
+                                  fillColor: const Color(0xFFF7F8FB),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Gender',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                              const SizedBox(height: 8),
+                              Row(
+                                children: [
+                                  Radio<String>(
+                                    value: 'M',
+                                    groupValue: selectedGender,
+                                    onChanged: (value) => setModalState(() {
+                                      selectedGender = value;
+                                    }),
+                                  ),
+                                  const Text('Male'),
+                                  const SizedBox(width: 12),
+                                  Radio<String>(
+                                    value: 'F',
+                                    groupValue: selectedGender,
+                                    onChanged: (value) => setModalState(() {
+                                      selectedGender = value;
+                                    }),
+                                  ),
+                                  const Text('Female'),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorText!,
+                        style: const TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            final name = nameController.text.trim();
+                            final age = int.tryParse(ageController.text.trim());
+
+                            if (name.isEmpty) {
+                              setModalState(() {
+                                errorText = 'Please enter a full name.';
+                              });
+                              return;
+                            }
+                            if (age == null || age <= 0) {
+                              setModalState(() {
+                                errorText = 'Please enter a valid age.';
+                              });
+                              return;
+                            }
+                            if (selectedGender == null) {
+                              setModalState(() {
+                                errorText = 'Please select a gender.';
+                              });
+                              return;
+                            }
+
+                            try {
+                              widget.database.insertMember(
+                                name: name,
+                                age: age,
+                                gender: selectedGender!,
+                              );
+                              Navigator.of(dialogContext).pop();
+                              _loadData();
+                            } catch (e) {
+                              setModalState(() {
+                                errorText = 'Failed to save member.';
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.save),
+                          label: const Text('Save Member'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
+    ageController.dispose();
+  }
+
+  Future<void> _confirmClearDatabase() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Clear Database',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                const Text(
+                  'This will permanently remove members, tasks, and assignments. '
+                  'This action cannot be undone.',
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text('Cancel'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Clear Database'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    if (confirmed == true) {
+      try {
+        widget.database.clearDatabase();
+        await _loadData();
+        _showMessage('Database cleared.');
+      } catch (e) {
+        _showMessage('Failed to clear database.');
+      }
+    }
+  }
+
+  Future<void> _openAddTaskDialog() async {
+    final taskController = TextEditingController();
+    bool limitByGender = false;
+    String? selectedGender;
+    String? errorText;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: 440,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Add New Task',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Create a backstage task for the Avanco team.',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Task Description',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: taskController,
+                      decoration: InputDecoration(
+                        hintText: 'e.g., Organize welcome kits',
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F8FB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: limitByGender,
+                                onChanged: (value) {
+                                  setModalState(() {
+                                    limitByGender = value ?? false;
+                                    if (!limitByGender) {
+                                      selectedGender = null;
+                                    }
+                                  });
+                                },
+                              ),
+                              const Text(
+                                'Limit assignment by gender',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          if (limitByGender) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'SELECT GENDER',
+                              style: TextStyle(
+                                fontSize: 11,
+                                letterSpacing: 1.2,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => setModalState(() {
+                                      selectedGender = 'M';
+                                    }),
+                                    icon: const Icon(Icons.male),
+                                    label: const Text('Male Only'),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: selectedGender == 'M'
+                                          ? const Color(0xFFE8F0FF)
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => setModalState(() {
+                                      selectedGender = 'F';
+                                    }),
+                                    icon: const Icon(Icons.female),
+                                    label: const Text('Female Only'),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: selectedGender == 'F'
+                                          ? const Color(0xFFE8F0FF)
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorText!,
+                        style: const TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            final name = taskController.text.trim();
+                            if (name.isEmpty) {
+                              setModalState(() {
+                                errorText = 'Please enter a task description.';
+                              });
+                              return;
+                            }
+                            if (limitByGender && selectedGender == null) {
+                              setModalState(() {
+                                errorText = 'Please choose a gender.';
+                              });
+                              return;
+                            }
+
+                            try {
+                              widget.database.insertTask(
+                                name: name,
+                                genderConstraint: limitByGender ? selectedGender : null,
+                              );
+                              Navigator.of(dialogContext).pop();
+                              _loadData();
+                            } catch (e) {
+                              setModalState(() {
+                                errorText = 'Failed to save task.';
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F5BFF),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Save Task'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    taskController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -114,7 +600,20 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         actions: [
-          IconButton(onPressed: null, icon: const Icon(Icons.settings)),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.settings),
+            onSelected: (value) {
+              if (value == 'clear') {
+                _confirmClearDatabase();
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'clear',
+                child: Text('Clear Database'),
+              ),
+            ],
+          ),
           IconButton(onPressed: null, icon: const Icon(Icons.help_outline)),
           const SizedBox(width: 8),
           const CircleAvatar(
@@ -230,7 +729,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
           const SizedBox(height: 12),
           OutlinedButton.icon(
-            onPressed: null,
+            onPressed: _openAddMemberDialog,
             icon: const Icon(Icons.add),
             label: const Text('Add New Member'),
           ),
@@ -286,13 +785,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: const TextStyle(fontSize: 12, letterSpacing: 1.4),
                 ),
                 const Spacer(),
-                IconButton(
-                  onPressed: () => _changeDate(1),
-                  icon: const Icon(Icons.chevron_right),
-                ),
-              ],
+                  IconButton(
+                    onPressed: () => _changeDate(1),
+                    icon: const Icon(Icons.chevron_right),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton.icon(
+                    onPressed: _openAddTaskDialog,
+                    icon: const Icon(Icons.add),
+                    label: const Text('Add Task'),
+                  ),
+                ],
+              ),
             ),
-          ),
           const SizedBox(height: 16),
           Expanded(
             child: _tasks.isEmpty

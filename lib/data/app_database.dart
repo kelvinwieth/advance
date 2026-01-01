@@ -81,32 +81,6 @@ END;
       db.execute('ROLLBACK');
       rethrow;
     }
-
-    final memberCount = db.select('SELECT COUNT(*) AS count FROM members;').first['count'] as int;
-    final taskCount = db.select('SELECT COUNT(*) AS count FROM tasks;').first['count'] as int;
-
-    if (memberCount == 0 && taskCount == 0) {
-      db.execute('BEGIN');
-      try {
-        db.execute('''
-INSERT INTO members (name, age, gender) VALUES
-  ('Lucas', 20, 'M'),
-  ('Mateus', 30, 'M'),
-  ('Bia', 23, 'F'),
-  ('Joao', 25, 'M');
-''');
-        db.execute('''
-INSERT INTO tasks (name, gender_constraint) VALUES
-  ('Lavar Louca', NULL),
-  ('Limpar Salao', NULL),
-  ('Preparar Jantar', NULL);
-''');
-        db.execute('COMMIT');
-      } catch (e) {
-        db.execute('ROLLBACK');
-        rethrow;
-      }
-    }
   }
 
   List<Member> fetchMembers() {
@@ -153,6 +127,54 @@ ORDER BY m.name;
         'INSERT INTO member_tasks (member_id, task_id, date) VALUES (?, ?, ?);',
         [memberId, taskId, isoDate],
       );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  void insertMember({
+    required String name,
+    required int age,
+    required String gender,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'INSERT INTO members (name, age, gender) VALUES (?, ?, ?);',
+        [name, age, gender],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  void insertTask({
+    required String name,
+    required String? genderConstraint,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'INSERT INTO tasks (name, gender_constraint) VALUES (?, ?);',
+        [name, genderConstraint],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  void clearDatabase() {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute('DELETE FROM member_tasks;');
+      _db.execute('DELETE FROM members;');
+      _db.execute('DELETE FROM tasks;');
       _db.execute('COMMIT');
     } catch (e) {
       _db.execute('ROLLBACK');
