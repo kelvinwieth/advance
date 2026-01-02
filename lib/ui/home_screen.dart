@@ -258,8 +258,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _uploadMembersCsv() async {
-    final confirm = await _confirmCsvImport();
-    if (!confirm) return;
+    final proceed = await _showCsvInstructions();
+    if (!proceed) return;
 
     final file = await openFile(
       acceptedTypeGroups: const [
@@ -270,17 +270,100 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final content = await file.readAsString();
-      final members = _parseMembersCsv(content);
-      if (members.isEmpty) {
+      final parsedMembers = _parseMembersCsv(content);
+      if (parsedMembers.isEmpty) {
         _showMessage('Nenhum membro válido encontrado no CSV.');
         return;
       }
-      widget.database.replaceMembers(members);
+
+      final confirmedMembers = await _confirmMembersImport(parsedMembers);
+      if (confirmedMembers == null || confirmedMembers.isEmpty) return;
+
+      widget.database.replaceMembers(confirmedMembers);
       await _loadData();
       _showMessage('Lista de membros importada.');
     } catch (e) {
       _showMessage('Falha ao importar CSV.');
     }
+  }
+
+  Future<bool> _showCsvInstructions() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Importar CSV',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Formato esperado do CSV:',
+                  style: TextStyle(fontWeight: FontWeight.w600),
+                ),
+                const SizedBox(height: 8),
+                const Text('name,gender,age,church'),
+                const SizedBox(height: 8),
+                const Text(
+                  'Exemplo: Foo Bar da Silva,M,22,João Pessoa (Centro)',
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'Depois você poderá revisar e editar os membros antes de salvar.',
+                  style: TextStyle(color: Colors.black54),
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        child: const Text('Cancelar'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F5BFF),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Selecionar arquivo'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return confirmed ?? false;
   }
 
   List<Map<String, Object?>> _parseMembersCsv(String content) {
@@ -313,72 +396,218 @@ class _HomeScreenState extends State<HomeScreen> {
     return members;
   }
 
-  Future<bool> _confirmCsvImport() async {
-    final confirmed = await showDialog<bool>(
+  Future<List<Map<String, Object?>>?> _confirmMembersImport(
+    List<Map<String, Object?>> members,
+  ) async {
+    final nameControllers = <TextEditingController>[];
+    final ageControllers = <TextEditingController>[];
+    final churchControllers = <TextEditingController>[];
+    final genders = <String?>[];
+
+    for (final member in members) {
+      nameControllers.add(TextEditingController(text: member['name'] as String));
+      ageControllers.add(TextEditingController(text: member['age'].toString()));
+      churchControllers.add(TextEditingController(text: member['church'] as String));
+      genders.add(member['gender'] as String);
+    }
+
+    final result = await showDialog<List<Map<String, Object?>>?>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: 720,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Importar membros',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Esta ação vai substituir todos os membros atuais e remover '
-                  'todas as atribuições relacionadas.',
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        child: const Text('Cancelar'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F5BFF),
-                          foregroundColor: Colors.white,
+                    Row(
+                      children: [
+                        const Text(
+                          'Importar membros',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
-                        child: const Text('Importar'),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(null),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Formato esperado do CSV: name,gender,age,church. '
+                      'Exemplo: "Foo Bar,M,22,João Pessoa (Centro)".',
+                    ),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Esta ação substitui todos os membros e remove atribuições.',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 16),
+                    Flexible(
+                      child: ListView.separated(
+                        shrinkWrap: true,
+                        itemCount: members.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          return Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF7F8FB),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                            ),
+                            child: Column(
+                              children: [
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: TextField(
+                                        controller: nameControllers[index],
+                                        decoration: InputDecoration(
+                                          labelText: 'Nome',
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    SizedBox(
+                                      width: 90,
+                                      child: TextField(
+                                        controller: ageControllers[index],
+                                        keyboardType: TextInputType.number,
+                                        inputFormatters: [
+                                          FilteringTextInputFormatter.digitsOnly,
+                                        ],
+                                        decoration: InputDecoration(
+                                          labelText: 'Idade',
+                                          filled: true,
+                                          fillColor: Colors.white,
+                                          border: OutlineInputBorder(
+                                            borderRadius: BorderRadius.circular(10),
+                                            borderSide: BorderSide.none,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Radio<String>(
+                                          value: 'M',
+                                          groupValue: genders[index],
+                                          onChanged: (value) => setModalState(() {
+                                            genders[index] = value;
+                                          }),
+                                        ),
+                                        const Text('M'),
+                                        const SizedBox(width: 8),
+                                        Radio<String>(
+                                          value: 'F',
+                                          groupValue: genders[index],
+                                          onChanged: (value) => setModalState(() {
+                                            genders[index] = value;
+                                          }),
+                                        ),
+                                        const Text('F'),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 12),
+                                TextField(
+                                  controller: churchControllers[index],
+                                  decoration: InputDecoration(
+                                    labelText: 'Igreja',
+                                    filled: true,
+                                    fillColor: Colors.white,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(10),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(null),
+                            child: const Text('Cancelar'),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final updated = <Map<String, Object?>>[];
+                              for (var i = 0; i < members.length; i += 1) {
+                                final name = nameControllers[i].text.trim();
+                                final age = int.tryParse(ageControllers[i].text.trim());
+                                final church = churchControllers[i].text.trim();
+                                final gender = genders[i];
+                                if (name.isEmpty || church.isEmpty) continue;
+                                if (gender != 'M' && gender != 'F') continue;
+                                if (age == null || age <= 0) continue;
+                                updated.add({
+                                  'name': name,
+                                  'gender': gender,
+                                  'age': age,
+                                  'church': church,
+                                });
+                              }
+                              Navigator.of(dialogContext).pop(updated);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F5BFF),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Importar'),
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
       },
     );
-    return confirmed ?? false;
+    for (final controller in nameControllers) {
+      controller.dispose();
+    }
+    for (final controller in ageControllers) {
+      controller.dispose();
+    }
+    for (final controller in churchControllers) {
+      controller.dispose();
+    }
+    return result;
   }
 
   Future<void> _exportDayPdf() async {
