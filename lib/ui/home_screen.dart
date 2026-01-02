@@ -1334,17 +1334,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ],
           ),
-          IconButton(onPressed: null, icon: const Icon(Icons.help_outline)),
           const SizedBox(width: 8),
-          const CircleAvatar(
-            radius: 16,
-            backgroundColor: Color(0xFF3B82F6),
-            child: Text(
-              'AD',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-            ),
-          ),
-          const SizedBox(width: 16),
         ],
       ),
       body: _loading
@@ -1370,6 +1360,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final assignedIds = assignments.map((a) => a.member.id).toSet();
 
     final filteredMembers = _members.where((member) {
+      if (assignedIds.contains(member.id)) return false;
       if (query.isEmpty) return true;
       return member.name.toLowerCase().contains(query);
     }).toList();

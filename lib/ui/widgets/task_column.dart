@@ -247,11 +247,6 @@ class _TaskColumnState extends State<TaskColumn> {
                       )
                     : const SizedBox.shrink(),
               ),
-              const SizedBox(height: 12),
-              TextButton(
-                onPressed: null,
-                child: const Text('+ Adicionar cartão'),
-              ),
             ],
           ),
         );
