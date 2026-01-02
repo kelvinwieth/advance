@@ -32,6 +32,7 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _showAllMembers = false;
   String _memberSortField = 'name';
   bool _memberSortAsc = true;
+  String _genderFilter = 'all';
   String? _errorMessage;
   List<Member> _members = [];
   List<Task> _tasks = [];
@@ -405,9 +406,13 @@ class _HomeScreenState extends State<HomeScreen> {
     final genders = <String?>[];
 
     for (final member in members) {
-      nameControllers.add(TextEditingController(text: member['name'] as String));
+      nameControllers.add(
+        TextEditingController(text: member['name'] as String),
+      );
       ageControllers.add(TextEditingController(text: member['age'].toString()));
-      churchControllers.add(TextEditingController(text: member['church'] as String));
+      churchControllers.add(
+        TextEditingController(text: member['church'] as String),
+      );
       genders.add(member['gender'] as String);
     }
 
@@ -439,7 +444,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         const Spacer(),
                         IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(null),
+                          onPressed: () =>
+                              Navigator.of(dialogContext).pop(null),
                           icon: const Icon(Icons.close),
                         ),
                       ],
@@ -466,7 +472,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             decoration: BoxDecoration(
                               color: const Color(0xFFF7F8FB),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFE5E7EB)),
+                              border: Border.all(
+                                color: const Color(0xFFE5E7EB),
+                              ),
                             ),
                             child: Column(
                               children: [
@@ -480,7 +488,9 @@ class _HomeScreenState extends State<HomeScreen> {
                                           filled: true,
                                           fillColor: Colors.white,
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                             borderSide: BorderSide.none,
                                           ),
                                         ),
@@ -493,14 +503,17 @@ class _HomeScreenState extends State<HomeScreen> {
                                         controller: ageControllers[index],
                                         keyboardType: TextInputType.number,
                                         inputFormatters: [
-                                          FilteringTextInputFormatter.digitsOnly,
+                                          FilteringTextInputFormatter
+                                              .digitsOnly,
                                         ],
                                         decoration: InputDecoration(
                                           labelText: 'Idade',
                                           filled: true,
                                           fillColor: Colors.white,
                                           border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(10),
+                                            borderRadius: BorderRadius.circular(
+                                              10,
+                                            ),
                                             borderSide: BorderSide.none,
                                           ),
                                         ),
@@ -513,18 +526,20 @@ class _HomeScreenState extends State<HomeScreen> {
                                         Radio<String>(
                                           value: 'M',
                                           groupValue: genders[index],
-                                          onChanged: (value) => setModalState(() {
-                                            genders[index] = value;
-                                          }),
+                                          onChanged: (value) =>
+                                              setModalState(() {
+                                                genders[index] = value;
+                                              }),
                                         ),
                                         const Text('M'),
                                         const SizedBox(width: 8),
                                         Radio<String>(
                                           value: 'F',
                                           groupValue: genders[index],
-                                          onChanged: (value) => setModalState(() {
-                                            genders[index] = value;
-                                          }),
+                                          onChanged: (value) =>
+                                              setModalState(() {
+                                                genders[index] = value;
+                                              }),
                                         ),
                                         const Text('F'),
                                       ],
@@ -555,7 +570,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(null),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(null),
                             child: const Text('Cancelar'),
                           ),
                         ),
@@ -566,7 +582,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               final updated = <Map<String, Object?>>[];
                               for (var i = 0; i < members.length; i += 1) {
                                 final name = nameControllers[i].text.trim();
-                                final age = int.tryParse(ageControllers[i].text.trim());
+                                final age = int.tryParse(
+                                  ageControllers[i].text.trim(),
+                                );
                                 final church = churchControllers[i].text.trim();
                                 final gender = genders[i];
                                 if (name.isEmpty || church.isEmpty) continue;
@@ -2007,6 +2025,8 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final filteredMembers = _members.where((member) {
       if (!_showAllMembers && assignedIds.contains(member.id)) return false;
+      if (_genderFilter == 'M' && member.gender != 'M') return false;
+      if (_genderFilter == 'F' && member.gender != 'F') return false;
       if (query.isEmpty) return true;
       return member.name.toLowerCase().contains(query) ||
           member.church.toLowerCase().contains(query) ||
@@ -2031,6 +2051,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final availableCount = _members
         .where((member) => !assignedIds.contains(member.id))
         .length;
+    final displayedCount = filteredMembers.length;
 
     return DragTarget<AssignmentDragData>(
       onAcceptWithDetails: (details) {
@@ -2062,24 +2083,21 @@ class _HomeScreenState extends State<HomeScreen> {
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
                   ),
                   const Spacer(),
-                  FilterChip(
-                    label: Text('$availableCount disponíveis'),
-                    selected: !_showAllMembers,
-                    onSelected: (selected) {
-                      setState(() {
-                        _showAllMembers = !selected;
-                      });
-                    },
-                    backgroundColor: const Color(0xFFF1F2F6),
-                    selectedColor: const Color(0xFFE8F0FF),
-                    checkmarkColor: const Color(0xFF1D4ED8),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide.none,
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
                     ),
-                    labelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF1F2F6),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      displayedCount.toString(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],
@@ -2190,6 +2208,101 @@ class _HomeScreenState extends State<HomeScreen> {
                           size: 16,
                         ),
                       ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  Flexible(
+                    child: FilterChip(
+                      label: const Text('Disponível'),
+                      selected: !_showAllMembers,
+                      onSelected: (selected) {
+                        setState(() {
+                          _showAllMembers = !selected;
+                        });
+                      },
+                      backgroundColor: const Color(0xFFF1F2F6),
+                      selectedColor: const Color(0xFFDFF7E8),
+                      checkmarkColor: const Color(0xFF118C4F),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        side: BorderSide.none,
+                      ),
+                      labelStyle: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_genderFilter == 'M') ...[
+                          const Icon(
+                            Icons.male,
+                            size: 14,
+                            color: Color(0xFF1D4ED8),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        const Text('H'),
+                      ],
+                    ),
+                    selected: _genderFilter == 'M',
+                    onSelected: (selected) {
+                      setState(() {
+                        _genderFilter = selected ? 'M' : 'all';
+                      });
+                    },
+                    showCheckmark: false,
+                    backgroundColor: const Color(0xFFF1F2F6),
+                    selectedColor: const Color(0xFFE8F0FF),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide.none,
+                    ),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  FilterChip(
+                    label: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_genderFilter == 'F') ...[
+                          const Icon(
+                            Icons.female,
+                            size: 14,
+                            color: Color(0xFFBE185D),
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        const Text('M'),
+                      ],
+                    ),
+                    selected: _genderFilter == 'F',
+                    onSelected: (selected) {
+                      setState(() {
+                        _genderFilter = selected ? 'F' : 'all';
+                      });
+                    },
+                    showCheckmark: false,
+                    backgroundColor: const Color(0xFFF1F2F6),
+                    selectedColor: const Color(0xFFFFE7F3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide.none,
+                    ),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
