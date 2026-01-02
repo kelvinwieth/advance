@@ -95,7 +95,7 @@ BEGIN
             VALUE "InternalName", "advance" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2026 com.example. All rights reserved." "\0"
             VALUE "OriginalFilename", "advance.exe" "\0"
-            VALUE "ProductName", "advance" "\0"
+            VALUE "ProductName", "Avanço Missionário" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
