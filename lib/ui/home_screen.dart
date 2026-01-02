@@ -2010,6 +2010,7 @@ class _HomeScreenState extends State<HomeScreen> {
             icon: const Icon(Icons.picture_as_pdf),
           ),
           PopupMenuButton<String>(
+            color: Colors.white,
             icon: const Icon(Icons.settings),
             onSelected: (value) {
               if (value == 'clear') {
@@ -2159,6 +2160,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 children: [
                   Expanded(
                     child: PopupMenuButton<String>(
+                      color: Color(0xFFF1F2F6),
                       tooltip: 'Ordenar por',
                       onSelected: (value) {
                         setState(() {
@@ -2264,13 +2266,15 @@ class _HomeScreenState extends State<HomeScreen> {
                       backgroundColor: const Color(0xFFF1F2F6),
                       selectedColor: const Color(0xFFDFF7E8),
                       checkmarkColor: const Color(0xFF118C4F),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        side: BorderSide.none,
-                      ),
                       labelStyle: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
+                        color: WidgetStateColor.fromMap(
+                          {
+                            WidgetState.selected: Colors.black,
+                            WidgetState.any: Colors.black,
+                          },
+                        ),
                       ),
                     ),
                   ),
@@ -2299,13 +2303,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     showCheckmark: false,
                     backgroundColor: const Color(0xFFF1F2F6),
                     selectedColor: const Color(0xFFE8F0FF),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide.none,
-                    ),
                     labelStyle: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      color: WidgetStateColor.fromMap(
+                        {
+                          WidgetState.selected: Colors.black,
+                          WidgetState.any: Colors.black,
+                        },
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -2333,13 +2339,15 @@ class _HomeScreenState extends State<HomeScreen> {
                     showCheckmark: false,
                     backgroundColor: const Color(0xFFF1F2F6),
                     selectedColor: const Color(0xFFFFE7F3),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                      side: BorderSide.none,
-                    ),
                     labelStyle: const TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
+                      color: WidgetStateColor.fromMap(
+                        {
+                          WidgetState.selected: Colors.black,
+                          WidgetState.any: Colors.black,
+                        },
+                      ),
                     ),
                   ),
                 ],
