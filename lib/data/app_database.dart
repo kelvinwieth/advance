@@ -6,8 +6,9 @@ import 'models.dart';
 
 class AppDatabase {
   final Database _db;
+  final String _dbPath;
 
-  AppDatabase._(this._db);
+  AppDatabase._(this._db, this._dbPath);
 
   static Future<AppDatabase> open() async {
     final dir = await getApplicationSupportDirectory();
@@ -16,8 +17,10 @@ class AppDatabase {
     db.execute('PRAGMA foreign_keys = ON;');
     db.execute('PRAGMA journal_mode = WAL;');
     _migrate(db);
-    return AppDatabase._(db);
+    return AppDatabase._(db, dbPath);
   }
+
+  String get dbPath => _dbPath;
 
   static void _migrate(Database db) {
     db.execute('BEGIN');

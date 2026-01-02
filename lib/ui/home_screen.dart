@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
-import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -285,6 +284,24 @@ class _HomeScreenState extends State<HomeScreen> {
       _showMessage('Lista de membros importada.');
     } catch (e) {
       _showMessage('Falha ao importar CSV.');
+    }
+  }
+
+  Future<void> _exportDatabaseCopy() async {
+    final saveLocation = await getSaveLocation(
+      suggestedName: 'avanco.db',
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'SQLite', extensions: ['db']),
+      ],
+    );
+    if (saveLocation == null) return;
+
+    try {
+      final source = File(widget.database.dbPath);
+      await source.copy(saveLocation.path);
+      _showMessage('Banco exportado com sucesso.');
+    } catch (e) {
+      _showMessage('Falha ao exportar o banco.');
     }
   }
 
@@ -1990,6 +2007,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _confirmClearDatabase();
               } else if (value == 'mock') {
                 _confirmMockDatabase();
+              } else if (value == 'export') {
+                _exportDatabaseCopy();
               }
             },
             itemBuilder: (context) => [
@@ -2000,6 +2019,10 @@ class _HomeScreenState extends State<HomeScreen> {
               const PopupMenuItem(
                 value: 'mock',
                 child: Text('Banco de teste'),
+              ),
+              const PopupMenuItem(
+                value: 'export',
+                child: Text('Exportar banco'),
               ),
             ],
           ),
