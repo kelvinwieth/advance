@@ -142,84 +142,87 @@ class _HomeScreenState extends State<HomeScreen> {
     for (var i = 0; i < _tasks.length; i += 3) {
       groups.add(_tasks.sublist(i, (i + 3).clamp(0, _tasks.length)));
     }
+    final header = pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        pw.Text(
+          'Distribuição de Tarefas do Dia',
+          style: pw.TextStyle(
+            fontSize: 22,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(height: 6),
+        pw.Text(
+          '$dateLabel (${weekdayLabel[0].toUpperCase()}${weekdayLabel.substring(1)})',
+          style: pw.TextStyle(
+            fontSize: 14,
+            color: PdfColors.grey700,
+          ),
+        ),
+        pw.SizedBox(height: 18),
+      ],
+    );
 
     pdf.addPage(
-      pw.Page(
+      pw.MultiPage(
         pageFormat: PdfPageFormat.a4.landscape,
         margin: const pw.EdgeInsets.all(32),
         build: (context) {
-          return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.start,
-            children: [
-              pw.Text(
-                'Distribuição de Tarefas do Dia',
-                style: pw.TextStyle(
-                  fontSize: 22,
-                  fontWeight: pw.FontWeight.bold,
-                ),
-              ),
-              pw.SizedBox(height: 6),
-              pw.Text(
-                '$dateLabel (${weekdayLabel[0].toUpperCase()}${weekdayLabel.substring(1)})',
-                style: pw.TextStyle(
-                  fontSize: 14,
-                  color: PdfColors.grey700,
-                ),
-              ),
-              pw.SizedBox(height: 18),
-              ...groups.map((group) {
-                final headers = group.map((task) => task.name).toList();
-                final rows = _buildPdfRows(group);
-                return pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    pw.Table(
-                      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.8),
-                      columnWidths: {
-                        for (var i = 0; i < headers.length; i++)
-                          i: const pw.FlexColumnWidth(),
-                      },
-                      children: [
-                        pw.TableRow(
-                          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
-                          children: headers
+          return [
+            header,
+            ...groups.map((group) {
+              final headers = group.map((task) => task.name).toList();
+              final rows = _buildPdfRows(group);
+              return pw.Column(
+                crossAxisAlignment: pw.CrossAxisAlignment.start,
+                children: [
+                  pw.Table(
+                    border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.8),
+                    columnWidths: {
+                      for (var i = 0; i < headers.length; i++)
+                        i: const pw.FlexColumnWidth(),
+                    },
+                    children: [
+                      pw.TableRow(
+                        decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                        children: headers
+                            .map(
+                              (title) => pw.Padding(
+                                padding: const pw.EdgeInsets.all(8),
+                                child: pw.Text(
+                                  title,
+                                  style: pw.TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: pw.FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            )
+                            .toList(),
+                      ),
+                      ...rows.map(
+                        (row) => pw.TableRow(
+                          children: row
                               .map(
-                                (title) => pw.Padding(
+                                (cell) => pw.Padding(
                                   padding: const pw.EdgeInsets.all(8),
                                   child: pw.Text(
-                                    title,
-                                    style: pw.TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: pw.FontWeight.bold,
-                                    ),
+                                    cell,
+                                    style: const pw.TextStyle(fontSize: 11),
                                   ),
                                 ),
                               )
                               .toList(),
                         ),
-                        ...rows.map(
-                          (row) => pw.TableRow(
-                            children: row
-                                .map(
-                                  (cell) => pw.Padding(
-                                    padding: const pw.EdgeInsets.all(8),
-                                    child: pw.Text(
-                                      cell,
-                                      style: const pw.TextStyle(fontSize: 11),
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                          ),
-                        ),
-                      ],
-                    ),
-                    pw.SizedBox(height: 18),
-                  ],
-                );
-              }),
-            ],
-          );
+                      ),
+                    ],
+                  ),
+                  pw.SizedBox(height: 18),
+                ],
+              );
+            }),
+          ];
         },
       ),
     );
