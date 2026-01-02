@@ -11,6 +11,7 @@ class TaskColumn extends StatefulWidget {
   final void Function(Member member)? onMemberDoubleTap;
   final VoidCallback? onTaskDoubleTap;
   final void Function(int memberId, int taskId)? onRemoveAssignment;
+  final Map<int, int> taskCounts;
 
   const TaskColumn({
     super.key,
@@ -21,6 +22,7 @@ class TaskColumn extends StatefulWidget {
     this.onMemberDoubleTap,
     this.onTaskDoubleTap,
     this.onRemoveAssignment,
+    required this.taskCounts,
   });
 
   @override
@@ -179,6 +181,7 @@ class _TaskColumnState extends State<TaskColumn> {
                             child: MemberCard(
                               member: assignment.member,
                               dense: true,
+                              taskCount: widget.taskCounts[assignment.member.id] ?? 0,
                             ),
                           ),
                         ),
@@ -187,6 +190,7 @@ class _TaskColumnState extends State<TaskColumn> {
                           child: MemberCard(
                             member: assignment.member,
                             dense: true,
+                            taskCount: widget.taskCounts[assignment.member.id] ?? 0,
                             onDoubleTap: widget.onMemberDoubleTap == null
                                 ? null
                                 : () => widget.onMemberDoubleTap!(assignment.member),
@@ -195,6 +199,7 @@ class _TaskColumnState extends State<TaskColumn> {
                         child: MemberCard(
                           member: assignment.member,
                           dense: true,
+                          taskCount: widget.taskCounts[assignment.member.id] ?? 0,
                           onDoubleTap: widget.onMemberDoubleTap == null
                               ? null
                               : () => widget.onMemberDoubleTap!(assignment.member),

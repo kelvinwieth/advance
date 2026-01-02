@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Member> _members = [];
   List<Task> _tasks = [];
   Map<int, List<TaskAssignment>> _assignments = {};
+  Map<int, int> _taskCounts = {};
 
   @override
   void initState() {
@@ -59,12 +60,14 @@ class _HomeScreenState extends State<HomeScreen> {
       final tasks = widget.database.fetchTasks();
       final assignments =
           widget.database.fetchAssignmentsByTaskForDate(_isoDate(_selectedDate));
+      final taskCounts = widget.database.fetchTaskCountsUpTo(_isoDate(_selectedDate));
 
       if (!mounted) return;
       setState(() {
         _members = members;
         _tasks = tasks;
         _assignments = assignments;
+        _taskCounts = taskCounts;
         _loading = false;
       });
     } catch (e) {
@@ -1446,16 +1449,25 @@ class _HomeScreenState extends State<HomeScreen> {
                     color: Colors.transparent,
                     child: SizedBox(
                       width: 240,
-                      child: MemberCard(member: member, dense: true),
+                      child: MemberCard(
+                        member: member,
+                        dense: true,
+                        taskCount: _taskCounts[member.id] ?? 0,
+                      ),
                     ),
                   ),
                   childWhenDragging: Opacity(
                     opacity: 0.5,
-                    child: MemberCard(member: member, dense: true),
+                    child: MemberCard(
+                      member: member,
+                      dense: true,
+                      taskCount: _taskCounts[member.id] ?? 0,
+                    ),
                   ),
                   child: MemberCard(
                     member: member,
                     dense: true,
+                    taskCount: _taskCounts[member.id] ?? 0,
                     onDoubleTap: () => _openEditMemberDialog(member),
                   ),
                 );
@@ -1562,6 +1574,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onMemberDoubleTap: _openEditMemberDialog,
                           onTaskDoubleTap: () => _openEditTaskDialog(task),
                           onRemoveAssignment: _handleRemoveAssignment,
+                          taskCounts: _taskCounts,
                         ),
                       );
                     },

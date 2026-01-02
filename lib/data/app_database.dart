@@ -123,6 +123,20 @@ ORDER BY m.name;
     return grouped;
   }
 
+  Map<int, int> fetchTaskCountsUpTo(String isoDate) {
+    final result = _db.select('''
+SELECT member_id, COUNT(*) AS total
+FROM member_tasks
+WHERE date <= ?
+GROUP BY member_id;
+''', [isoDate]);
+    final counts = <int, int>{};
+    for (final row in result) {
+      counts[row['member_id'] as int] = row['total'] as int;
+    }
+    return counts;
+  }
+
   void assignMemberToTask({
     required int memberId,
     required int taskId,

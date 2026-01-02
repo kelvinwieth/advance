@@ -7,6 +7,7 @@ class MemberCard extends StatelessWidget {
   final bool showStatus;
   final bool dense;
   final VoidCallback? onDoubleTap;
+  final int? taskCount;
 
   const MemberCard({
     super.key,
@@ -14,6 +15,7 @@ class MemberCard extends StatelessWidget {
     this.showStatus = false,
     this.dense = false,
     this.onDoubleTap,
+    this.taskCount,
   });
 
   @override
@@ -70,7 +72,7 @@ class MemberCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    member.church,
+                    '${member.age}, ${member.church}',
                     style: TextStyle(
                       color: Colors.black54,
                       fontSize: dense ? 12 : 13,
@@ -79,23 +81,15 @@ class MemberCard extends StatelessWidget {
                 ],
               ),
             ),
-            Row(
-              children: [
-                Icon(
-                  member.gender == 'M' ? Icons.male : Icons.female,
-                  size: dense ? 14 : 16,
+            if (taskCount != null)
+              Text(
+                taskCount.toString(),
+                style: TextStyle(
                   color: Colors.black54,
+                  fontSize: dense ? 12 : 13,
+                  fontWeight: FontWeight.w600,
                 ),
-                const SizedBox(width: 6),
-                Text(
-                  member.age.toString(),
-                  style: TextStyle(
-                    color: Colors.black54,
-                    fontSize: dense ? 12 : 13,
-                  ),
-                ),
-              ],
-            ),
+              ),
             if (showStatus)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
