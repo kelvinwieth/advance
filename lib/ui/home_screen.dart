@@ -133,11 +133,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    final fontRegular = await PdfGoogleFonts.notoSansRegular();
-    final fontBold = await PdfGoogleFonts.notoSansBold();
     final theme = pw.ThemeData.withFont(
-      base: fontRegular,
-      bold: fontBold,
+      base: pw.Font.helvetica(),
+      bold: pw.Font.helveticaBold(),
     );
     final pdf = pw.Document(theme: theme);
     final dateLabel = _dateFormat.format(_selectedDate);
