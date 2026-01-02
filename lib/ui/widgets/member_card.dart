@@ -23,16 +23,19 @@ class MemberCard extends StatelessWidget {
         ? parts.map((part) => part[0]).take(2).join()
         : '?';
 
-    final backgroundColor = member.gender == 'M'
-        ? const Color(0xFFF5F9FF)
-        : const Color(0xFFFFF7FB);
+    final avatarBackgroundColor = member.gender == 'M'
+        ? const Color(0xFFE8F0FF)
+        : const Color(0xFFFFE7F3);
+    final avatarTextColor = member.gender == 'M'
+        ? const Color(0xFF1D4ED8)
+        : const Color(0xFFBE185D);
 
     return GestureDetector(
       onDoubleTap: onDoubleTap,
       child: Container(
         padding: EdgeInsets.all(dense ? 12 : 16),
         decoration: BoxDecoration(
-          color: backgroundColor,
+          color: Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFE1E4EA)),
         ),
@@ -40,14 +43,14 @@ class MemberCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: dense ? 18 : 20,
-              backgroundColor: const Color(0xFFE8F0FF),
-              child: Text(
-                initials.toUpperCase(),
-                style: TextStyle(
-                  color: const Color(0xFF1D4ED8),
-                  fontWeight: FontWeight.w600,
-                  fontSize: dense ? 12 : 14,
-                ),
+            backgroundColor: avatarBackgroundColor,
+            child: Text(
+              initials.toUpperCase(),
+              style: TextStyle(
+                color: avatarTextColor,
+                fontWeight: FontWeight.w600,
+                fontSize: dense ? 12 : 14,
+              ),
               ),
             ),
             const SizedBox(width: 12),
