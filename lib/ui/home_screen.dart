@@ -1545,7 +1545,9 @@ class _HomeScreenState extends State<HomeScreen> {
     final filteredMembers = _members.where((member) {
       if (!_showAllMembers && assignedIds.contains(member.id)) return false;
       if (query.isEmpty) return true;
-      return member.name.toLowerCase().contains(query);
+      return member.name.toLowerCase().contains(query) ||
+          member.church.toLowerCase().contains(query) ||
+          member.age.toString().contains(query);
     }).toList();
     filteredMembers.sort((a, b) {
       int result;
