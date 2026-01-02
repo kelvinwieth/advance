@@ -7,7 +7,6 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:printing/printing.dart';
 
 import '../data/app_database.dart';
 import '../data/models.dart';
@@ -226,29 +225,26 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     final bytes = await pdf.save();
-    final info = await Printing.info();
     final filename = 'avanco-${DateFormat('yyyy-MM-dd').format(_selectedDate)}.pdf';
-
-    if (info.canPrint) {
-      await Printing.layoutPdf(
-        onLayout: (_) async => bytes,
-        name: filename,
-      );
-      return;
-    }
-
-    if (info.canShare) {
-      final shared = await Printing.sharePdf(
-        bytes: bytes,
-        filename: filename,
-      );
-      if (shared) return;
-    }
-
     final dir = await getApplicationDocumentsDirectory();
     final file = File(p.join(dir.path, filename));
     await file.writeAsBytes(bytes);
+    await _openFile(file.path);
     _showMessage('PDF saved to ${file.path}');
+  }
+
+  Future<void> _openFile(String path) async {
+    try {
+      if (Platform.isMacOS) {
+        await Process.run('open', [path]);
+      } else if (Platform.isWindows) {
+        await Process.run('cmd', ['/c', 'start', '', path]);
+      } else if (Platform.isLinux) {
+        await Process.run('xdg-open', [path]);
+      }
+    } catch (_) {
+      // Keep silent; user still has the path in the snackbar.
+    }
   }
 
   List<List<String>> _buildPdfRows(List<Task> tasks) {
@@ -1507,8 +1503,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _exportDayPdf,
-                  icon: const Icon(Icons.print),
-                  label: const Text('Export PDF'),
+                  icon: const Icon(Icons.picture_as_pdf),
+                  label: const Text('Save PDF'),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
