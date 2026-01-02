@@ -9,6 +9,7 @@ import 'package:pdf/widgets.dart' as pw;
 
 import '../data/app_database.dart';
 import '../data/models.dart';
+import 'widgets/app_dialog.dart';
 import 'widgets/member_card.dart';
 import 'widgets/task_column.dart';
 
@@ -194,56 +195,29 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Membro já atribuído',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
-                const Text(
-                  'Este membro já possui uma tarefa neste dia. '
-                  'Deseja atribuir mesmo assim?',
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(true),
-                      child: const Text('Atribuir'),
-                    ),
-                  ],
-                ),
-              ],
+        return AppDialog(
+          title: 'Membro já atribuído',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.primaryStyle(),
+                child: const Text('Atribuir'),
+              ),
+            ),
+          ],
+          child: const Text(
+            'Este membro já possui uma tarefa neste dia. '
+            'Deseja atribuir mesmo assim?',
           ),
         );
       },
@@ -310,73 +284,43 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Importar CSV',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Formato esperado do CSV:',
-                  style: TextStyle(fontWeight: FontWeight.w600),
-                ),
-                const SizedBox(height: 8),
-                const Text('name,gender,age,church'),
-                const SizedBox(height: 8),
-                const Text(
-                  'Exemplo: Foo Bar da Silva,M,22,João Pessoa (Centro)',
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'Depois você poderá revisar e editar os membros antes de salvar.',
-                  style: TextStyle(color: Colors.black54),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(false),
-                        child: const Text('Cancelar'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => Navigator.of(dialogContext).pop(true),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF0F5BFF),
-                          foregroundColor: Colors.white,
-                        ),
-                        child: const Text('Selecionar arquivo'),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+        return AppDialog(
+          title: 'Importar CSV',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.primaryStyle(),
+                child: const Text('Selecionar arquivo'),
+              ),
+            ),
+          ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Formato esperado do CSV:',
+                style: TextStyle(fontWeight: FontWeight.w600),
+              ),
+              SizedBox(height: 8),
+              Text('name,gender,age,church'),
+              SizedBox(height: 8),
+              Text('Exemplo: Foo Bar da Silva,M,22,João Pessoa (Centro)'),
+              SizedBox(height: 16),
+              Text(
+                'Depois você poderá revisar e editar os membros antes de salvar.',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ],
           ),
         );
       },
@@ -439,194 +383,162 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                width: 720,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Importar membros',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () =>
-                              Navigator.of(dialogContext).pop(null),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Formato esperado do CSV: name,gender,age,church. '
-                      'Exemplo: "Foo Bar,M,22,João Pessoa (Centro)".',
-                    ),
-                    const SizedBox(height: 8),
-                    const Text(
-                      'Esta ação substitui todos os membros e remove atribuições.',
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                    const SizedBox(height: 16),
-                    Flexible(
-                      child: ListView.separated(
-                        shrinkWrap: true,
-                        itemCount: members.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          return Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF7F8FB),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: const Color(0xFFE5E7EB),
-                              ),
+            return AppDialog(
+              title: 'Importar membros',
+              width: 720,
+              onClose: () => Navigator.of(dialogContext).pop(null),
+              actions: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(null),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final updated = <Map<String, Object?>>[];
+                      for (var i = 0; i < members.length; i += 1) {
+                        final name = nameControllers[i].text.trim();
+                        final age = int.tryParse(
+                          ageControllers[i].text.trim(),
+                        );
+                        final church = churchControllers[i].text.trim();
+                        final gender = genders[i];
+                        if (name.isEmpty || church.isEmpty) continue;
+                        if (gender != 'M' && gender != 'F') continue;
+                        if (age == null || age <= 0) continue;
+                        updated.add({
+                          'name': name,
+                          'gender': gender,
+                          'age': age,
+                          'church': church,
+                        });
+                      }
+                      Navigator.of(dialogContext).pop(updated);
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Importar'),
+                  ),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Formato esperado do CSV: name,gender,age,church. '
+                    'Exemplo: "Foo Bar,M,22,João Pessoa (Centro)".',
+                  ),
+                  const SizedBox(height: 8),
+                  const Text(
+                    'Esta ação substitui todos os membros e remove atribuições.',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 320,
+                    child: ListView.separated(
+                      itemCount: members.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      itemBuilder: (context, index) {
+                        return Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: AppDialog.sectionFill,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: const Color(0xFFB3DFE9),
                             ),
-                            child: Column(
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: TextField(
-                                        controller: nameControllers[index],
-                                        decoration: InputDecoration(
-                                          labelText: 'Nome',
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                            borderSide: BorderSide.none,
+                          ),
+                          child: Column(
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: TextField(
+                                      controller: nameControllers[index],
+                                      decoration: InputDecoration(
+                                        labelText: 'Nome',
+                                        filled: true,
+                                        fillColor: AppDialog.inputFill,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
                                           ),
+                                          borderSide: BorderSide.none,
                                         ),
                                       ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    SizedBox(
-                                      width: 90,
-                                      child: TextField(
-                                        controller: ageControllers[index],
-                                        keyboardType: TextInputType.number,
-                                        inputFormatters: [
-                                          FilteringTextInputFormatter
-                                              .digitsOnly,
-                                        ],
-                                        decoration: InputDecoration(
-                                          labelText: 'Idade',
-                                          filled: true,
-                                          fillColor: Colors.white,
-                                          border: OutlineInputBorder(
-                                            borderRadius: BorderRadius.circular(
-                                              10,
-                                            ),
-                                            borderSide: BorderSide.none,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Row(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Radio<String>(
-                                          value: 'M',
-                                          groupValue: genders[index],
-                                          onChanged: (value) =>
-                                              setModalState(() {
-                                                genders[index] = value;
-                                              }),
-                                        ),
-                                        const Text('M'),
-                                        const SizedBox(width: 8),
-                                        Radio<String>(
-                                          value: 'F',
-                                          groupValue: genders[index],
-                                          onChanged: (value) =>
-                                              setModalState(() {
-                                                genders[index] = value;
-                                              }),
-                                        ),
-                                        const Text('F'),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                                const SizedBox(height: 12),
-                                TextField(
-                                  controller: churchControllers[index],
-                                  decoration: InputDecoration(
-                                    labelText: 'Igreja',
-                                    filled: true,
-                                    fillColor: Colors.white,
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(10),
-                                      borderSide: BorderSide.none,
                                     ),
                                   ),
+                                  const SizedBox(width: 12),
+                                  SizedBox(
+                                    width: 90,
+                                    child: TextField(
+                                      controller: ageControllers[index],
+                                      keyboardType: TextInputType.number,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      decoration: InputDecoration(
+                                        labelText: 'Idade',
+                                        filled: true,
+                                        fillColor: AppDialog.inputFill,
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
+                                          borderSide: BorderSide.none,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Radio<String>(
+                                        value: 'M',
+                                        groupValue: genders[index],
+                                        onChanged: (value) => setModalState(() {
+                                          genders[index] = value;
+                                        }),
+                                      ),
+                                      const Text('M'),
+                                      const SizedBox(width: 8),
+                                      Radio<String>(
+                                        value: 'F',
+                                        groupValue: genders[index],
+                                        onChanged: (value) => setModalState(() {
+                                          genders[index] = value;
+                                        }),
+                                      ),
+                                      const Text('F'),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 12),
+                              TextField(
+                                controller: churchControllers[index],
+                                decoration: InputDecoration(
+                                  labelText: 'Igreja',
+                                  filled: true,
+                                  fillColor: AppDialog.inputFill,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                    borderSide: BorderSide.none,
+                                  ),
                                 ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () =>
-                                Navigator.of(dialogContext).pop(null),
-                            child: const Text('Cancelar'),
+                              ),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final updated = <Map<String, Object?>>[];
-                              for (var i = 0; i < members.length; i += 1) {
-                                final name = nameControllers[i].text.trim();
-                                final age = int.tryParse(
-                                  ageControllers[i].text.trim(),
-                                );
-                                final church = churchControllers[i].text.trim();
-                                final gender = genders[i];
-                                if (name.isEmpty || church.isEmpty) continue;
-                                if (gender != 'M' && gender != 'F') continue;
-                                if (age == null || age <= 0) continue;
-                                updated.add({
-                                  'name': name,
-                                  'gender': gender,
-                                  'age': age,
-                                  'church': church,
-                                });
-                              }
-                              Navigator.of(dialogContext).pop(updated);
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F5BFF),
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Importar'),
-                          ),
-                        ),
-                      ],
+                        );
+                      },
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             );
           },
@@ -840,230 +752,201 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                width: 420,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Adicionar membro',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Nome completo',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        hintText: 'ex.: João Silva',
-                        suffixIcon: const Icon(Icons.person_outline),
-                        filled: true,
-                        fillColor: const Color(0xFFF7F8FB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
+            return AppDialog(
+              title: 'Adicionar membro',
+              onClose: () => Navigator.of(dialogContext).pop(),
+              actions: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final name = nameController.text.trim();
+                      final age = int.tryParse(
+                        ageController.text.trim(),
+                      );
+                      final church = churchController.text.trim();
+
+                      if (name.isEmpty) {
+                        setModalState(() {
+                          errorText = 'Informe o nome completo.';
+                        });
+                        return;
+                      }
+                      if (age == null || age <= 0) {
+                        setModalState(() {
+                          errorText = 'Informe uma idade válida.';
+                        });
+                        return;
+                      }
+                      if (church.isEmpty) {
+                        setModalState(() {
+                          errorText = 'Informe o nome da igreja.';
+                        });
+                        return;
+                      }
+                      if (selectedGender == null) {
+                        setModalState(() {
+                          errorText = 'Selecione o gênero.';
+                        });
+                        return;
+                      }
+
+                      try {
+                        widget.database.insertMember(
+                          name: name,
+                          age: age,
+                          gender: selectedGender!,
+                          church: church,
+                        );
+                        Navigator.of(dialogContext).pop();
+                        _loadData();
+                      } catch (e) {
+                        setModalState(() {
+                          errorText = 'Falha ao salvar o membro.';
+                        });
+                      }
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Salvar'),
+                  ),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Nome completo',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: 'ex.: João Silva',
+                      suffixIcon: const Icon(Icons.person_outline),
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Idade',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: ageController,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                decoration: InputDecoration(
-                                  hintText: 'ex.: 24',
-                                  filled: true,
-                                  fillColor: const Color(0xFFF7F8FB),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Idade',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: ageController,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              decoration: InputDecoration(
+                                hintText: 'ex.: 24',
+                                filled: true,
+                                fillColor: AppDialog.inputFill,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Gênero',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 8,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Radio<String>(
-                                        value: 'M',
-                                        groupValue: selectedGender,
-                                        onChanged: (value) => setModalState(() {
-                                          selectedGender = value;
-                                        }),
-                                      ),
-                                      const Text('Masculino'),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Radio<String>(
-                                        value: 'F',
-                                        groupValue: selectedGender,
-                                        onChanged: (value) => setModalState(() {
-                                          selectedGender = value;
-                                        }),
-                                      ),
-                                      const Text('Feminino'),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Igreja',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: churchController,
-                      decoration: InputDecoration(
-                        hintText: 'ex.: João Pessoa',
-                        filled: true,
-                        fillColor: const Color(0xFFF7F8FB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        errorText!,
-                        style: const TextStyle(
-                          color: Color(0xFFDC2626),
-                          fontSize: 12,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gênero',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: 'M',
+                                      groupValue: selectedGender,
+                                      onChanged: (value) => setModalState(() {
+                                        selectedGender = value;
+                                      }),
+                                    ),
+                                    const Text('Masculino'),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: 'F',
+                                      groupValue: selectedGender,
+                                      onChanged: (value) => setModalState(() {
+                                        selectedGender = value;
+                                      }),
+                                    ),
+                                    const Text('Feminino'),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            child: const Text('Cancelar'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final name = nameController.text.trim();
-                              final age = int.tryParse(
-                                ageController.text.trim(),
-                              );
-                              final church = churchController.text.trim();
-
-                              if (name.isEmpty) {
-                                setModalState(() {
-                                  errorText = 'Informe o nome completo.';
-                                });
-                                return;
-                              }
-                              if (age == null || age <= 0) {
-                                setModalState(() {
-                                  errorText = 'Informe uma idade válida.';
-                                });
-                                return;
-                              }
-                              if (church.isEmpty) {
-                                setModalState(() {
-                                  errorText = 'Informe o nome da igreja.';
-                                });
-                                return;
-                              }
-                              if (selectedGender == null) {
-                                setModalState(() {
-                                  errorText = 'Selecione o gênero.';
-                                });
-                                return;
-                              }
-
-                              try {
-                                widget.database.insertMember(
-                                  name: name,
-                                  age: age,
-                                  gender: selectedGender!,
-                                  church: church,
-                                );
-                                Navigator.of(dialogContext).pop();
-                                _loadData();
-                              } catch (e) {
-                                setModalState(() {
-                                  errorText = 'Falha ao salvar o membro.';
-                                });
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F5BFF),
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Salvar'),
-                          ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Igreja',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: churchController,
+                    decoration: InputDecoration(
+                      hintText: 'ex.: João Pessoa',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
-                ),
+                ],
               ),
             );
           },
@@ -1089,231 +972,202 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                width: 420,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Editar membro',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Nome completo',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: nameController,
-                      decoration: InputDecoration(
-                        hintText: 'ex.: João Silva',
-                        suffixIcon: const Icon(Icons.person_outline),
-                        filled: true,
-                        fillColor: const Color(0xFFF7F8FB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
+            return AppDialog(
+              title: 'Editar membro',
+              onClose: () => Navigator.of(dialogContext).pop(),
+              actions: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final name = nameController.text.trim();
+                      final age = int.tryParse(
+                        ageController.text.trim(),
+                      );
+                      final church = churchController.text.trim();
+
+                      if (name.isEmpty) {
+                        setModalState(() {
+                          errorText = 'Informe o nome completo.';
+                        });
+                        return;
+                      }
+                      if (age == null || age <= 0) {
+                        setModalState(() {
+                          errorText = 'Informe uma idade válida.';
+                        });
+                        return;
+                      }
+                      if (church.isEmpty) {
+                        setModalState(() {
+                          errorText = 'Informe o nome da igreja.';
+                        });
+                        return;
+                      }
+                      if (selectedGender == null) {
+                        setModalState(() {
+                          errorText = 'Selecione o gênero.';
+                        });
+                        return;
+                      }
+
+                      try {
+                        widget.database.updateMember(
+                          id: member.id,
+                          name: name,
+                          age: age,
+                          gender: selectedGender!,
+                          church: church,
+                        );
+                        Navigator.of(dialogContext).pop();
+                        _loadData();
+                      } catch (e) {
+                        setModalState(() {
+                          errorText = 'Falha ao atualizar o membro.';
+                        });
+                      }
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Salvar'),
+                  ),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Nome completo',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameController,
+                    decoration: InputDecoration(
+                      hintText: 'ex.: João Silva',
+                      suffixIcon: const Icon(Icons.person_outline),
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Idade',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 8),
-                              TextField(
-                                controller: ageController,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                decoration: InputDecoration(
-                                  hintText: 'ex.: 24',
-                                  filled: true,
-                                  fillColor: const Color(0xFFF7F8FB),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
+                  ),
+                  const SizedBox(height: 16),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Idade',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            TextField(
+                              controller: ageController,
+                              keyboardType: TextInputType.number,
+                              inputFormatters: [
+                                FilteringTextInputFormatter.digitsOnly,
+                              ],
+                              decoration: InputDecoration(
+                                hintText: 'ex.: 24',
+                                filled: true,
+                                fillColor: AppDialog.inputFill,
+                                border: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide.none,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Gênero',
-                                style: TextStyle(fontWeight: FontWeight.w600),
-                              ),
-                              const SizedBox(height: 8),
-                              Wrap(
-                                spacing: 12,
-                                runSpacing: 8,
-                                crossAxisAlignment: WrapCrossAlignment.center,
-                                children: [
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Radio<String>(
-                                        value: 'M',
-                                        groupValue: selectedGender,
-                                        onChanged: (value) => setModalState(() {
-                                          selectedGender = value;
-                                        }),
-                                      ),
-                                      const Text('Masculino'),
-                                    ],
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Radio<String>(
-                                        value: 'F',
-                                        groupValue: selectedGender,
-                                        onChanged: (value) => setModalState(() {
-                                          selectedGender = value;
-                                        }),
-                                      ),
-                                      const Text('Feminino'),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Igreja',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: churchController,
-                      decoration: InputDecoration(
-                        hintText: 'ex.: João Pessoa',
-                        filled: true,
-                        fillColor: const Color(0xFFF7F8FB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
+                            ),
+                          ],
                         ),
                       ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        errorText!,
-                        style: const TextStyle(
-                          color: Color(0xFFDC2626),
-                          fontSize: 12,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text(
+                              'Gênero',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: 'M',
+                                      groupValue: selectedGender,
+                                      onChanged: (value) => setModalState(() {
+                                        selectedGender = value;
+                                      }),
+                                    ),
+                                    const Text('Masculino'),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Radio<String>(
+                                      value: 'F',
+                                      groupValue: selectedGender,
+                                      onChanged: (value) => setModalState(() {
+                                        selectedGender = value;
+                                      }),
+                                    ),
+                                    const Text('Feminino'),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            child: const Text('Cancelar'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final name = nameController.text.trim();
-                              final age = int.tryParse(
-                                ageController.text.trim(),
-                              );
-                              final church = churchController.text.trim();
-
-                              if (name.isEmpty) {
-                                setModalState(() {
-                                  errorText = 'Informe o nome completo.';
-                                });
-                                return;
-                              }
-                              if (age == null || age <= 0) {
-                                setModalState(() {
-                                  errorText = 'Informe uma idade válida.';
-                                });
-                                return;
-                              }
-                              if (church.isEmpty) {
-                                setModalState(() {
-                                  errorText = 'Informe o nome da igreja.';
-                                });
-                                return;
-                              }
-                              if (selectedGender == null) {
-                                setModalState(() {
-                                  errorText = 'Selecione o gênero.';
-                                });
-                                return;
-                              }
-
-                              try {
-                                widget.database.updateMember(
-                                  id: member.id,
-                                  name: name,
-                                  age: age,
-                                  gender: selectedGender!,
-                                  church: church,
-                                );
-                                Navigator.of(dialogContext).pop();
-                                _loadData();
-                              } catch (e) {
-                                setModalState(() {
-                                  errorText = 'Falha ao atualizar o membro.';
-                                });
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F5BFF),
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Salvar'),
-                          ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Igreja',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: churchController,
+                    decoration: InputDecoration(
+                      hintText: 'ex.: João Pessoa',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
-                ),
+                ],
               ),
             );
           },
@@ -1331,60 +1185,29 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Limpar banco',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
-                const Text(
-                  'Isso vai remover permanentemente membros, tarefas e atribuições. '
-                  'Esta ação não pode ser desfeita.',
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Limpar banco'),
-                    ),
-                  ],
-                ),
-              ],
+        return AppDialog(
+          title: 'Limpar banco',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.destructiveStyle(),
+                child: const Text('Limpar banco'),
+              ),
+            ),
+          ],
+          child: const Text(
+            'Isso vai remover permanentemente membros, tarefas e atribuições. '
+            'Esta ação não pode ser desfeita.',
           ),
         );
       },
@@ -1406,55 +1229,28 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Banco de teste',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
-                const Text(
-                  'Isso vai adicionar 30 membros e 8 tarefas ao banco.',
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(true),
-                      child: const Text('Adicionar dados de teste'),
-                    ),
-                  ],
-                ),
-              ],
+        return AppDialog(
+          title: 'Banco de teste',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.primaryStyle(),
+                child: const Text('Adicionar dados de teste'),
+              ),
+            ),
+          ],
+          child: const Text(
+            'Isso vai adicionar 30 membros e 8 tarefas ao banco.',
           ),
         );
       },
@@ -1483,195 +1279,171 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                width: 440,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Adicionar tarefa',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Crie uma tarefa de apoio para a equipe Avanço.',
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Descrição da tarefa',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: taskController,
-                      decoration: InputDecoration(
-                        hintText: 'ex.: Organizar kits de boas-vindas',
-                        filled: true,
-                        fillColor: const Color(0xFFF7F8FB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF7F8FB),
+            return AppDialog(
+              title: 'Adicionar tarefa',
+              subtitle: 'Crie uma tarefa de apoio para a equipe Avanço.',
+              width: 440,
+              onClose: () => Navigator.of(dialogContext).pop(),
+              actions: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final name = taskController.text.trim();
+                      if (name.isEmpty) {
+                        setModalState(() {
+                          errorText = 'Informe a descrição da tarefa.';
+                        });
+                        return;
+                      }
+                      if (limitByGender && selectedGender == null) {
+                        setModalState(() {
+                          errorText = 'Selecione o gênero.';
+                        });
+                        return;
+                      }
+
+                      try {
+                        widget.database.insertTask(
+                          name: name,
+                          genderConstraint: limitByGender
+                              ? selectedGender
+                              : null,
+                        );
+                        Navigator.of(dialogContext).pop();
+                        _loadData();
+                      } catch (e) {
+                        setModalState(() {
+                          errorText = 'Falha ao salvar a tarefa.';
+                        });
+                      }
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Salvar'),
+                  ),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Descrição da tarefa',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: taskController,
+                    decoration: InputDecoration(
+                      hintText: 'ex.: Organizar kits de boas-vindas',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        borderSide: BorderSide.none,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppDialog.sectionFill,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFB3DFE9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: limitByGender,
+                              onChanged: (value) {
+                                setModalState(() {
+                                  limitByGender = value ?? false;
+                                  if (!limitByGender) {
+                                    selectedGender = null;
+                                  }
+                                });
+                              },
+                            ),
+                            const Text(
+                              'Limitar atribuição por gênero',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        if (limitByGender) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'SELECIONE O GÊNERO',
+                            style: TextStyle(
+                              fontSize: 11,
+                              letterSpacing: 1.2,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
-                              Checkbox(
-                                value: limitByGender,
-                                onChanged: (value) {
-                                  setModalState(() {
-                                    limitByGender = value ?? false;
-                                    if (!limitByGender) {
-                                      selectedGender = null;
-                                    }
-                                  });
-                                },
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => setModalState(() {
+                                    selectedGender = 'M';
+                                  }),
+                                  icon: const Icon(Icons.male),
+                                  label: const Text('Somente homens'),
+                                  style: AppDialog.outlinedStyle().copyWith(
+                                    backgroundColor: selectedGender == 'M'
+                                        ? const WidgetStatePropertyAll(
+                                            Color(0xFFE8F0FF),
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
-                              const Text(
-                                'Limitar atribuição por gênero',
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => setModalState(() {
+                                    selectedGender = 'F';
+                                  }),
+                                  icon: const Icon(Icons.female),
+                                  label: const Text('Somente mulheres'),
+                                  style: AppDialog.outlinedStyle().copyWith(
+                                    backgroundColor: selectedGender == 'F'
+                                        ? const WidgetStatePropertyAll(
+                                            Color(0xFFFFE8F2),
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                          if (limitByGender) ...[
-                            const SizedBox(height: 8),
-                            const Text(
-                              'SELECIONE O GÊNERO',
-                              style: TextStyle(
-                                fontSize: 11,
-                                letterSpacing: 1.2,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => setModalState(() {
-                                      selectedGender = 'M';
-                                    }),
-                                    icon: const Icon(Icons.male),
-                                    label: const Text('Somente homens'),
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: selectedGender == 'M'
-                                          ? const Color(0xFFE8F0FF)
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => setModalState(() {
-                                      selectedGender = 'F';
-                                    }),
-                                    icon: const Icon(Icons.female),
-                                    label: const Text('Somente mulheres'),
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: selectedGender == 'F'
-                                          ? const Color(0xFFE8F0FF)
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
                         ],
-                      ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        errorText!,
-                        style: const TextStyle(
-                          color: Color(0xFFDC2626),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancelar'),
-                        ),
-                        const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: () {
-                            final name = taskController.text.trim();
-                            if (name.isEmpty) {
-                              setModalState(() {
-                                errorText = 'Informe a descrição da tarefa.';
-                              });
-                              return;
-                            }
-                            if (limitByGender && selectedGender == null) {
-                              setModalState(() {
-                                errorText = 'Selecione o gênero.';
-                              });
-                              return;
-                            }
-
-                            try {
-                              widget.database.insertTask(
-                                name: name,
-                                genderConstraint: limitByGender
-                                    ? selectedGender
-                                    : null,
-                              );
-                              Navigator.of(dialogContext).pop();
-                              _loadData();
-                            } catch (e) {
-                              setModalState(() {
-                                errorText = 'Falha ao salvar a tarefa.';
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F5BFF),
-                            foregroundColor: Colors.white,
-                          ),
-                          child: const Text('Salvar tarefa'),
-                        ),
                       ],
                     ),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
             );
           },
@@ -1694,223 +1466,194 @@ class _HomeScreenState extends State<HomeScreen> {
       builder: (dialogContext) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            return Dialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Container(
-                width: 440,
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Text(
-                          'Editar tarefa',
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        IconButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          icon: const Icon(Icons.close),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Atualize os detalhes da tarefa de apoio.',
-                      style: TextStyle(color: Colors.black54),
-                    ),
-                    const SizedBox(height: 16),
-                    const Text(
-                      'Descrição da tarefa',
-                      style: TextStyle(fontWeight: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: taskController,
-                      decoration: InputDecoration(
-                        hintText: 'ex.: Organizar kits de boas-vindas',
-                        filled: true,
-                        fillColor: const Color(0xFFF7F8FB),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          borderSide: BorderSide.none,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFF7F8FB),
+            return AppDialog(
+              title: 'Editar tarefa',
+              subtitle: 'Atualize os detalhes da tarefa de apoio.',
+              width: 440,
+              onClose: () => Navigator.of(dialogContext).pop(),
+              actions: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final confirm = await _confirmDeleteTask();
+                      if (!confirm) return;
+                      try {
+                        widget.database.deleteTask(task.id);
+                        if (!mounted) return;
+                        Navigator.of(dialogContext).pop();
+                        _loadData();
+                      } catch (e) {
+                        _showMessage(
+                          'Não foi possível excluir a tarefa.',
+                        );
+                      }
+                    },
+                    style: AppDialog.destructiveStyle(),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Excluir'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final name = taskController.text.trim();
+                      if (name.isEmpty) {
+                        setModalState(() {
+                          errorText = 'Informe a descrição da tarefa.';
+                        });
+                        return;
+                      }
+                      if (limitByGender && selectedGender == null) {
+                        setModalState(() {
+                          errorText = 'Selecione o gênero.';
+                        });
+                        return;
+                      }
+
+                      try {
+                        widget.database.updateTask(
+                          id: task.id,
+                          name: name,
+                          genderConstraint: limitByGender
+                              ? selectedGender
+                              : null,
+                        );
+                        Navigator.of(dialogContext).pop();
+                        _loadData();
+                      } catch (e) {
+                        setModalState(() {
+                          errorText = 'Falha ao atualizar a tarefa.';
+                        });
+                      }
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Salvar'),
+                  ),
+                ),
+              ],
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Descrição da tarefa',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: taskController,
+                    decoration: InputDecoration(
+                      hintText: 'ex.: Organizar kits de boas-vindas',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                        borderSide: BorderSide.none,
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: AppDialog.sectionFill,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0xFFB3DFE9)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Checkbox(
+                              value: limitByGender,
+                              onChanged: (value) {
+                                setModalState(() {
+                                  limitByGender = value ?? false;
+                                  if (!limitByGender) {
+                                    selectedGender = null;
+                                  }
+                                });
+                              },
+                            ),
+                            const Text(
+                              'Limitar atribuição por gênero',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        if (limitByGender) ...[
+                          const SizedBox(height: 8),
+                          const Text(
+                            'SELECIONE O GÊNERO',
+                            style: TextStyle(
+                              fontSize: 11,
+                              letterSpacing: 1.2,
+                              color: Colors.black54,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
                           Row(
                             children: [
-                              Checkbox(
-                                value: limitByGender,
-                                onChanged: (value) {
-                                  setModalState(() {
-                                    limitByGender = value ?? false;
-                                    if (!limitByGender) {
-                                      selectedGender = null;
-                                    }
-                                  });
-                                },
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => setModalState(() {
+                                    selectedGender = 'M';
+                                  }),
+                                  icon: const Icon(Icons.male),
+                                  label: const Text('Somente homens'),
+                                  style: AppDialog.outlinedStyle().copyWith(
+                                    backgroundColor: selectedGender == 'M'
+                                        ? const WidgetStatePropertyAll(
+                                            Color(0xFFE8F0FF),
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
-                              const Text(
-                                'Limitar atribuição por gênero',
-                                style: TextStyle(fontWeight: FontWeight.w600),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: OutlinedButton.icon(
+                                  onPressed: () => setModalState(() {
+                                    selectedGender = 'F';
+                                  }),
+                                  icon: const Icon(Icons.female),
+                                  label: const Text('Somente mulheres'),
+                                  style: AppDialog.outlinedStyle().copyWith(
+                                    backgroundColor: selectedGender == 'F'
+                                        ? const WidgetStatePropertyAll(
+                                            Color(0xFFFFE8F2),
+                                          )
+                                        : null,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                          if (limitByGender) ...[
-                            const SizedBox(height: 8),
-                            const Text(
-                              'SELECIONE O GÊNERO',
-                              style: TextStyle(
-                                fontSize: 11,
-                                letterSpacing: 1.2,
-                                color: Colors.black54,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => setModalState(() {
-                                      selectedGender = 'M';
-                                    }),
-                                    icon: const Icon(Icons.male),
-                                    label: const Text('Somente homens'),
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: selectedGender == 'M'
-                                          ? const Color(0xFFE8F0FF)
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: OutlinedButton.icon(
-                                    onPressed: () => setModalState(() {
-                                      selectedGender = 'F';
-                                    }),
-                                    icon: const Icon(Icons.female),
-                                    label: const Text('Somente mulheres'),
-                                    style: OutlinedButton.styleFrom(
-                                      backgroundColor: selectedGender == 'F'
-                                          ? const Color(0xFFE8F0FF)
-                                          : null,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
                         ],
-                      ),
-                    ),
-                    if (errorText != null) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        errorText!,
-                        style: const TextStyle(
-                          color: Color(0xFFDC2626),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 24),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: OutlinedButton.icon(
-                            onPressed: () async {
-                              final confirm = await _confirmDeleteTask();
-                              if (!confirm) return;
-                              try {
-                                widget.database.deleteTask(task.id);
-                                if (!mounted) return;
-                                Navigator.of(dialogContext).pop();
-                                _loadData();
-                              } catch (e) {
-                                _showMessage(
-                                  'Não foi possível excluir a tarefa.',
-                                );
-                              }
-                            },
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: const Color(0xFFDC2626),
-                            ),
-                            icon: const Icon(Icons.delete_outline),
-                            label: const Text('Excluir'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: OutlinedButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(),
-                            child: const Text('Cancelar'),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {
-                              final name = taskController.text.trim();
-                              if (name.isEmpty) {
-                                setModalState(() {
-                                  errorText = 'Informe a descrição da tarefa.';
-                                });
-                                return;
-                              }
-                              if (limitByGender && selectedGender == null) {
-                                setModalState(() {
-                                  errorText = 'Selecione o gênero.';
-                                });
-                                return;
-                              }
-
-                              try {
-                                widget.database.updateTask(
-                                  id: task.id,
-                                  name: name,
-                                  genderConstraint: limitByGender
-                                      ? selectedGender
-                                      : null,
-                                );
-                                Navigator.of(dialogContext).pop();
-                                _loadData();
-                              } catch (e) {
-                                setModalState(() {
-                                  errorText = 'Falha ao atualizar a tarefa.';
-                                });
-                              }
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF0F5BFF),
-                              foregroundColor: Colors.white,
-                            ),
-                            child: const Text('Salvar'),
-                          ),
-                        ),
                       ],
                     ),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 12),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
-                ),
+                ],
               ),
             );
           },
@@ -1926,59 +1669,28 @@ class _HomeScreenState extends State<HomeScreen> {
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Container(
-            width: 420,
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'Excluir tarefa',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const Spacer(),
-                    IconButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-                const Divider(height: 1),
-                const SizedBox(height: 16),
-                const Text(
-                  'Esta ação vai remover a tarefa e todas as atribuições associadas a ela.',
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    OutlinedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancelar'),
-                    ),
-                    const SizedBox(width: 12),
-                    ElevatedButton(
-                      onPressed: () => Navigator.of(dialogContext).pop(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFDC2626),
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text('Excluir tarefa'),
-                    ),
-                  ],
-                ),
-              ],
+        return AppDialog(
+          title: 'Excluir tarefa',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
             ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.destructiveStyle(),
+                child: const Text('Excluir tarefa'),
+              ),
+            ),
+          ],
+          child: const Text(
+            'Esta ação vai remover a tarefa e todas as atribuições associadas a ela.',
           ),
         );
       },
@@ -2397,7 +2109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     child: OutlinedButton.icon(
                       onPressed: _openAddMemberDialog,
                       icon: const Icon(Icons.add),
-                      label: const Text('Adicionar'),
+                      label: const Text('Novo membro'),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -2511,9 +2223,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 Positioned(
                   right: 12,
                   bottom: 12,
-                  child: FloatingActionButton(
+                  child: FloatingActionButton.extended(
                     onPressed: _openAddTaskDialog,
-                    child: const Icon(Icons.add),
+                    label: Text('Nova tarefa'),
+                    icon: const Icon(Icons.add),
                   ),
                 ),
               ],
