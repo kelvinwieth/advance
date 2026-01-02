@@ -45,9 +45,9 @@ class _TaskColumnState extends State<TaskColumn> {
             ? const Color(0xFFFFF7FB)
             : Colors.white;
     final subtitle = widget.task.genderConstraint == 'M'
-        ? 'Male only'
+        ? 'Somente homens'
         : widget.task.genderConstraint == 'F'
-            ? 'Female only'
+            ? 'Somente mulheres'
             : null;
 
     return DragTarget<Member>(
@@ -146,7 +146,7 @@ class _TaskColumnState extends State<TaskColumn> {
                     ),
                     child: Center(
                       child: Text(
-                        'Drag members here',
+                        'Arraste membros aqui',
                         style: TextStyle(
                           color: Colors.black54,
                           fontSize: 12,
@@ -234,7 +234,7 @@ class _TaskColumnState extends State<TaskColumn> {
                                 Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
                                 SizedBox(width: 8),
                                 Text(
-                                  'Drag here to remove',
+                                  'Arraste aqui para remover',
                                   style: TextStyle(
                                     color: Color(0xFFDC2626),
                                     fontWeight: FontWeight.w600,
@@ -250,7 +250,7 @@ class _TaskColumnState extends State<TaskColumn> {
               const SizedBox(height: 12),
               TextButton(
                 onPressed: null,
-                child: const Text('+ Add card'),
+                child: const Text('+ Adicionar cartão'),
               ),
             ],
           ),

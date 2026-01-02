@@ -98,7 +98,7 @@ class MemberCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: const Text(
-                  'Active',
+                  'Ativo',
                   style: TextStyle(
                     color: Color(0xFF118C4F),
                     fontSize: 11,

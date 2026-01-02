@@ -17,7 +17,7 @@ class AvancoApp extends StatelessWidget {
     );
 
     return MaterialApp(
-      title: 'Avanco',
+      title: 'Avanço',
       theme: ThemeData(
         colorScheme: colorScheme,
         useMaterial3: true,

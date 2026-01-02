@@ -24,8 +24,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final DateFormat _dateFormat = DateFormat('MM / dd / yyyy');
-  final DateFormat _weekdayFormat = DateFormat('EEEE');
+  final DateFormat _dateFormat = DateFormat('dd / MM / yyyy', 'pt_BR');
+  final DateFormat _weekdayFormat = DateFormat('EEEE', 'pt_BR');
 
   DateTime _selectedDate = DateTime.now();
   bool _loading = true;
@@ -70,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _errorMessage = 'Failed to load data.';
+        _errorMessage = 'Falha ao carregar os dados.';
         _loading = false;
       });
     }
@@ -85,13 +85,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _handleDrop(Task task, Member member) {
     if (task.genderConstraint != null && task.genderConstraint != member.gender) {
-      _showMessage('Gender constraint does not match for this task.');
+      _showMessage('A restrição de gênero não corresponde a esta tarefa.');
       return;
     }
 
     final existingForTask = _assignments[task.id] ?? [];
     if (existingForTask.any((entry) => entry.member.id == member.id)) {
-      _showMessage('This member is already assigned to this task.');
+      _showMessage('Este membro já está atribuído a esta tarefa.');
       return;
     }
 
@@ -103,7 +103,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       _loadData();
     } catch (e) {
-      _showMessage('Assignment failed. ${e.toString()}');
+      _showMessage('Falha ao atribuir. ${e.toString()}');
     }
   }
 
@@ -116,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
       );
       _loadData();
     } catch (e) {
-      _showMessage('Failed to remove assignment.');
+      _showMessage('Falha ao remover a atribuição.');
     }
   }
 
@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _exportDayPdf() async {
     if (_tasks.isEmpty) {
-      _showMessage('No tasks to export.');
+      _showMessage('Nenhuma tarefa para exportar.');
       return;
     }
 
@@ -152,7 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: pw.CrossAxisAlignment.start,
             children: [
               pw.Text(
-                'Daily Task Assignments',
+                'Distribuição de Tarefas do Dia',
                 style: pw.TextStyle(
                   fontSize: 22,
                   fontWeight: pw.FontWeight.bold,
@@ -230,7 +230,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final file = File(p.join(dir.path, filename));
     await file.writeAsBytes(bytes);
     await _openFile(file.path);
-    _showMessage('PDF saved to ${file.path}');
+    _showMessage('PDF salvo em ${file.path}');
   }
 
   Future<void> _openFile(String path) async {
@@ -297,7 +297,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         const Text(
-                          'Add New Member',
+                          'Adicionar membro',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -313,14 +313,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Divider(height: 1),
                     const SizedBox(height: 16),
                     const Text(
-                      'Full Name',
+                      'Nome completo',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        hintText: 'e.g. John Doe',
+                        hintText: 'ex.: João Silva',
                         suffixIcon: const Icon(Icons.person_outline),
                         filled: true,
                         fillColor: const Color(0xFFF7F8FB),
@@ -338,7 +338,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Age',
+                                'Idade',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
@@ -349,7 +349,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 decoration: InputDecoration(
-                                  hintText: 'e.g. 24',
+                                  hintText: 'ex.: 24',
                                   filled: true,
                                   fillColor: const Color(0xFFF7F8FB),
                                   border: OutlineInputBorder(
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Gender',
+                                'Gênero',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
@@ -380,7 +380,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = value;
                                     }),
                                   ),
-                                  const Text('Male'),
+                                  const Text('Masculino'),
                                   const SizedBox(width: 12),
                                   Radio<String>(
                                     value: 'F',
@@ -389,7 +389,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = value;
                                     }),
                                   ),
-                                  const Text('Female'),
+                                  const Text('Feminino'),
                                 ],
                               ),
                             ],
@@ -399,14 +399,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Church',
+                      'Igreja',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: churchController,
                       decoration: InputDecoration(
-                        hintText: 'e.g. Joao Pessoa',
+                        hintText: 'ex.: João Pessoa',
                         filled: true,
                         fillColor: const Color(0xFFF7F8FB),
                         border: OutlineInputBorder(
@@ -431,7 +431,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancel'),
+                          child: const Text('Cancelar'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
@@ -442,25 +442,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             if (name.isEmpty) {
                               setModalState(() {
-                                errorText = 'Please enter a full name.';
+                                errorText = 'Informe o nome completo.';
                               });
                               return;
                             }
                             if (age == null || age <= 0) {
                               setModalState(() {
-                                errorText = 'Please enter a valid age.';
+                                errorText = 'Informe uma idade válida.';
                               });
                               return;
                             }
                             if (church.isEmpty) {
                               setModalState(() {
-                                errorText = 'Please enter a church name.';
+                                errorText = 'Informe o nome da igreja.';
                               });
                               return;
                             }
                             if (selectedGender == null) {
                               setModalState(() {
-                                errorText = 'Please select a gender.';
+                                errorText = 'Selecione o gênero.';
                               });
                               return;
                             }
@@ -476,12 +476,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               _loadData();
                             } catch (e) {
                               setModalState(() {
-                                errorText = 'Failed to save member.';
+                                errorText = 'Falha ao salvar o membro.';
                               });
                             }
                           },
                           icon: const Icon(Icons.save),
-                          label: const Text('Save Member'),
+                          label: const Text('Salvar membro'),
                         ),
                       ],
                     ),
@@ -526,7 +526,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         const Text(
-                          'Edit Member',
+                          'Editar membro',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -542,14 +542,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     const Divider(height: 1),
                     const SizedBox(height: 16),
                     const Text(
-                      'Full Name',
+                      'Nome completo',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: nameController,
                       decoration: InputDecoration(
-                        hintText: 'e.g. John Doe',
+                        hintText: 'ex.: João Silva',
                         suffixIcon: const Icon(Icons.person_outline),
                         filled: true,
                         fillColor: const Color(0xFFF7F8FB),
@@ -567,7 +567,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Age',
+                                'Idade',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
@@ -578,7 +578,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   FilteringTextInputFormatter.digitsOnly,
                                 ],
                                 decoration: InputDecoration(
-                                  hintText: 'e.g. 24',
+                                  hintText: 'ex.: 24',
                                   filled: true,
                                   fillColor: const Color(0xFFF7F8FB),
                                   border: OutlineInputBorder(
@@ -596,7 +596,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               const Text(
-                                'Gender',
+                                'Gênero',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
@@ -609,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = value;
                                     }),
                                   ),
-                                  const Text('Male'),
+                                  const Text('Masculino'),
                                   const SizedBox(width: 12),
                                   Radio<String>(
                                     value: 'F',
@@ -618,7 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = value;
                                     }),
                                   ),
-                                  const Text('Female'),
+                                  const Text('Feminino'),
                                 ],
                               ),
                             ],
@@ -628,14 +628,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Church',
+                      'Igreja',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: churchController,
                       decoration: InputDecoration(
-                        hintText: 'e.g. Joao Pessoa',
+                        hintText: 'ex.: João Pessoa',
                         filled: true,
                         fillColor: const Color(0xFFF7F8FB),
                         border: OutlineInputBorder(
@@ -660,7 +660,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancel'),
+                          child: const Text('Cancelar'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
@@ -671,25 +671,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             if (name.isEmpty) {
                               setModalState(() {
-                                errorText = 'Please enter a full name.';
+                                errorText = 'Informe o nome completo.';
                               });
                               return;
                             }
                             if (age == null || age <= 0) {
                               setModalState(() {
-                                errorText = 'Please enter a valid age.';
+                                errorText = 'Informe uma idade válida.';
                               });
                               return;
                             }
                             if (church.isEmpty) {
                               setModalState(() {
-                                errorText = 'Please enter a church name.';
+                                errorText = 'Informe o nome da igreja.';
                               });
                               return;
                             }
                             if (selectedGender == null) {
                               setModalState(() {
-                                errorText = 'Please select a gender.';
+                                errorText = 'Selecione o gênero.';
                               });
                               return;
                             }
@@ -706,12 +706,12 @@ class _HomeScreenState extends State<HomeScreen> {
                               _loadData();
                             } catch (e) {
                               setModalState(() {
-                                errorText = 'Failed to update member.';
+                                errorText = 'Falha ao atualizar o membro.';
                               });
                             }
                           },
                           icon: const Icon(Icons.save),
-                          label: const Text('Save Changes'),
+                          label: const Text('Salvar alterações'),
                         ),
                       ],
                     ),
@@ -748,7 +748,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   children: [
                     const Text(
-                      'Clear Database',
+                      'Limpar banco',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -764,8 +764,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Divider(height: 1),
                 const SizedBox(height: 16),
                 const Text(
-                  'This will permanently remove members, tasks, and assignments. '
-                  'This action cannot be undone.',
+                  'Isso vai remover permanentemente membros, tarefas e atribuições. '
+                  'Esta ação não pode ser desfeita.',
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -773,7 +773,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     OutlinedButton(
                       onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancel'),
+                      child: const Text('Cancelar'),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
@@ -782,7 +782,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         backgroundColor: const Color(0xFFDC2626),
                         foregroundColor: Colors.white,
                       ),
-                      child: const Text('Clear Database'),
+                      child: const Text('Limpar banco'),
                     ),
                   ],
                 ),
@@ -797,9 +797,9 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         widget.database.clearDatabase();
         await _loadData();
-        _showMessage('Database cleared.');
+        _showMessage('Banco limpo.');
       } catch (e) {
-        _showMessage('Failed to clear database.');
+        _showMessage('Falha ao limpar o banco.');
       }
     }
   }
@@ -823,7 +823,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Row(
                   children: [
                     const Text(
-                      'Mock Database',
+                      'Banco de teste',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,
@@ -839,7 +839,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const Divider(height: 1),
                 const SizedBox(height: 16),
                 const Text(
-                  'This will add 30 members and 8 tasks to the database.',
+                  'Isso vai adicionar 30 membros e 8 tarefas ao banco.',
                 ),
                 const SizedBox(height: 24),
                 Row(
@@ -847,12 +847,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     OutlinedButton(
                       onPressed: () => Navigator.of(dialogContext).pop(false),
-                      child: const Text('Cancel'),
+                      child: const Text('Cancelar'),
                     ),
                     const SizedBox(width: 12),
                     ElevatedButton(
                       onPressed: () => Navigator.of(dialogContext).pop(true),
-                      child: const Text('Add Mock Data'),
+                      child: const Text('Adicionar dados de teste'),
                     ),
                   ],
                 ),
@@ -867,9 +867,9 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         widget.database.insertMockData();
         await _loadData();
-        _showMessage('Mock data added.');
+        _showMessage('Dados de teste adicionados.');
       } catch (e) {
-        _showMessage('Failed to add mock data.');
+        _showMessage('Falha ao adicionar dados de teste.');
       }
     }
   }
@@ -900,7 +900,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         const Text(
-                          'Add New Task',
+                          'Adicionar tarefa',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -915,19 +915,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Create a backstage task for the Avanco team.',
+                      'Crie uma tarefa de apoio para a equipe Avanço.',
                       style: TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Task Description',
+                      'Descrição da tarefa',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: taskController,
                       decoration: InputDecoration(
-                        hintText: 'e.g., Organize welcome kits',
+                        hintText: 'ex.: Organizar kits de boas-vindas',
                         filled: true,
                         fillColor: const Color(0xFFF7F8FB),
                         border: OutlineInputBorder(
@@ -962,7 +962,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                               ),
                               const Text(
-                                'Limit assignment by gender',
+                                'Limitar atribuição por gênero',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ],
@@ -970,7 +970,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (limitByGender) ...[
                             const SizedBox(height: 8),
                             const Text(
-                              'SELECT GENDER',
+                              'SELECIONE O GÊNERO',
                               style: TextStyle(
                                 fontSize: 11,
                                 letterSpacing: 1.2,
@@ -986,7 +986,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = 'M';
                                     }),
                                     icon: const Icon(Icons.male),
-                                    label: const Text('Male Only'),
+                                    label: const Text('Somente homens'),
                                     style: OutlinedButton.styleFrom(
                                       backgroundColor: selectedGender == 'M'
                                           ? const Color(0xFFE8F0FF)
@@ -1001,7 +1001,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = 'F';
                                     }),
                                     icon: const Icon(Icons.female),
-                                    label: const Text('Female Only'),
+                                    label: const Text('Somente mulheres'),
                                     style: OutlinedButton.styleFrom(
                                       backgroundColor: selectedGender == 'F'
                                           ? const Color(0xFFE8F0FF)
@@ -1031,7 +1031,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancel'),
+                          child: const Text('Cancelar'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton(
@@ -1039,13 +1039,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             final name = taskController.text.trim();
                             if (name.isEmpty) {
                               setModalState(() {
-                                errorText = 'Please enter a task description.';
+                                errorText = 'Informe a descrição da tarefa.';
                               });
                               return;
                             }
                             if (limitByGender && selectedGender == null) {
                               setModalState(() {
-                                errorText = 'Please choose a gender.';
+                                errorText = 'Selecione o gênero.';
                               });
                               return;
                             }
@@ -1059,7 +1059,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _loadData();
                             } catch (e) {
                               setModalState(() {
-                                errorText = 'Failed to save task.';
+                                errorText = 'Falha ao salvar a tarefa.';
                               });
                             }
                           },
@@ -1067,7 +1067,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: const Color(0xFF0F5BFF),
                             foregroundColor: Colors.white,
                           ),
-                          child: const Text('Save Task'),
+                          child: const Text('Salvar tarefa'),
                         ),
                       ],
                     ),
@@ -1109,7 +1109,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Row(
                       children: [
                         const Text(
-                          'Edit Task',
+                          'Editar tarefa',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w700,
@@ -1124,19 +1124,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Update the backstage task details.',
+                      'Atualize os detalhes da tarefa de apoio.',
                       style: TextStyle(color: Colors.black54),
                     ),
                     const SizedBox(height: 16),
                     const Text(
-                      'Task Description',
+                      'Descrição da tarefa',
                       style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     const SizedBox(height: 8),
                     TextField(
                       controller: taskController,
                       decoration: InputDecoration(
-                        hintText: 'e.g., Organize welcome kits',
+                        hintText: 'ex.: Organizar kits de boas-vindas',
                         filled: true,
                         fillColor: const Color(0xFFF7F8FB),
                         border: OutlineInputBorder(
@@ -1171,7 +1171,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 },
                               ),
                               const Text(
-                                'Limit assignment by gender',
+                                'Limitar atribuição por gênero',
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                             ],
@@ -1179,7 +1179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (limitByGender) ...[
                             const SizedBox(height: 8),
                             const Text(
-                              'SELECT GENDER',
+                              'SELECIONE O GÊNERO',
                               style: TextStyle(
                                 fontSize: 11,
                                 letterSpacing: 1.2,
@@ -1195,7 +1195,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = 'M';
                                     }),
                                     icon: const Icon(Icons.male),
-                                    label: const Text('Male Only'),
+                                    label: const Text('Somente homens'),
                                     style: OutlinedButton.styleFrom(
                                       backgroundColor: selectedGender == 'M'
                                           ? const Color(0xFFE8F0FF)
@@ -1210,7 +1210,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                       selectedGender = 'F';
                                     }),
                                     icon: const Icon(Icons.female),
-                                    label: const Text('Female Only'),
+                                    label: const Text('Somente mulheres'),
                                     style: OutlinedButton.styleFrom(
                                       backgroundColor: selectedGender == 'F'
                                           ? const Color(0xFFE8F0FF)
@@ -1240,7 +1240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         OutlinedButton(
                           onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancel'),
+                          child: const Text('Cancelar'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton(
@@ -1248,13 +1248,13 @@ class _HomeScreenState extends State<HomeScreen> {
                             final name = taskController.text.trim();
                             if (name.isEmpty) {
                               setModalState(() {
-                                errorText = 'Please enter a task description.';
+                                errorText = 'Informe a descrição da tarefa.';
                               });
                               return;
                             }
                             if (limitByGender && selectedGender == null) {
                               setModalState(() {
-                                errorText = 'Please choose a gender.';
+                                errorText = 'Selecione o gênero.';
                               });
                               return;
                             }
@@ -1269,7 +1269,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               _loadData();
                             } catch (e) {
                               setModalState(() {
-                                errorText = 'Failed to update task.';
+                                errorText = 'Falha ao atualizar a tarefa.';
                               });
                             }
                           },
@@ -1277,7 +1277,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: const Color(0xFF0F5BFF),
                             foregroundColor: Colors.white,
                           ),
-                          child: const Text('Save Changes'),
+                          child: const Text('Salvar alterações'),
                         ),
                       ],
                     ),
@@ -1297,7 +1297,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Avanco'),
+        title: const Text('Avanço'),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         actions: [
@@ -1313,11 +1313,11 @@ class _HomeScreenState extends State<HomeScreen> {
             itemBuilder: (context) => [
               const PopupMenuItem(
                 value: 'clear',
-                child: Text('Clear Database'),
+                child: Text('Limpar banco'),
               ),
               const PopupMenuItem(
                 value: 'mock',
-                child: Text('Mock Database'),
+                child: Text('Banco de teste'),
               ),
             ],
           ),
@@ -1388,7 +1388,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
-                  '$availableCount Available',
+                  '$availableCount disponíveis',
                   style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -1399,7 +1399,7 @@ class _HomeScreenState extends State<HomeScreen> {
             controller: _searchController,
             onChanged: (_) => setState(() {}),
             decoration: InputDecoration(
-              hintText: 'Search members...',
+              hintText: 'Buscar membros...',
               prefixIcon: const Icon(Icons.search),
               filled: true,
               fillColor: const Color(0xFFF1F2F6),
@@ -1442,7 +1442,7 @@ class _HomeScreenState extends State<HomeScreen> {
           OutlinedButton.icon(
             onPressed: _openAddMemberDialog,
             icon: const Icon(Icons.add),
-            label: const Text('Add New Member'),
+            label: const Text('Adicionar membro'),
           ),
         ],
       ),
@@ -1504,13 +1504,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 OutlinedButton.icon(
                   onPressed: _exportDayPdf,
                   icon: const Icon(Icons.picture_as_pdf),
-                  label: const Text('Save PDF'),
+                  label: const Text('Salvar PDF'),
                 ),
                 const SizedBox(width: 8),
                 OutlinedButton.icon(
                   onPressed: _openAddTaskDialog,
                   icon: const Icon(Icons.add),
-                  label: const Text('Add Task'),
+                  label: const Text('Adicionar tarefa'),
                 ),
                 ],
               ),
@@ -1518,7 +1518,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: _tasks.isEmpty
-                ? const Center(child: Text('No tasks yet.'))
+                ? const Center(child: Text('Nenhuma tarefa cadastrada.'))
                 : ListView.separated(
                     scrollDirection: Axis.horizontal,
                     itemCount: _tasks.length,
