@@ -478,7 +478,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    const Divider(height: 1),
+                    const SizedBox(height: 8),
                     const SizedBox(height: 16),
                     const Text(
                       'Nome completo',
@@ -607,18 +607,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                     const SizedBox(height: 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancelar'),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: const Text('Cancelar'),
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            final name = nameController.text.trim();
-                            final age = int.tryParse(ageController.text.trim());
-                            final church = churchController.text.trim();
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final name = nameController.text.trim();
+                              final age = int.tryParse(ageController.text.trim());
+                              final church = churchController.text.trim();
 
                             if (name.isEmpty) {
                               setModalState(() {
@@ -659,9 +661,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 errorText = 'Falha ao salvar o membro.';
                               });
                             }
-                          },
-                          icon: const Icon(Icons.save),
-                          label: const Text('Salvar membro'),
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F5BFF),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Salvar'),
+                          ),
                         ),
                       ],
                     ),
@@ -719,7 +725,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    const Divider(height: 1),
+                    const SizedBox(height: 8),
                     const SizedBox(height: 16),
                     const Text(
                       'Nome completo',
@@ -848,18 +854,20 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                     const SizedBox(height: 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancelar'),
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: const Text('Cancelar'),
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        ElevatedButton.icon(
-                          onPressed: () {
-                            final name = nameController.text.trim();
-                            final age = int.tryParse(ageController.text.trim());
-                            final church = churchController.text.trim();
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final name = nameController.text.trim();
+                              final age = int.tryParse(ageController.text.trim());
+                              final church = churchController.text.trim();
 
                             if (name.isEmpty) {
                               setModalState(() {
@@ -901,9 +909,13 @@ class _HomeScreenState extends State<HomeScreen> {
                                 errorText = 'Falha ao atualizar o membro.';
                               });
                             }
-                          },
-                          icon: const Icon(Icons.save),
-                          label: const Text('Salvar alterações'),
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F5BFF),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Salvar'),
+                          ),
                         ),
                       ],
                     ),
@@ -1430,50 +1442,77 @@ class _HomeScreenState extends State<HomeScreen> {
                     ],
                     const SizedBox(height: 24),
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.end,
                       children: [
-                        OutlinedButton(
-                          onPressed: () => Navigator.of(dialogContext).pop(),
-                          child: const Text('Cancelar'),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: () async {
+                              final confirm = await _confirmDeleteTask();
+                              if (!confirm) return;
+                              try {
+                                widget.database.deleteTask(task.id);
+                                if (!mounted) return;
+                                Navigator.of(dialogContext).pop();
+                                _loadData();
+                              } catch (e) {
+                                _showMessage(
+                                  'Não foi possível excluir a tarefa.',
+                                );
+                              }
+                            },
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: const Color(0xFFDC2626),
+                            ),
+                            icon: const Icon(Icons.delete_outline),
+                            label: const Text('Excluir'),
+                          ),
                         ),
                         const SizedBox(width: 12),
-                        ElevatedButton(
-                          onPressed: () {
-                            final name = taskController.text.trim();
-                            if (name.isEmpty) {
-                              setModalState(() {
-                                errorText = 'Informe a descrição da tarefa.';
-                              });
-                              return;
-                            }
-                            if (limitByGender && selectedGender == null) {
-                              setModalState(() {
-                                errorText = 'Selecione o gênero.';
-                              });
-                              return;
-                            }
-
-                            try {
-                              widget.database.updateTask(
-                                id: task.id,
-                                name: name,
-                                genderConstraint: limitByGender
-                                    ? selectedGender
-                                    : null,
-                              );
-                              Navigator.of(dialogContext).pop();
-                              _loadData();
-                            } catch (e) {
-                              setModalState(() {
-                                errorText = 'Falha ao atualizar a tarefa.';
-                              });
-                            }
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF0F5BFF),
-                            foregroundColor: Colors.white,
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(),
+                            child: const Text('Cancelar'),
                           ),
-                          child: const Text('Salvar alterações'),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () {
+                              final name = taskController.text.trim();
+                              if (name.isEmpty) {
+                                setModalState(() {
+                                  errorText = 'Informe a descrição da tarefa.';
+                                });
+                                return;
+                              }
+                              if (limitByGender && selectedGender == null) {
+                                setModalState(() {
+                                  errorText = 'Selecione o gênero.';
+                                });
+                                return;
+                              }
+
+                              try {
+                                widget.database.updateTask(
+                                  id: task.id,
+                                  name: name,
+                                  genderConstraint: limitByGender
+                                      ? selectedGender
+                                      : null,
+                                );
+                                Navigator.of(dialogContext).pop();
+                                _loadData();
+                              } catch (e) {
+                                setModalState(() {
+                                  errorText = 'Falha ao atualizar a tarefa.';
+                                });
+                              }
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF0F5BFF),
+                              foregroundColor: Colors.white,
+                            ),
+                            child: const Text('Salvar'),
+                          ),
                         ),
                       ],
                     ),
@@ -1487,6 +1526,72 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     taskController.dispose();
+  }
+
+  Future<bool> _confirmDeleteTask() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Excluir tarefa',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                const Text(
+                  'Esta ação vai remover a tarefa e todas as atribuições associadas a ela.',
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text('Cancelar'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFFDC2626),
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('Excluir tarefa'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+
+    return confirmed ?? false;
   }
 
   @override

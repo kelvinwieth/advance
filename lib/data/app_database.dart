@@ -229,6 +229,24 @@ GROUP BY member_id;
     }
   }
 
+  void deleteTask(int id) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'DELETE FROM member_tasks WHERE task_id = ?;',
+        [id],
+      );
+      _db.execute(
+        'DELETE FROM tasks WHERE id = ?;',
+        [id],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void clearDatabase() {
     _db.execute('BEGIN IMMEDIATE');
     try {
