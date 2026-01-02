@@ -18,10 +18,13 @@ class MemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parts = member.name.trim().split(RegExp(r'\\s+')).where((part) => part.isNotEmpty);
-    final initials = parts.isNotEmpty
-        ? parts.map((part) => part[0]).take(2).join()
-        : '?';
+    final parts =
+        member.name.trim().split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    final initials = parts.isEmpty
+        ? '?'
+        : parts.length == 1
+            ? parts.first[0]
+            : '${parts.first[0]}${parts.last[0]}';
 
     final avatarBackgroundColor = member.gender == 'M'
         ? const Color(0xFFE8F0FF)
