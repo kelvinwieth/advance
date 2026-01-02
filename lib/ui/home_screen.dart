@@ -23,7 +23,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final DateFormat _dateFormat = DateFormat('dd / MM / yyyy', 'pt_BR');
+  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy', 'pt_BR');
   final DateFormat _weekdayFormat = DateFormat('EEEE', 'pt_BR');
 
   DateTime _selectedDate = DateTime.now();
@@ -137,6 +137,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
     final pdf = pw.Document(theme: theme);
     final dateLabel = _dateFormat.format(_selectedDate);
+    final weekdayLabel = _weekdayFormat.format(_selectedDate);
     final groups = <List<Task>>[];
     for (var i = 0; i < _tasks.length; i += 3) {
       groups.add(_tasks.sublist(i, (i + 3).clamp(0, _tasks.length)));
@@ -159,7 +160,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               pw.SizedBox(height: 6),
               pw.Text(
-                dateLabel,
+                '$dateLabel (${weekdayLabel[0].toUpperCase()}${weekdayLabel.substring(1)})',
                 style: pw.TextStyle(
                   fontSize: 14,
                   color: PdfColors.grey700,
