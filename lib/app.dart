@@ -36,6 +36,7 @@ class AvancoApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Avanço',
+      restorationScopeId: 'test',
       theme: ThemeData(
         colorScheme: colorScheme,
         useMaterial3: true,
