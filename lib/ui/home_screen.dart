@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:file_selector/file_selector.dart';
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -254,6 +255,130 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> _uploadMembersCsv() async {
+    final confirm = await _confirmCsvImport();
+    if (!confirm) return;
+
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'CSV', extensions: ['csv']),
+      ],
+    );
+    if (file == null) return;
+
+    try {
+      final content = await file.readAsString();
+      final members = _parseMembersCsv(content);
+      if (members.isEmpty) {
+        _showMessage('Nenhum membro válido encontrado no CSV.');
+        return;
+      }
+      widget.database.replaceMembers(members);
+      await _loadData();
+      _showMessage('Lista de membros importada.');
+    } catch (e) {
+      _showMessage('Falha ao importar CSV.');
+    }
+  }
+
+  List<Map<String, Object?>> _parseMembersCsv(String content) {
+    final lines = content
+        .split(RegExp(r'\r?\n'))
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
+    if (lines.isEmpty) return [];
+    final dataLines = lines.first.toLowerCase().startsWith('name,')
+        ? lines.sublist(1)
+        : lines;
+    final members = <Map<String, Object?>>[];
+    for (final line in dataLines) {
+      final parts = line.split(',');
+      if (parts.length < 4) continue;
+      final name = parts[0].trim();
+      final gender = parts[1].trim().toUpperCase();
+      final age = int.tryParse(parts[2].trim());
+      final church = parts.sublist(3).join(',').trim();
+      if (name.isEmpty || church.isEmpty) continue;
+      if (gender != 'M' && gender != 'F') continue;
+      if (age == null || age <= 0) continue;
+      members.add({
+        'name': name,
+        'gender': gender,
+        'age': age,
+        'church': church,
+      });
+    }
+    return members;
+  }
+
+  Future<bool> _confirmCsvImport() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Importar membros',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Esta ação vai substituir todos os membros atuais e remover '
+                  'todas as atribuições relacionadas.',
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  children: [
+                    Expanded(
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(false),
+                        child: const Text('Cancelar'),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF0F5BFF),
+                          foregroundColor: Colors.white,
+                        ),
+                        child: const Text('Importar'),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return confirmed ?? false;
   }
 
   Future<void> _exportDayPdf() async {
@@ -619,48 +744,50 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               final name = nameController.text.trim();
-                              final age = int.tryParse(ageController.text.trim());
+                              final age = int.tryParse(
+                                ageController.text.trim(),
+                              );
                               final church = churchController.text.trim();
 
-                            if (name.isEmpty) {
-                              setModalState(() {
-                                errorText = 'Informe o nome completo.';
-                              });
-                              return;
-                            }
-                            if (age == null || age <= 0) {
-                              setModalState(() {
-                                errorText = 'Informe uma idade válida.';
-                              });
-                              return;
-                            }
-                            if (church.isEmpty) {
-                              setModalState(() {
-                                errorText = 'Informe o nome da igreja.';
-                              });
-                              return;
-                            }
-                            if (selectedGender == null) {
-                              setModalState(() {
-                                errorText = 'Selecione o gênero.';
-                              });
-                              return;
-                            }
+                              if (name.isEmpty) {
+                                setModalState(() {
+                                  errorText = 'Informe o nome completo.';
+                                });
+                                return;
+                              }
+                              if (age == null || age <= 0) {
+                                setModalState(() {
+                                  errorText = 'Informe uma idade válida.';
+                                });
+                                return;
+                              }
+                              if (church.isEmpty) {
+                                setModalState(() {
+                                  errorText = 'Informe o nome da igreja.';
+                                });
+                                return;
+                              }
+                              if (selectedGender == null) {
+                                setModalState(() {
+                                  errorText = 'Selecione o gênero.';
+                                });
+                                return;
+                              }
 
-                            try {
-                              widget.database.insertMember(
-                                name: name,
-                                age: age,
-                                gender: selectedGender!,
-                                church: church,
-                              );
-                              Navigator.of(dialogContext).pop();
-                              _loadData();
-                            } catch (e) {
-                              setModalState(() {
-                                errorText = 'Falha ao salvar o membro.';
-                              });
-                            }
+                              try {
+                                widget.database.insertMember(
+                                  name: name,
+                                  age: age,
+                                  gender: selectedGender!,
+                                  church: church,
+                                );
+                                Navigator.of(dialogContext).pop();
+                                _loadData();
+                              } catch (e) {
+                                setModalState(() {
+                                  errorText = 'Falha ao salvar o membro.';
+                                });
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0F5BFF),
@@ -866,49 +993,51 @@ class _HomeScreenState extends State<HomeScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               final name = nameController.text.trim();
-                              final age = int.tryParse(ageController.text.trim());
+                              final age = int.tryParse(
+                                ageController.text.trim(),
+                              );
                               final church = churchController.text.trim();
 
-                            if (name.isEmpty) {
-                              setModalState(() {
-                                errorText = 'Informe o nome completo.';
-                              });
-                              return;
-                            }
-                            if (age == null || age <= 0) {
-                              setModalState(() {
-                                errorText = 'Informe uma idade válida.';
-                              });
-                              return;
-                            }
-                            if (church.isEmpty) {
-                              setModalState(() {
-                                errorText = 'Informe o nome da igreja.';
-                              });
-                              return;
-                            }
-                            if (selectedGender == null) {
-                              setModalState(() {
-                                errorText = 'Selecione o gênero.';
-                              });
-                              return;
-                            }
+                              if (name.isEmpty) {
+                                setModalState(() {
+                                  errorText = 'Informe o nome completo.';
+                                });
+                                return;
+                              }
+                              if (age == null || age <= 0) {
+                                setModalState(() {
+                                  errorText = 'Informe uma idade válida.';
+                                });
+                                return;
+                              }
+                              if (church.isEmpty) {
+                                setModalState(() {
+                                  errorText = 'Informe o nome da igreja.';
+                                });
+                                return;
+                              }
+                              if (selectedGender == null) {
+                                setModalState(() {
+                                  errorText = 'Selecione o gênero.';
+                                });
+                                return;
+                              }
 
-                            try {
-                              widget.database.updateMember(
-                                id: member.id,
-                                name: name,
-                                age: age,
-                                gender: selectedGender!,
-                                church: church,
-                              );
-                              Navigator.of(dialogContext).pop();
-                              _loadData();
-                            } catch (e) {
-                              setModalState(() {
-                                errorText = 'Falha ao atualizar o membro.';
-                              });
-                            }
+                              try {
+                                widget.database.updateMember(
+                                  id: member.id,
+                                  name: name,
+                                  age: age,
+                                  gender: selectedGender!,
+                                  church: church,
+                                );
+                                Navigator.of(dialogContext).pop();
+                                _loadData();
+                              } catch (e) {
+                                setModalState(() {
+                                  errorText = 'Falha ao atualizar o membro.';
+                                });
+                              }
                             },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFF0F5BFF),
@@ -1875,13 +2004,21 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              SizedBox(
-                width: double.maxFinite,
-                child: OutlinedButton.icon(
-                  onPressed: _openAddMemberDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Adicionar membro'),
-                ),
+              Row(
+                children: [
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: _openAddMemberDialog,
+                      icon: const Icon(Icons.add),
+                      label: const Text('Adicionar'),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  OutlinedButton(
+                    onPressed: _uploadMembersCsv,
+                    child: const Icon(Icons.folder_open),
+                  ),
+                ],
               ),
             ],
           ),

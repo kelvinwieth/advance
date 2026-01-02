@@ -247,6 +247,29 @@ GROUP BY member_id;
     }
   }
 
+  void replaceMembers(List<Map<String, Object?>> members) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute('DELETE FROM member_tasks;');
+      _db.execute('DELETE FROM members;');
+      for (final member in members) {
+        _db.execute(
+          'INSERT INTO members (name, age, gender, church) VALUES (?, ?, ?, ?);',
+          [
+            member['name'],
+            member['age'],
+            member['gender'],
+            member['church'],
+          ],
+        );
+      }
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void clearDatabase() {
     _db.execute('BEGIN IMMEDIATE');
     try {
