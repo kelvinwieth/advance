@@ -977,6 +977,26 @@ class _HomeScreenState extends State<HomeScreen> {
               onClose: () => Navigator.of(dialogContext).pop(),
               actions: [
                 Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final confirm = await _confirmDeleteMember();
+                      if (!confirm) return;
+                      try {
+                        widget.database.deleteMember(member.id);
+                        if (!mounted) return;
+                        Navigator.of(dialogContext).pop();
+                        _loadData();
+                      } catch (e) {
+                        _showMessage('Não foi possível excluir o membro.');
+                      }
+                    },
+                    style: AppDialog.destructiveStyle(),
+                    icon: const Icon(Icons.delete_outline),
+                    label: const Text('Excluir'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
                   child: OutlinedButton(
                     onPressed: () => Navigator.of(dialogContext).pop(),
                     style: AppDialog.outlinedStyle(),
@@ -1178,6 +1198,41 @@ class _HomeScreenState extends State<HomeScreen> {
     nameController.dispose();
     ageController.dispose();
     churchController.dispose();
+  }
+
+  Future<bool> _confirmDeleteMember() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Excluir membro',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          child: const Text(
+            'Esta ação vai remover o membro e todas as atribuições associadas.',
+          ),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.destructiveStyle(),
+                child: const Text('Excluir membro'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
   }
 
   Future<void> _confirmClearDatabase() async {
