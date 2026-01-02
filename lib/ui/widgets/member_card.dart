@@ -59,16 +59,24 @@ class MemberCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 4),
-                  Text(
-                    'Age: ${member.age}',
-                    style: TextStyle(
-                      color: Colors.black54,
-                      fontSize: dense ? 12 : 13,
-                    ),
+                Text(
+                  'Age: ${member.age}',
+                  style: TextStyle(
+                    color: Colors.black54,
+                    fontSize: dense ? 12 : 13,
                   ),
-                ],
-              ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  member.church,
+                  style: TextStyle(
+                    color: Colors.black45,
+                    fontSize: dense ? 11 : 12,
+                  ),
+                ),
+              ],
             ),
+          ),
             if (showStatus)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

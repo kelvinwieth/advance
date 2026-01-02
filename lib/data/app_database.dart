@@ -27,7 +27,8 @@ CREATE TABLE IF NOT EXISTS members (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
   age INTEGER NOT NULL CHECK (age > 0),
-  gender TEXT NOT NULL CHECK (gender IN ('M', 'F'))
+  gender TEXT NOT NULL CHECK (gender IN ('M', 'F')),
+  church TEXT NOT NULL CHECK (length(church) > 0)
 );
 ''');
       db.execute('''
@@ -76,6 +77,11 @@ BEGIN
     END;
 END;
 ''');
+      final columns = db.select('PRAGMA table_info(members);');
+      final hasChurch = columns.any((row) => row['name'] == 'church');
+      if (!hasChurch) {
+        db.execute('ALTER TABLE members ADD COLUMN church TEXT NOT NULL DEFAULT \"\";');
+      }
       db.execute('COMMIT');
     } catch (e) {
       db.execute('ROLLBACK');
@@ -84,7 +90,7 @@ END;
   }
 
   List<Member> fetchMembers() {
-    final result = _db.select('SELECT id, name, age, gender FROM members ORDER BY name;');
+    final result = _db.select('SELECT id, name, age, gender, church FROM members ORDER BY name;');
     return result.map((row) => Member.fromRow(row)).toList();
   }
 
@@ -101,7 +107,8 @@ SELECT
   m.id AS member_id,
   m.name AS member_name,
   m.age AS member_age,
-  m.gender AS member_gender
+  m.gender AS member_gender,
+  m.church AS member_church
 FROM member_tasks mt
 JOIN members m ON m.id = mt.member_id
 WHERE mt.date = ?
@@ -138,12 +145,13 @@ ORDER BY m.name;
     required String name,
     required int age,
     required String gender,
+    required String church,
   }) {
     _db.execute('BEGIN IMMEDIATE');
     try {
       _db.execute(
-        'INSERT INTO members (name, age, gender) VALUES (?, ?, ?);',
-        [name, age, gender],
+        'INSERT INTO members (name, age, gender, church) VALUES (?, ?, ?, ?);',
+        [name, age, gender, church],
       );
       _db.execute('COMMIT');
     } catch (e) {
@@ -157,12 +165,13 @@ ORDER BY m.name;
     required String name,
     required int age,
     required String gender,
+    required String church,
   }) {
     _db.execute('BEGIN IMMEDIATE');
     try {
       _db.execute(
-        'UPDATE members SET name = ?, age = ?, gender = ? WHERE id = ?;',
-        [name, age, gender, id],
+        'UPDATE members SET name = ?, age = ?, gender = ?, church = ? WHERE id = ?;',
+        [name, age, gender, church, id],
       );
       _db.execute('COMMIT');
     } catch (e) {
@@ -241,37 +250,37 @@ ORDER BY m.name;
     _db.execute('BEGIN IMMEDIATE');
     try {
       _db.execute('''
-INSERT INTO members (name, age, gender) VALUES
-  ('Joao Silva', 24, 'M'),
-  ('Maria Souza', 22, 'F'),
-  ('Pedro Lima', 28, 'M'),
-  ('Ana Costa', 26, 'F'),
-  ('Lucas Mendes', 21, 'M'),
-  ('Beatriz Ramos', 27, 'F'),
-  ('Gabriel Rocha', 23, 'M'),
-  ('Larissa Almeida', 25, 'F'),
-  ('Rafael Oliveira', 29, 'M'),
-  ('Juliana Barros', 24, 'F'),
-  ('Matheus Ferreira', 20, 'M'),
-  ('Carla Nunes', 31, 'F'),
-  ('Bruno Cardoso', 27, 'M'),
-  ('Paula Pereira', 23, 'F'),
-  ('Diego Martins', 26, 'M'),
-  ('Fernanda Dias', 28, 'F'),
-  ('Tiago Araujo', 30, 'M'),
-  ('Camila Teixeira', 22, 'F'),
-  ('Henrique Melo', 25, 'M'),
-  ('Mariana Pires', 29, 'F'),
-  ('Andre Ribeiro', 24, 'M'),
-  ('Patricia Sousa', 33, 'F'),
-  ('Felipe Santos', 21, 'M'),
-  ('Aline Brito', 27, 'F'),
-  ('Eduardo Castro', 32, 'M'),
-  ('Renata Farias', 26, 'F'),
-  ('Vitor Moreira', 23, 'M'),
-  ('Isabela Lopes', 24, 'F'),
-  ('Leandro Freitas', 28, 'M'),
-  ('Tatiana Cunha', 30, 'F');
+INSERT INTO members (name, age, gender, church) VALUES
+  ('Joao Silva', 24, 'M', 'Joao Pessoa'),
+  ('Maria Souza', 22, 'F', 'Campina Grande'),
+  ('Pedro Lima', 28, 'M', 'Santa Rita'),
+  ('Ana Costa', 26, 'F', 'Bayeux'),
+  ('Lucas Mendes', 21, 'M', 'Patos'),
+  ('Beatriz Ramos', 27, 'F', 'Cabedelo'),
+  ('Gabriel Rocha', 23, 'M', 'Sousa'),
+  ('Larissa Almeida', 25, 'F', 'Cajazeiras'),
+  ('Rafael Oliveira', 29, 'M', 'Guarabira'),
+  ('Juliana Barros', 24, 'F', 'Itabaiana'),
+  ('Matheus Ferreira', 20, 'M', 'Mamanguape'),
+  ('Carla Nunes', 31, 'F', 'Pombal'),
+  ('Bruno Cardoso', 27, 'M', 'Sape'),
+  ('Paula Pereira', 23, 'F', 'Esperanca'),
+  ('Diego Martins', 26, 'M', 'Bananeiras'),
+  ('Fernanda Dias', 28, 'F', 'Solanea'),
+  ('Tiago Araujo', 30, 'M', 'Alagoa Grande'),
+  ('Camila Teixeira', 22, 'F', 'Queimadas'),
+  ('Henrique Melo', 25, 'M', 'Lagoa Seca'),
+  ('Mariana Pires', 29, 'F', 'Alhandra'),
+  ('Andre Ribeiro', 24, 'M', 'Caapora'),
+  ('Patricia Sousa', 33, 'F', 'Pedras de Fogo'),
+  ('Felipe Santos', 21, 'M', 'Conde'),
+  ('Aline Brito', 27, 'F', 'Rio Tinto'),
+  ('Eduardo Castro', 32, 'M', 'Cruz do Espirito Santo'),
+  ('Renata Farias', 26, 'F', 'Areia'),
+  ('Vitor Moreira', 23, 'M', 'Arara'),
+  ('Isabela Lopes', 24, 'F', 'Catole do Rocha'),
+  ('Leandro Freitas', 28, 'M', 'Itaporanga'),
+  ('Tatiana Cunha', 30, 'F', 'Princesa Isabel');
 ''');
       _db.execute('''
 INSERT INTO tasks (name, gender_constraint) VALUES

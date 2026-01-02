@@ -123,6 +123,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _openAddMemberDialog() async {
     final nameController = TextEditingController();
     final ageController = TextEditingController();
+    final churchController = TextEditingController();
     String? selectedGender;
     String? errorText;
 
@@ -246,6 +247,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Church',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: churchController,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Joao Pessoa',
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                     if (errorText != null) ...[
                       const SizedBox(height: 12),
                       Text(
@@ -269,6 +288,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             final name = nameController.text.trim();
                             final age = int.tryParse(ageController.text.trim());
+                            final church = churchController.text.trim();
 
                             if (name.isEmpty) {
                               setModalState(() {
@@ -279,6 +299,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (age == null || age <= 0) {
                               setModalState(() {
                                 errorText = 'Please enter a valid age.';
+                              });
+                              return;
+                            }
+                            if (church.isEmpty) {
+                              setModalState(() {
+                                errorText = 'Please enter a church name.';
                               });
                               return;
                             }
@@ -294,6 +320,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 name: name,
                                 age: age,
                                 gender: selectedGender!,
+                                church: church,
                               );
                               Navigator.of(dialogContext).pop();
                               _loadData();
@@ -319,11 +346,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
     nameController.dispose();
     ageController.dispose();
+    churchController.dispose();
   }
 
   Future<void> _openEditMemberDialog(Member member) async {
     final nameController = TextEditingController(text: member.name);
     final ageController = TextEditingController(text: member.age.toString());
+    final churchController = TextEditingController(text: member.church);
     String? selectedGender = member.gender;
     String? errorText;
 
@@ -447,6 +476,24 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Church',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: churchController,
+                      decoration: InputDecoration(
+                        hintText: 'e.g. Joao Pessoa',
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
                     if (errorText != null) ...[
                       const SizedBox(height: 12),
                       Text(
@@ -470,6 +517,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onPressed: () {
                             final name = nameController.text.trim();
                             final age = int.tryParse(ageController.text.trim());
+                            final church = churchController.text.trim();
 
                             if (name.isEmpty) {
                               setModalState(() {
@@ -480,6 +528,12 @@ class _HomeScreenState extends State<HomeScreen> {
                             if (age == null || age <= 0) {
                               setModalState(() {
                                 errorText = 'Please enter a valid age.';
+                              });
+                              return;
+                            }
+                            if (church.isEmpty) {
+                              setModalState(() {
+                                errorText = 'Please enter a church name.';
                               });
                               return;
                             }
@@ -496,6 +550,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 name: name,
                                 age: age,
                                 gender: selectedGender!,
+                                church: church,
                               );
                               Navigator.of(dialogContext).pop();
                               _loadData();
@@ -521,6 +576,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     nameController.dispose();
     ageController.dispose();
+    churchController.dispose();
   }
 
   Future<void> _confirmClearDatabase() async {

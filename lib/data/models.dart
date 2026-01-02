@@ -3,12 +3,14 @@ class Member {
   final String name;
   final int age;
   final String gender;
+  final String church;
 
   const Member({
     required this.id,
     required this.name,
     required this.age,
     required this.gender,
+    required this.church,
   });
 
   factory Member.fromRow(Map<String, Object?> row) {
@@ -17,6 +19,7 @@ class Member {
       name: row['name'] as String,
       age: row['age'] as int,
       gender: row['gender'] as String,
+      church: row['church'] as String,
     );
   }
 }
@@ -61,6 +64,7 @@ class TaskAssignment {
         name: row['member_name'] as String,
         age: row['member_age'] as int,
         gender: row['member_gender'] as String,
+        church: row['member_church'] as String,
       ),
     );
   }
