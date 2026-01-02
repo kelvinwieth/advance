@@ -521,25 +521,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
-                              Row(
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  Radio<String>(
-                                    value: 'M',
-                                    groupValue: selectedGender,
-                                    onChanged: (value) => setModalState(() {
-                                      selectedGender = value;
-                                    }),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Radio<String>(
+                                        value: 'M',
+                                        groupValue: selectedGender,
+                                        onChanged: (value) => setModalState(() {
+                                          selectedGender = value;
+                                        }),
+                                      ),
+                                      const Text('Masculino'),
+                                    ],
                                   ),
-                                  const Text('Masculino'),
-                                  const SizedBox(width: 12),
-                                  Radio<String>(
-                                    value: 'F',
-                                    groupValue: selectedGender,
-                                    onChanged: (value) => setModalState(() {
-                                      selectedGender = value;
-                                    }),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Radio<String>(
+                                        value: 'F',
+                                        groupValue: selectedGender,
+                                        onChanged: (value) => setModalState(() {
+                                          selectedGender = value;
+                                        }),
+                                      ),
+                                      const Text('Feminino'),
+                                    ],
                                   ),
-                                  const Text('Feminino'),
                                 ],
                               ),
                             ],
@@ -750,25 +762,37 @@ class _HomeScreenState extends State<HomeScreen> {
                                 style: TextStyle(fontWeight: FontWeight.w600),
                               ),
                               const SizedBox(height: 8),
-                              Row(
+                              Wrap(
+                                spacing: 12,
+                                runSpacing: 8,
+                                crossAxisAlignment: WrapCrossAlignment.center,
                                 children: [
-                                  Radio<String>(
-                                    value: 'M',
-                                    groupValue: selectedGender,
-                                    onChanged: (value) => setModalState(() {
-                                      selectedGender = value;
-                                    }),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Radio<String>(
+                                        value: 'M',
+                                        groupValue: selectedGender,
+                                        onChanged: (value) => setModalState(() {
+                                          selectedGender = value;
+                                        }),
+                                      ),
+                                      const Text('Masculino'),
+                                    ],
                                   ),
-                                  const Text('Masculino'),
-                                  const SizedBox(width: 12),
-                                  Radio<String>(
-                                    value: 'F',
-                                    groupValue: selectedGender,
-                                    onChanged: (value) => setModalState(() {
-                                      selectedGender = value;
-                                    }),
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Radio<String>(
+                                        value: 'F',
+                                        groupValue: selectedGender,
+                                        onChanged: (value) => setModalState(() {
+                                          selectedGender = value;
+                                        }),
+                                      ),
+                                      const Text('Feminino'),
+                                    ],
                                   ),
-                                  const Text('Feminino'),
                                 ],
                               ),
                             ],
