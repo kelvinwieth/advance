@@ -188,6 +188,24 @@ ORDER BY m.name;
     }
   }
 
+  void updateTask({
+    required int id,
+    required String name,
+    required String? genderConstraint,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'UPDATE tasks SET name = ?, gender_constraint = ? WHERE id = ?;',
+        [name, genderConstraint, id],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void clearDatabase() {
     _db.execute('BEGIN IMMEDIATE');
     try {

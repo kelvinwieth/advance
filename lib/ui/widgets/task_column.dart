@@ -9,6 +9,7 @@ class TaskColumn extends StatelessWidget {
   final List<TaskAssignment> assignments;
   final void Function(Member member) onMemberDropped;
   final void Function(Member member)? onMemberDoubleTap;
+  final VoidCallback? onTaskDoubleTap;
 
   const TaskColumn({
     super.key,
@@ -17,6 +18,7 @@ class TaskColumn extends StatelessWidget {
     required this.assignments,
     required this.onMemberDropped,
     this.onMemberDoubleTap,
+    this.onTaskDoubleTap,
   });
 
   @override
@@ -40,41 +42,44 @@ class TaskColumn extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: accentColor,
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      task.name,
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+              GestureDetector(
+                onDoubleTap: onTaskDoubleTap,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: accentColor,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F2F6),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      assignments.length.toString(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        task.name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF1F2F6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Text(
+                        assignments.length.toString(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               if (assignments.isEmpty)

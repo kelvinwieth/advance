@@ -864,6 +864,216 @@ class _HomeScreenState extends State<HomeScreen> {
     taskController.dispose();
   }
 
+  Future<void> _openEditTaskDialog(Task task) async {
+    final taskController = TextEditingController(text: task.name);
+    bool limitByGender = task.genderConstraint != null;
+    String? selectedGender = task.genderConstraint;
+    String? errorText;
+
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Dialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Container(
+                width: 440,
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Text(
+                          'Edit Task',
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                        const Spacer(),
+                        IconButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Update the backstage task details.',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 16),
+                    const Text(
+                      'Task Description',
+                      style: TextStyle(fontWeight: FontWeight.w600),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      controller: taskController,
+                      decoration: InputDecoration(
+                        hintText: 'e.g., Organize welcome kits',
+                        filled: true,
+                        fillColor: const Color(0xFFF7F8FB),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                          borderSide: BorderSide.none,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F8FB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE5E7EB)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: limitByGender,
+                                onChanged: (value) {
+                                  setModalState(() {
+                                    limitByGender = value ?? false;
+                                    if (!limitByGender) {
+                                      selectedGender = null;
+                                    }
+                                  });
+                                },
+                              ),
+                              const Text(
+                                'Limit assignment by gender',
+                                style: TextStyle(fontWeight: FontWeight.w600),
+                              ),
+                            ],
+                          ),
+                          if (limitByGender) ...[
+                            const SizedBox(height: 8),
+                            const Text(
+                              'SELECT GENDER',
+                              style: TextStyle(
+                                fontSize: 11,
+                                letterSpacing: 1.2,
+                                color: Colors.black54,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => setModalState(() {
+                                      selectedGender = 'M';
+                                    }),
+                                    icon: const Icon(Icons.male),
+                                    label: const Text('Male Only'),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: selectedGender == 'M'
+                                          ? const Color(0xFFE8F0FF)
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: OutlinedButton.icon(
+                                    onPressed: () => setModalState(() {
+                                      selectedGender = 'F';
+                                    }),
+                                    icon: const Icon(Icons.female),
+                                    label: const Text('Female Only'),
+                                    style: OutlinedButton.styleFrom(
+                                      backgroundColor: selectedGender == 'F'
+                                          ? const Color(0xFFE8F0FF)
+                                          : null,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        errorText!,
+                        style: const TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        OutlinedButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: const Text('Cancel'),
+                        ),
+                        const SizedBox(width: 12),
+                        ElevatedButton(
+                          onPressed: () {
+                            final name = taskController.text.trim();
+                            if (name.isEmpty) {
+                              setModalState(() {
+                                errorText = 'Please enter a task description.';
+                              });
+                              return;
+                            }
+                            if (limitByGender && selectedGender == null) {
+                              setModalState(() {
+                                errorText = 'Please choose a gender.';
+                              });
+                              return;
+                            }
+
+                            try {
+                              widget.database.updateTask(
+                                id: task.id,
+                                name: name,
+                                genderConstraint: limitByGender ? selectedGender : null,
+                              );
+                              Navigator.of(dialogContext).pop();
+                              _loadData();
+                            } catch (e) {
+                              setModalState(() {
+                                errorText = 'Failed to update task.';
+                              });
+                            }
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF0F5BFF),
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Save Changes'),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    taskController.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -1101,6 +1311,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           assignments: assignments,
                           onMemberDropped: (member) => _handleDrop(task, member),
                           onMemberDoubleTap: _openEditMemberDialog,
+                          onTaskDoubleTap: () => _openEditTaskDialog(task),
                         ),
                       );
                     },
