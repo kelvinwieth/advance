@@ -1978,6 +1978,11 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         actions: [
+          IconButton(
+            tooltip: 'Salvar PDF',
+            onPressed: _exportDayPdf,
+            icon: const Icon(Icons.picture_as_pdf),
+          ),
           PopupMenuButton<String>(
             icon: const Icon(Icons.settings),
             onSelected: (value) {
@@ -2423,51 +2428,56 @@ class _HomeScreenState extends State<HomeScreen> {
                   onPressed: () => _changeDate(1),
                   icon: const Icon(Icons.chevron_right),
                 ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _exportDayPdf,
-                  icon: const Icon(Icons.picture_as_pdf),
-                  label: const Text('Salvar PDF'),
-                ),
-                const SizedBox(width: 8),
-                OutlinedButton.icon(
-                  onPressed: _openAddTaskDialog,
-                  icon: const Icon(Icons.add),
-                  label: const Text('Adicionar tarefa'),
-                ),
               ],
             ),
           ),
           const SizedBox(height: 16),
           Expanded(
-            child: _tasks.isEmpty
-                ? const Center(child: Text('Nenhuma tarefa cadastrada.'))
-                : ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: _tasks.length,
-                    separatorBuilder: (_, __) => const SizedBox(width: 16),
-                    itemBuilder: (context, index) {
-                      final task = _tasks[index];
-                      final assignments = _assignments[task.id] ?? [];
-                      final color = accentColors[index % accentColors.length];
+            child: Stack(
+              children: [
+                Positioned.fill(
+                  child: _tasks.isEmpty
+                      ? const Center(child: Text('Nenhuma tarefa cadastrada.'))
+                      : ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          itemCount: _tasks.length,
+                          separatorBuilder: (_, __) =>
+                              const SizedBox(width: 16),
+                          itemBuilder: (context, index) {
+                            final task = _tasks[index];
+                            final assignments = _assignments[task.id] ?? [];
+                            final color =
+                                accentColors[index % accentColors.length];
 
-                      return SizedBox(
-                        width: 280,
-                        child: TaskColumn(
-                          task: task,
-                          accentColor: color,
-                          assignments: assignments,
-                          onMemberDropped: (member) =>
-                              _handleDrop(task, member),
-                          onMoveAssignment: _handleMoveAssignment,
-                          onMemberDoubleTap: _openEditMemberDialog,
-                          onTaskDoubleTap: () => _openEditTaskDialog(task),
-                          onRemoveAssignment: _handleRemoveAssignment,
-                          taskCounts: _taskCounts,
+                            return SizedBox(
+                              width: 280,
+                              child: TaskColumn(
+                                task: task,
+                                accentColor: color,
+                                assignments: assignments,
+                                onMemberDropped: (member) =>
+                                    _handleDrop(task, member),
+                                onMoveAssignment: _handleMoveAssignment,
+                                onMemberDoubleTap: _openEditMemberDialog,
+                                onTaskDoubleTap: () =>
+                                    _openEditTaskDialog(task),
+                                onRemoveAssignment: _handleRemoveAssignment,
+                                taskCounts: _taskCounts,
+                              ),
+                            );
+                          },
                         ),
-                      );
-                    },
+                ),
+                Positioned(
+                  right: 12,
+                  bottom: 12,
+                  child: FloatingActionButton(
+                    onPressed: _openAddTaskDialog,
+                    child: const Icon(Icons.add),
                   ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
