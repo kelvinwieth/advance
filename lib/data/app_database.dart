@@ -246,12 +246,12 @@ ORDER BY m.name;
     }
   }
 
-  void insertMockData() {
+  void insertMockData({required String isoDate}) {
     _db.execute('BEGIN IMMEDIATE');
     try {
       _db.execute('''
 INSERT INTO members (name, age, gender, church) VALUES
-  ('Joao Silva', 24, 'M', 'Joao Pessoa'),
+  ('João Silva', 24, 'M', 'João Pessoa'),
   ('Maria Souza', 22, 'F', 'Campina Grande'),
   ('Pedro Lima', 28, 'M', 'Santa Rita'),
   ('Ana Costa', 26, 'F', 'Bayeux'),
@@ -264,35 +264,81 @@ INSERT INTO members (name, age, gender, church) VALUES
   ('Matheus Ferreira', 20, 'M', 'Mamanguape'),
   ('Carla Nunes', 31, 'F', 'Pombal'),
   ('Bruno Cardoso', 27, 'M', 'Sape'),
-  ('Paula Pereira', 23, 'F', 'Esperanca'),
+  ('Paula Pereira', 23, 'F', 'Esperança'),
   ('Diego Martins', 26, 'M', 'Bananeiras'),
-  ('Fernanda Dias', 28, 'F', 'Solanea'),
+  ('Fernanda Dias', 28, 'F', 'Solânea'),
   ('Tiago Araujo', 30, 'M', 'Alagoa Grande'),
   ('Camila Teixeira', 22, 'F', 'Queimadas'),
   ('Henrique Melo', 25, 'M', 'Lagoa Seca'),
   ('Mariana Pires', 29, 'F', 'Alhandra'),
-  ('Andre Ribeiro', 24, 'M', 'Caapora'),
-  ('Patricia Sousa', 33, 'F', 'Pedras de Fogo'),
+  ('André Ribeiro', 24, 'M', 'Caaporã'),
+  ('Patrícia Sousa', 33, 'F', 'Pedras de Fogo'),
   ('Felipe Santos', 21, 'M', 'Conde'),
   ('Aline Brito', 27, 'F', 'Rio Tinto'),
-  ('Eduardo Castro', 32, 'M', 'Cruz do Espirito Santo'),
+  ('Eduardo Castro', 32, 'M', 'Cruz do Espírito Santo'),
   ('Renata Farias', 26, 'F', 'Areia'),
-  ('Vitor Moreira', 23, 'M', 'Arara'),
-  ('Isabela Lopes', 24, 'F', 'Catole do Rocha'),
+  ('Vítor Moreira', 23, 'M', 'Arara'),
+  ('Isabela Lopes', 24, 'F', 'Catolé do Rocha'),
   ('Leandro Freitas', 28, 'M', 'Itaporanga'),
   ('Tatiana Cunha', 30, 'F', 'Princesa Isabel');
 ''');
       _db.execute('''
 INSERT INTO tasks (name, gender_constraint) VALUES
-  ('Lavar Louca', NULL),
-  ('Limpar Salao', NULL),
+  ('Lavar Louça', NULL),
+  ('Limpar Salão', NULL),
   ('Preparar Jantar', NULL),
-  ('Recepcao', NULL),
+  ('Recepção', NULL),
   ('Organizar Materiais', NULL),
-  ('Som e Midia', 'M'),
-  ('Decoracao', 'F'),
-  ('Apoio Logistico', NULL);
+  ('Som e Mídia', 'M'),
+  ('Decoração', 'F'),
+  ('Apoio Logístico', NULL);
 ''');
+
+      final memberRows = _db.select(
+        'SELECT id, gender FROM members ORDER BY id DESC LIMIT 30;',
+      );
+      final taskRows = _db.select(
+        'SELECT id, gender_constraint FROM tasks ORDER BY id DESC LIMIT 8;',
+      );
+      final maleIds = <int>[];
+      final femaleIds = <int>[];
+      final allIds = <int>[];
+
+      for (final row in memberRows.reversed) {
+        final id = row['id'] as int;
+        final gender = row['gender'] as String;
+        allIds.add(id);
+        if (gender == 'M') {
+          maleIds.add(id);
+        } else if (gender == 'F') {
+          femaleIds.add(id);
+        }
+      }
+
+      if (allIds.isNotEmpty && taskRows.isNotEmpty) {
+        final tasks = taskRows.reversed.toList();
+        for (var t = 0; t < tasks.length; t += 1) {
+          final taskId = tasks[t]['id'] as int;
+          final constraint = tasks[t]['gender_constraint'] as String?;
+          final pool = constraint == 'M'
+              ? maleIds
+              : constraint == 'F'
+                  ? femaleIds
+                  : allIds;
+
+          if (pool.isEmpty) continue;
+
+          final count = (2 + (t % 4)).clamp(2, pool.length); // 2..5
+          for (var j = 0; j < count; j += 1) {
+            final memberId = pool[(t * 5 + j) % pool.length];
+            _db.execute(
+              'INSERT OR IGNORE INTO member_tasks (member_id, task_id, date) VALUES (?, ?, ?);',
+              [memberId, taskId, isoDate],
+            );
+          }
+        }
+      }
+
       _db.execute('COMMIT');
     } catch (e) {
       _db.execute('ROLLBACK');

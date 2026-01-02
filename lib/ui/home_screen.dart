@@ -1,10 +1,9 @@
 import 'dart:io';
 
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import 'package:path/path.dart' as p;
-import 'package:path_provider/path_provider.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -226,8 +225,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final bytes = await pdf.save();
     final filename = 'avanco-${DateFormat('yyyy-MM-dd').format(_selectedDate)}.pdf';
-    final dir = await getApplicationDocumentsDirectory();
-    final file = File(p.join(dir.path, filename));
+    final saveLocation = await getSaveLocation(
+      suggestedName: filename,
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'PDF', extensions: ['pdf']),
+      ],
+    );
+    if (saveLocation == null) {
+      _showMessage('Exportacao cancelada.');
+      return;
+    }
+
+    final file = File(saveLocation.path);
     await file.writeAsBytes(bytes);
     await _openFile(file.path);
     _showMessage('PDF salvo em ${file.path}');
@@ -865,7 +874,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirmed == true) {
       try {
-        widget.database.insertMockData();
+        widget.database.insertMockData(isoDate: _isoDate(_selectedDate));
         await _loadData();
         _showMessage('Dados de teste adicionados.');
       } catch (e) {
