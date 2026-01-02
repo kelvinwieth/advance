@@ -260,6 +260,29 @@ GROUP BY member_id;
     }
   }
 
+  void moveAssignment({
+    required int memberId,
+    required int fromTaskId,
+    required int toTaskId,
+    required String isoDate,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'DELETE FROM member_tasks WHERE member_id = ? AND task_id = ? AND date = ?;',
+        [memberId, fromTaskId, isoDate],
+      );
+      _db.execute(
+        'INSERT INTO member_tasks (member_id, task_id, date) VALUES (?, ?, ?);',
+        [memberId, toTaskId, isoDate],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void insertMockData({required String isoDate}) {
     _db.execute('BEGIN IMMEDIATE');
     try {

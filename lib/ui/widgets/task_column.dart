@@ -8,6 +8,7 @@ class TaskColumn extends StatefulWidget {
   final Color accentColor;
   final List<TaskAssignment> assignments;
   final void Function(Member member) onMemberDropped;
+  final void Function(int memberId, int fromTaskId, int toTaskId)? onMoveAssignment;
   final void Function(Member member)? onMemberDoubleTap;
   final VoidCallback? onTaskDoubleTap;
   final void Function(int memberId, int taskId)? onRemoveAssignment;
@@ -19,6 +20,7 @@ class TaskColumn extends StatefulWidget {
     required this.accentColor,
     required this.assignments,
     required this.onMemberDropped,
+    this.onMoveAssignment,
     this.onMemberDoubleTap,
     this.onTaskDoubleTap,
     this.onRemoveAssignment,
@@ -52,8 +54,16 @@ class _TaskColumnState extends State<TaskColumn> {
             ? 'Somente mulheres'
             : null;
 
-    return DragTarget<Member>(
-      onAcceptWithDetails: (details) => widget.onMemberDropped(details.data),
+    return DragTarget<Object>(
+      onAcceptWithDetails: (details) {
+        final data = details.data;
+        if (data is Member) {
+          widget.onMemberDropped(data);
+        } else if (data is AssignmentDragData) {
+          if (data.taskId == widget.task.id) return;
+          widget.onMoveAssignment?.call(data.memberId, data.taskId, widget.task.id);
+        }
+      },
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
 
@@ -165,8 +175,8 @@ class _TaskColumnState extends State<TaskColumn> {
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final assignment = widget.assignments[index];
-                      return Draggable<_AssignmentDragData>(
-                        data: _AssignmentDragData(
+                      return Draggable<AssignmentDragData>(
+                        data: AssignmentDragData(
                           memberId: assignment.member.id,
                           taskId: assignment.taskId,
                         ),
@@ -212,7 +222,7 @@ class _TaskColumnState extends State<TaskColumn> {
               AnimatedSwitcher(
                 duration: const Duration(milliseconds: 150),
                 child: _showRemoveZone
-                    ? DragTarget<_AssignmentDragData>(
+                    ? DragTarget<AssignmentDragData>(
                         onAcceptWithDetails: (details) {
                           final data = details.data;
                           if (widget.onRemoveAssignment != null && data.taskId == widget.task.id) {
@@ -260,11 +270,11 @@ class _TaskColumnState extends State<TaskColumn> {
   }
 }
 
-class _AssignmentDragData {
+class AssignmentDragData {
   final int memberId;
   final int taskId;
 
-  const _AssignmentDragData({
+  const AssignmentDragData({
     required this.memberId,
     required this.taskId,
   });

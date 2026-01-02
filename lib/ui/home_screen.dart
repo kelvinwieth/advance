@@ -123,6 +123,52 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _handleMoveAssignment(int memberId, int fromTaskId, int toTaskId) {
+    if (fromTaskId == toTaskId) return;
+    Member? member;
+    for (final entry in _members) {
+      if (entry.id == memberId) {
+        member = entry;
+        break;
+      }
+    }
+    Task? targetTask;
+    for (final entry in _tasks) {
+      if (entry.id == toTaskId) {
+        targetTask = entry;
+        break;
+      }
+    }
+
+    if (member == null || targetTask == null) {
+      _showMessage('Falha ao mover a atribuição.');
+      return;
+    }
+
+    if (targetTask.genderConstraint != null && targetTask.genderConstraint != member.gender) {
+      _showMessage('A restrição de gênero não corresponde a esta tarefa.');
+      return;
+    }
+
+    final existingForTarget = _assignments[toTaskId] ?? [];
+    if (existingForTarget.any((entry) => entry.member.id == memberId)) {
+      _showMessage('Este membro já está atribuído a esta tarefa.');
+      return;
+    }
+
+    try {
+      widget.database.moveAssignment(
+        memberId: memberId,
+        fromTaskId: fromTaskId,
+        toTaskId: toTaskId,
+        isoDate: _isoDate(_selectedDate),
+      );
+      _loadData();
+    } catch (e) {
+      _showMessage('Falha ao mover a atribuição.');
+    }
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -1384,104 +1430,114 @@ class _HomeScreenState extends State<HomeScreen> {
 
     final availableCount = _members.where((member) => !assignedIds.contains(member.id)).length;
 
-    return Container(
-      width: 280,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFE6E8EF)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
+    return DragTarget<AssignmentDragData>(
+      onAcceptWithDetails: (details) {
+        final data = details.data;
+        _handleRemoveAssignment(data.memberId, data.taskId);
+      },
+      builder: (context, candidateData, rejectedData) {
+        final isActive = candidateData.isNotEmpty;
+        return AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          width: 280,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isActive ? const Color(0xFFF0F6FF) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: isActive ? const Color(0xFF3B82F6) : const Color(0xFFE6E8EF)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Membros',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+              Row(
+                children: [
+                  const Text(
+                    'Membros',
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                  ),
+                  const Spacer(),
+                  FilterChip(
+                    label: Text('$availableCount disponíveis'),
+                    selected: !_showAllMembers,
+                    onSelected: (selected) {
+                      setState(() {
+                        _showAllMembers = !selected;
+                      });
+                    },
+                    backgroundColor: const Color(0xFFF1F2F6),
+                    selectedColor: const Color(0xFFE8F0FF),
+                    checkmarkColor: const Color(0xFF1D4ED8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide.none,
+                    ),
+                    labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                  ),
+                ],
               ),
-              const Spacer(),
-              FilterChip(
-                label: Text('$availableCount disponíveis'),
-                selected: !_showAllMembers,
-                onSelected: (selected) {
-                  setState(() {
-                    _showAllMembers = !selected;
-                  });
-                },
-                backgroundColor: const Color(0xFFF1F2F6),
-                selectedColor: const Color(0xFFE8F0FF),
-                checkmarkColor: const Color(0xFF1D4ED8),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                  side: BorderSide.none,
+              const SizedBox(height: 16),
+              TextField(
+                controller: _searchController,
+                onChanged: (_) => setState(() {}),
+                decoration: InputDecoration(
+                  hintText: 'Buscar membros...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: const Color(0xFFF1F2F6),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide.none,
+                  ),
                 ),
-                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          TextField(
-            controller: _searchController,
-            onChanged: (_) => setState(() {}),
-            decoration: InputDecoration(
-              hintText: 'Buscar membros...',
-              prefixIcon: const Icon(Icons.search),
-              filled: true,
-              fillColor: const Color(0xFFF1F2F6),
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(12),
-                borderSide: BorderSide.none,
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: ListView.separated(
-              itemCount: filteredMembers.length,
-              separatorBuilder: (_, __) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                final member = filteredMembers[index];
-                return Draggable<Member>(
-                  data: member,
-                  feedback: Material(
-                    color: Colors.transparent,
-                    child: SizedBox(
-                      width: 240,
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView.separated(
+                  itemCount: filteredMembers.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final member = filteredMembers[index];
+                    return Draggable<Member>(
+                      data: member,
+                      feedback: Material(
+                        color: Colors.transparent,
+                        child: SizedBox(
+                          width: 240,
+                          child: MemberCard(
+                            member: member,
+                            dense: true,
+                            taskCount: _taskCounts[member.id] ?? 0,
+                          ),
+                        ),
+                      ),
+                      childWhenDragging: Opacity(
+                        opacity: 0.5,
+                        child: MemberCard(
+                          member: member,
+                          dense: true,
+                          taskCount: _taskCounts[member.id] ?? 0,
+                        ),
+                      ),
                       child: MemberCard(
                         member: member,
                         dense: true,
                         taskCount: _taskCounts[member.id] ?? 0,
+                        onDoubleTap: () => _openEditMemberDialog(member),
                       ),
-                    ),
-                  ),
-                  childWhenDragging: Opacity(
-                    opacity: 0.5,
-                    child: MemberCard(
-                      member: member,
-                      dense: true,
-                      taskCount: _taskCounts[member.id] ?? 0,
-                    ),
-                  ),
-                  child: MemberCard(
-                    member: member,
-                    dense: true,
-                    taskCount: _taskCounts[member.id] ?? 0,
-                    onDoubleTap: () => _openEditMemberDialog(member),
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 12),
+              OutlinedButton.icon(
+                onPressed: _openAddMemberDialog,
+                icon: const Icon(Icons.add),
+                label: const Text('Adicionar membro'),
+              ),
+            ],
           ),
-          const SizedBox(height: 12),
-          OutlinedButton.icon(
-            onPressed: _openAddMemberDialog,
-            icon: const Icon(Icons.add),
-            label: const Text('Adicionar membro'),
-          ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -1571,6 +1627,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           accentColor: color,
                           assignments: assignments,
                           onMemberDropped: (member) => _handleDrop(task, member),
+                          onMoveAssignment: _handleMoveAssignment,
                           onMemberDoubleTap: _openEditMemberDialog,
                           onTaskDoubleTap: () => _openEditTaskDialog(task),
                           onRemoveAssignment: _handleRemoveAssignment,
