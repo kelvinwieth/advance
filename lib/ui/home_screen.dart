@@ -1,6 +1,13 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:printing/printing.dart';
 
 import '../data/app_database.dart';
 import '../data/models.dart';
@@ -118,6 +125,155 @@ class _HomeScreenState extends State<HomeScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
     );
+  }
+
+  Future<void> _exportDayPdf() async {
+    if (_tasks.isEmpty) {
+      _showMessage('No tasks to export.');
+      return;
+    }
+
+    final fontRegular = await PdfGoogleFonts.notoSansRegular();
+    final fontBold = await PdfGoogleFonts.notoSansBold();
+    final theme = pw.ThemeData.withFont(
+      base: fontRegular,
+      bold: fontBold,
+    );
+    final pdf = pw.Document(theme: theme);
+    final dateLabel = _dateFormat.format(_selectedDate);
+    final groups = <List<Task>>[];
+    for (var i = 0; i < _tasks.length; i += 3) {
+      groups.add(_tasks.sublist(i, (i + 3).clamp(0, _tasks.length)));
+    }
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4.landscape,
+        margin: const pw.EdgeInsets.all(32),
+        build: (context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.start,
+            children: [
+              pw.Text(
+                'Daily Task Assignments',
+                style: pw.TextStyle(
+                  fontSize: 22,
+                  fontWeight: pw.FontWeight.bold,
+                ),
+              ),
+              pw.SizedBox(height: 6),
+              pw.Text(
+                dateLabel,
+                style: pw.TextStyle(
+                  fontSize: 14,
+                  color: PdfColors.grey700,
+                ),
+              ),
+              pw.SizedBox(height: 18),
+              ...groups.map((group) {
+                final headers = group.map((task) => task.name).toList();
+                final rows = _buildPdfRows(group);
+                return pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Table(
+                      border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.8),
+                      columnWidths: {
+                        for (var i = 0; i < headers.length; i++)
+                          i: const pw.FlexColumnWidth(),
+                      },
+                      children: [
+                        pw.TableRow(
+                          decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                          children: headers
+                              .map(
+                                (title) => pw.Padding(
+                                  padding: const pw.EdgeInsets.all(8),
+                                  child: pw.Text(
+                                    title,
+                                    style: pw.TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: pw.FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              )
+                              .toList(),
+                        ),
+                        ...rows.map(
+                          (row) => pw.TableRow(
+                            children: row
+                                .map(
+                                  (cell) => pw.Padding(
+                                    padding: const pw.EdgeInsets.all(8),
+                                    child: pw.Text(
+                                      cell,
+                                      style: const pw.TextStyle(fontSize: 11),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 18),
+                  ],
+                );
+              }),
+            ],
+          );
+        },
+      ),
+    );
+
+    final bytes = await pdf.save();
+    final info = await Printing.info();
+    final filename = 'avanco-${DateFormat('yyyy-MM-dd').format(_selectedDate)}.pdf';
+
+    if (info.canPrint) {
+      await Printing.layoutPdf(
+        onLayout: (_) async => bytes,
+        name: filename,
+      );
+      return;
+    }
+
+    if (info.canShare) {
+      final shared = await Printing.sharePdf(
+        bytes: bytes,
+        filename: filename,
+      );
+      if (shared) return;
+    }
+
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dir.path, filename));
+    await file.writeAsBytes(bytes);
+    _showMessage('PDF saved to ${file.path}');
+  }
+
+  List<List<String>> _buildPdfRows(List<Task> tasks) {
+    final memberLists = tasks.map((task) {
+      final assignments = _assignments[task.id] ?? [];
+      return assignments
+          .map((assignment) => '${assignment.member.name} - ${assignment.member.church}')
+          .toList();
+    }).toList();
+
+    final maxRows = memberLists.map((list) => list.length).fold<int>(0, (a, b) => a > b ? a : b);
+    if (maxRows == 0) {
+      return [
+        List.generate(tasks.length, (_) => ''),
+      ];
+    }
+
+    return List.generate(maxRows, (rowIndex) {
+      return List.generate(tasks.length, (colIndex) {
+        final list = memberLists[colIndex];
+        return rowIndex < list.length ? list[rowIndex] : '';
+      });
+    });
   }
 
   Future<void> _openAddMemberDialog() async {
@@ -1346,16 +1502,22 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: const TextStyle(fontSize: 12, letterSpacing: 1.4),
                 ),
                 const Spacer(),
-                  IconButton(
-                    onPressed: () => _changeDate(1),
-                    icon: const Icon(Icons.chevron_right),
-                  ),
-                  const SizedBox(width: 8),
-                  OutlinedButton.icon(
-                    onPressed: _openAddTaskDialog,
-                    icon: const Icon(Icons.add),
-                    label: const Text('Add Task'),
-                  ),
+                IconButton(
+                  onPressed: () => _changeDate(1),
+                  icon: const Icon(Icons.chevron_right),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _exportDayPdf,
+                  icon: const Icon(Icons.print),
+                  label: const Text('Export PDF'),
+                ),
+                const SizedBox(width: 8),
+                OutlinedButton.icon(
+                  onPressed: _openAddTaskDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Add Task'),
+                ),
                 ],
               ),
             ),
