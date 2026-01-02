@@ -28,6 +28,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   DateTime _selectedDate = DateTime.now();
   bool _loading = true;
+  bool _showAllMembers = false;
   String? _errorMessage;
   List<Member> _members = [];
   List<Task> _tasks = [];
@@ -1373,7 +1374,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final assignedIds = assignments.map((a) => a.member.id).toSet();
 
     final filteredMembers = _members.where((member) {
-      if (assignedIds.contains(member.id)) return false;
+      if (!_showAllMembers && assignedIds.contains(member.id)) return false;
       if (query.isEmpty) return true;
       return member.name.toLowerCase().contains(query);
     }).toList();
@@ -1398,16 +1399,22 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF1F2F6),
+              FilterChip(
+                label: Text('$availableCount disponíveis'),
+                selected: !_showAllMembers,
+                onSelected: (selected) {
+                  setState(() {
+                    _showAllMembers = !selected;
+                  });
+                },
+                backgroundColor: const Color(0xFFF1F2F6),
+                selectedColor: const Color(0xFFE8F0FF),
+                checkmarkColor: const Color(0xFF1D4ED8),
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
+                  side: BorderSide.none,
                 ),
-                child: Text(
-                  '$availableCount disponíveis',
-                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                ),
+                labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
               ),
             ],
           ),
