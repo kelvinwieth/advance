@@ -138,9 +138,22 @@ class _HomeScreenState extends State<HomeScreen> {
     final pdf = pw.Document(theme: theme);
     final dateLabel = _dateFormat.format(_selectedDate);
     final weekdayLabel = _weekdayFormat.format(_selectedDate);
+    final tasksWithAssignments = _tasks
+        .where((task) => (_assignments[task.id] ?? []).isNotEmpty)
+        .toList();
+    if (tasksWithAssignments.isEmpty) {
+      _showMessage('Nenhuma tarefa com membros para exportar.');
+      return;
+    }
+
     final groups = <List<Task>>[];
-    for (var i = 0; i < _tasks.length; i += 3) {
-      groups.add(_tasks.sublist(i, (i + 3).clamp(0, _tasks.length)));
+    for (var i = 0; i < tasksWithAssignments.length; i += 3) {
+      groups.add(
+        tasksWithAssignments.sublist(
+          i,
+          (i + 3).clamp(0, tasksWithAssignments.length),
+        ),
+      );
     }
     final header = pw.Column(
       crossAxisAlignment: pw.CrossAxisAlignment.start,
