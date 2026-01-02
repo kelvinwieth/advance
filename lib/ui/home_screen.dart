@@ -29,6 +29,8 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _loading = true;
   bool _showAllMembers = false;
+  String _memberSortField = 'name';
+  bool _memberSortAsc = true;
   String? _errorMessage;
   List<Member> _members = [];
   List<Task> _tasks = [];
@@ -1525,6 +1527,21 @@ class _HomeScreenState extends State<HomeScreen> {
       if (query.isEmpty) return true;
       return member.name.toLowerCase().contains(query);
     }).toList();
+    filteredMembers.sort((a, b) {
+      int result;
+      switch (_memberSortField) {
+        case 'church':
+          result = a.church.toLowerCase().compareTo(b.church.toLowerCase());
+        case 'age':
+          result = a.age.compareTo(b.age);
+        case 'tasks':
+          result = (_taskCounts[a.id] ?? 0).compareTo(_taskCounts[b.id] ?? 0);
+        case 'name':
+        default:
+          result = a.name.toLowerCase().compareTo(b.name.toLowerCase());
+      }
+      return _memberSortAsc ? result : -result;
+    });
 
     final availableCount = _members.where((member) => !assignedIds.contains(member.id)).length;
 
@@ -1587,6 +1604,88 @@ class _HomeScreenState extends State<HomeScreen> {
                     borderSide: BorderSide.none,
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: PopupMenuButton<String>(
+                      tooltip: 'Ordenar por',
+                      onSelected: (value) {
+                        setState(() {
+                          _memberSortField = value;
+                        });
+                      },
+                      itemBuilder: (context) => [
+                        const PopupMenuItem(
+                          value: 'name',
+                          child: Text('Nome'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'church',
+                          child: Text('Igreja'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'age',
+                          child: Text('Idade'),
+                        ),
+                        const PopupMenuItem(
+                          value: 'tasks',
+                          child: Text('Qtd. tarefas'),
+                        ),
+                      ],
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F2F6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.sort, size: 16),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Text(
+                                _memberSortField == 'name'
+                                    ? 'Nome'
+                                    : _memberSortField == 'church'
+                                        ? 'Igreja'
+                                        : _memberSortField == 'age'
+                                            ? 'Idade'
+                                            : 'Qtd. tarefas',
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Tooltip(
+                    message: _memberSortAsc ? 'Ordem crescente' : 'Ordem decrescente',
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
+                        setState(() {
+                          _memberSortAsc = !_memberSortAsc;
+                        });
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF1F2F6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _memberSortAsc ? Icons.arrow_upward : Icons.arrow_downward,
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 16),
               Expanded(
