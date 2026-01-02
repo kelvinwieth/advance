@@ -7,7 +7,7 @@ class TaskColumn extends StatefulWidget {
   final Task task;
   final Color accentColor;
   final List<TaskAssignment> assignments;
-  final void Function(Member member) onMemberDropped;
+  final Future<void> Function(Member member) onMemberDropped;
   final void Function(int memberId, int fromTaskId, int toTaskId)? onMoveAssignment;
   final void Function(Member member)? onMemberDoubleTap;
   final VoidCallback? onTaskDoubleTap;

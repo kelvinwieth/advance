@@ -354,6 +354,7 @@ INSERT INTO tasks (name, gender_constraint) VALUES
 
       if (allIds.isNotEmpty && taskRows.isNotEmpty) {
         final tasks = taskRows.reversed.toList();
+        final used = <int>{};
         for (var t = 0; t < tasks.length; t += 1) {
           final taskId = tasks[t]['id'] as int;
           final constraint = tasks[t]['gender_constraint'] as String?;
@@ -365,9 +366,12 @@ INSERT INTO tasks (name, gender_constraint) VALUES
 
           if (pool.isEmpty) continue;
 
-          final count = (2 + (t % 4)).clamp(2, pool.length); // 2..5
+          final available = pool.where((id) => !used.contains(id)).toList();
+          if (available.isEmpty) continue;
+          final count = (2 + (t % 4)).clamp(1, available.length); // up to 5
           for (var j = 0; j < count; j += 1) {
-            final memberId = pool[(t * 5 + j) % pool.length];
+            final memberId = available[(t * 5 + j) % available.length];
+            used.add(memberId);
             _db.execute(
               'INSERT OR IGNORE INTO member_tasks (member_id, task_id, date) VALUES (?, ?, ?);',
               [memberId, taskId, isoDate],

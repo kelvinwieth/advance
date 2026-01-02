@@ -86,7 +86,7 @@ class _HomeScreenState extends State<HomeScreen> {
     _loadData();
   }
 
-  void _handleDrop(Task task, Member member) {
+  Future<void> _handleDrop(Task task, Member member) async {
     if (task.genderConstraint != null && task.genderConstraint != member.gender) {
       _showMessage('A restrição de gênero não corresponde a esta tarefa.');
       return;
@@ -96,6 +96,18 @@ class _HomeScreenState extends State<HomeScreen> {
     if (existingForTask.any((entry) => entry.member.id == member.id)) {
       _showMessage('Este membro já está atribuído a esta tarefa.');
       return;
+    }
+
+    TaskAssignment? existingAssignment;
+    for (final entry in _assignments.values.expand((list) => list)) {
+      if (entry.member.id == member.id && entry.taskId != task.id) {
+        existingAssignment = entry;
+        break;
+      }
+    }
+    if (existingAssignment != null) {
+      final proceed = await _confirmMultipleTasks();
+      if (!proceed) return;
     }
 
     try {
@@ -167,6 +179,68 @@ class _HomeScreenState extends State<HomeScreen> {
     } catch (e) {
       _showMessage('Falha ao mover a atribuição.');
     }
+  }
+
+  Future<bool> _confirmMultipleTasks() async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Container(
+            width: 420,
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      'Membro já atribuído',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const Spacer(),
+                    IconButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      icon: const Icon(Icons.close),
+                    ),
+                  ],
+                ),
+                const Divider(height: 1),
+                const SizedBox(height: 16),
+                const Text(
+                  'Este membro já possui uma tarefa neste dia. '
+                  'Deseja atribuir mesmo assim?',
+                ),
+                const SizedBox(height: 24),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    OutlinedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(false),
+                      child: const Text('Cancelar'),
+                    ),
+                    const SizedBox(width: 12),
+                    ElevatedButton(
+                      onPressed: () => Navigator.of(dialogContext).pop(true),
+                      child: const Text('Atribuir'),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+    return result ?? false;
   }
 
   void _showMessage(String message) {
