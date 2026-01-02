@@ -1991,7 +1991,16 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Avanço'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/acev.png',
+              height: 28,
+            ),
+            const SizedBox(width: 10),
+            const Text('Avanço Missionário'),
+          ],
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
         actions: [
