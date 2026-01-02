@@ -39,6 +39,17 @@ class _TaskColumnState extends State<TaskColumn> {
 
   @override
   Widget build(BuildContext context) {
+    final genderTint = widget.task.genderConstraint == 'M'
+        ? const Color(0xFFF5F9FF)
+        : widget.task.genderConstraint == 'F'
+            ? const Color(0xFFFFF7FB)
+            : Colors.white;
+    final subtitle = widget.task.genderConstraint == 'M'
+        ? 'Male only'
+        : widget.task.genderConstraint == 'F'
+            ? 'Female only'
+            : null;
+
     return DragTarget<Member>(
       onAcceptWithDetails: (details) => widget.onMemberDropped(details.data),
       builder: (context, candidateData, rejectedData) {
@@ -48,7 +59,7 @@ class _TaskColumnState extends State<TaskColumn> {
           duration: const Duration(milliseconds: 150),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: isActive ? const Color(0xFFF0F6FF) : Colors.white,
+            color: isActive ? const Color(0xFFF0F6FF) : genderTint,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: isActive ? widget.accentColor : const Color(0xFFE6E8EF),
@@ -97,6 +108,27 @@ class _TaskColumnState extends State<TaskColumn> {
                   ],
                 ),
               ),
+              if (subtitle != null) ...[
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Icon(
+                      widget.task.genderConstraint == 'M' ? Icons.male : Icons.female,
+                      size: 14,
+                      color: Colors.black54,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: Colors.black54,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 16),
               if (widget.assignments.isEmpty)
                 Expanded(

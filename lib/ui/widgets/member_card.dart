@@ -24,8 +24,8 @@ class MemberCard extends StatelessWidget {
         : '?';
 
     final backgroundColor = member.gender == 'M'
-        ? const Color(0xFFEFF6FF)
-        : const Color(0xFFFDF2F8);
+        ? const Color(0xFFF5F9FF)
+        : const Color(0xFFFFF7FB);
 
     return GestureDetector(
       onDoubleTap: onDoubleTap,
