@@ -17,12 +17,12 @@ Aplicativo desktop em Flutter com banco local SQLite. Permite:
 
 ## Capturas de tela
 
-<img src="./docs/print1.jpeg" width="49%">
-<img src="./docs/print6.jpeg" width="49%">
-<img src="./docs/print2.jpeg" width="49%">
-<img src="./docs/print3.jpeg" width="49%">
-<img src="./docs/print4.jpeg" width="49%">
-<img src="./docs/print5.jpeg" width="49%">
+<img src="./docs/print1.jpeg">
+<img src="./docs/print6.jpeg">
+<img src="./docs/print2.jpeg">
+<img src="./docs/print3.jpeg">
+<img src="./docs/print4.jpeg">
+<img src="./docs/print5.jpeg">
 
 ## Principais funcionalidades
 
