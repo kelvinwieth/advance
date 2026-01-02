@@ -23,12 +23,16 @@ class MemberCard extends StatelessWidget {
         ? parts.map((part) => part[0]).take(2).join()
         : '?';
 
+    final backgroundColor = member.gender == 'M'
+        ? const Color(0xFFEFF6FF)
+        : const Color(0xFFFDF2F8);
+
     return GestureDetector(
       onDoubleTap: onDoubleTap,
       child: Container(
         padding: EdgeInsets.all(dense ? 12 : 16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: backgroundColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0xFFE1E4EA)),
         ),
@@ -58,25 +62,34 @@ class MemberCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
+                  Text(
+                    member.church,
+                    style: TextStyle(
+                      color: Colors.black54,
+                      fontSize: dense ? 12 : 13,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Row(
+              children: [
+                Icon(
+                  member.gender == 'M' ? Icons.male : Icons.female,
+                  size: dense ? 14 : 16,
+                  color: Colors.black54,
+                ),
+                const SizedBox(width: 6),
                 Text(
-                  'Age: ${member.age}',
+                  member.age.toString(),
                   style: TextStyle(
                     color: Colors.black54,
                     fontSize: dense ? 12 : 13,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  member.church,
-                  style: TextStyle(
-                    color: Colors.black45,
-                    fontSize: dense ? 11 : 12,
-                  ),
-                ),
               ],
             ),
-          ),
             if (showStatus)
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
