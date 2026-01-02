@@ -60,9 +60,12 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       final members = widget.database.fetchMembers();
       final tasks = widget.database.fetchTasks();
-      final assignments =
-          widget.database.fetchAssignmentsByTaskForDate(_isoDate(_selectedDate));
-      final taskCounts = widget.database.fetchTaskCountsUpTo(_isoDate(_selectedDate));
+      final assignments = widget.database.fetchAssignmentsByTaskForDate(
+        _isoDate(_selectedDate),
+      );
+      final taskCounts = widget.database.fetchTaskCountsUpTo(
+        _isoDate(_selectedDate),
+      );
 
       if (!mounted) return;
       setState(() {
@@ -89,7 +92,8 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _handleDrop(Task task, Member member) async {
-    if (task.genderConstraint != null && task.genderConstraint != member.gender) {
+    if (task.genderConstraint != null &&
+        task.genderConstraint != member.gender) {
       _showMessage('A restrição de gênero não corresponde a esta tarefa.');
       return;
     }
@@ -159,7 +163,8 @@ class _HomeScreenState extends State<HomeScreen> {
       return;
     }
 
-    if (targetTask.genderConstraint != null && targetTask.genderConstraint != member.gender) {
+    if (targetTask.genderConstraint != null &&
+        targetTask.genderConstraint != member.gender) {
       _showMessage('A restrição de gênero não corresponde a esta tarefa.');
       return;
     }
@@ -317,14 +322,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 crossAxisAlignment: pw.CrossAxisAlignment.start,
                 children: [
                   pw.Table(
-                    border: pw.TableBorder.all(color: PdfColors.grey300, width: 0.8),
+                    border: pw.TableBorder.all(
+                      color: PdfColors.grey300,
+                      width: 0.8,
+                    ),
                     columnWidths: {
                       for (var i = 0; i < headers.length; i++)
                         i: const pw.FlexColumnWidth(),
                     },
                     children: [
                       pw.TableRow(
-                        decoration: const pw.BoxDecoration(color: PdfColors.grey200),
+                        decoration: const pw.BoxDecoration(
+                          color: PdfColors.grey200,
+                        ),
                         children: headers
                             .map(
                               (title) => pw.Padding(
@@ -367,7 +377,8 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     final bytes = await pdf.save();
-    final filename = 'avanco-${DateFormat('yyyy-MM-dd').format(_selectedDate)}.pdf';
+    final filename =
+        'avanco-${DateFormat('yyyy-MM-dd').format(_selectedDate)}.pdf';
     final saveLocation = await getSaveLocation(
       suggestedName: filename,
       acceptedTypeGroups: const [
@@ -403,11 +414,16 @@ class _HomeScreenState extends State<HomeScreen> {
     final memberLists = tasks.map((task) {
       final assignments = _assignments[task.id] ?? [];
       return assignments
-          .map((assignment) => '${assignment.member.name} - ${assignment.member.church}')
+          .map(
+            (assignment) =>
+                '${assignment.member.name} - ${assignment.member.church}',
+          )
           .toList();
     }).toList();
 
-    final maxRows = memberLists.map((list) => list.length).fold<int>(0, (a, b) => a > b ? a : b);
+    final maxRows = memberLists
+        .map((list) => list.length)
+        .fold<int>(0, (a, b) => a > b ? a : b);
     if (maxRows == 0) {
       return [
         List.generate(tasks.length, (_) => ''),
@@ -1229,7 +1245,9 @@ class _HomeScreenState extends State<HomeScreen> {
                             try {
                               widget.database.insertTask(
                                 name: name,
-                                genderConstraint: limitByGender ? selectedGender : null,
+                                genderConstraint: limitByGender
+                                    ? selectedGender
+                                    : null,
                               );
                               Navigator.of(dialogContext).pop();
                               _loadData();
@@ -1439,7 +1457,9 @@ class _HomeScreenState extends State<HomeScreen> {
                               widget.database.updateTask(
                                 id: task.id,
                                 name: name,
-                                genderConstraint: limitByGender ? selectedGender : null,
+                                genderConstraint: limitByGender
+                                    ? selectedGender
+                                    : null,
                               );
                               Navigator.of(dialogContext).pop();
                               _loadData();
@@ -1503,17 +1523,17 @@ class _HomeScreenState extends State<HomeScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      _buildMembersPanel(),
-                      const SizedBox(width: 16),
-                      Expanded(child: _buildTasksPanel()),
-                    ],
-                  ),
-                ),
+          ? Center(child: Text(_errorMessage!))
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  _buildMembersPanel(),
+                  const SizedBox(width: 16),
+                  Expanded(child: _buildTasksPanel()),
+                ],
+              ),
+            ),
     );
   }
 
@@ -1543,7 +1563,9 @@ class _HomeScreenState extends State<HomeScreen> {
       return _memberSortAsc ? result : -result;
     });
 
-    final availableCount = _members.where((member) => !assignedIds.contains(member.id)).length;
+    final availableCount = _members
+        .where((member) => !assignedIds.contains(member.id))
+        .length;
 
     return DragTarget<AssignmentDragData>(
       onAcceptWithDetails: (details) {
@@ -1559,7 +1581,11 @@ class _HomeScreenState extends State<HomeScreen> {
           decoration: BoxDecoration(
             color: isActive ? const Color(0xFFF0F6FF) : Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: isActive ? const Color(0xFF3B82F6) : const Color(0xFFE6E8EF)),
+            border: Border.all(
+              color: isActive
+                  ? const Color(0xFF3B82F6)
+                  : const Color(0xFFE6E8EF),
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -1586,7 +1612,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(12),
                       side: BorderSide.none,
                     ),
-                    labelStyle: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                    labelStyle: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ],
               ),
@@ -1635,7 +1664,10 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F2F6),
                           borderRadius: BorderRadius.circular(12),
@@ -1649,12 +1681,15 @@ class _HomeScreenState extends State<HomeScreen> {
                                 _memberSortField == 'name'
                                     ? 'Nome'
                                     : _memberSortField == 'church'
-                                        ? 'Igreja'
-                                        : _memberSortField == 'age'
-                                            ? 'Idade'
-                                            : 'Qtd. tarefas',
+                                    ? 'Igreja'
+                                    : _memberSortField == 'age'
+                                    ? 'Idade'
+                                    : 'Qtd. tarefas',
                                 overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
                             ),
                           ],
@@ -1664,7 +1699,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SizedBox(width: 8),
                   Tooltip(
-                    message: _memberSortAsc ? 'Ordem crescente' : 'Ordem decrescente',
+                    message: _memberSortAsc
+                        ? 'Ordem crescente'
+                        : 'Ordem decrescente',
                     child: InkWell(
                       borderRadius: BorderRadius.circular(12),
                       onTap: () {
@@ -1673,13 +1710,18 @@ class _HomeScreenState extends State<HomeScreen> {
                         });
                       },
                       child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFF1F2F6),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
-                          _memberSortAsc ? Icons.arrow_upward : Icons.arrow_downward,
+                          _memberSortAsc
+                              ? Icons.arrow_upward
+                              : Icons.arrow_downward,
                           size: 16,
                         ),
                       ),
@@ -1726,10 +1768,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: 12),
-              OutlinedButton.icon(
-                onPressed: _openAddMemberDialog,
-                icon: const Icon(Icons.add),
-                label: const Text('Adicionar membro'),
+              SizedBox(
+                width: double.maxFinite,
+                child: OutlinedButton.icon(
+                  onPressed: _openAddMemberDialog,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Adicionar membro'),
+                ),
               ),
             ],
           ),
@@ -1775,7 +1820,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SizedBox(width: 8),
                     Text(
                       _dateFormat.format(_selectedDate),
-                      style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ],
                 ),
@@ -1801,9 +1849,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   icon: const Icon(Icons.add),
                   label: const Text('Adicionar tarefa'),
                 ),
-                ],
-              ),
+              ],
             ),
+          ),
           const SizedBox(height: 16),
           Expanded(
             child: _tasks.isEmpty
@@ -1823,7 +1871,8 @@ class _HomeScreenState extends State<HomeScreen> {
                           task: task,
                           accentColor: color,
                           assignments: assignments,
-                          onMemberDropped: (member) => _handleDrop(task, member),
+                          onMemberDropped: (member) =>
+                              _handleDrop(task, member),
                           onMoveAssignment: _handleMoveAssignment,
                           onMemberDoubleTap: _openEditMemberDialog,
                           onTaskDoubleTap: () => _openEditTaskDialog(task),
