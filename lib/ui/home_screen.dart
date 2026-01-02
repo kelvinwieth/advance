@@ -591,9 +591,17 @@ class _HomeScreenState extends State<HomeScreen> {
       crossAxisAlignment: pw.CrossAxisAlignment.start,
       children: [
         pw.Text(
-          'Distribuição de Tarefas do Dia',
+          'ACEV - Avanço Missionário 2026',
           style: pw.TextStyle(
-            fontSize: 22,
+            fontSize: 24,
+            fontWeight: pw.FontWeight.bold,
+          ),
+        ),
+        pw.SizedBox(height: 4),
+        pw.Text(
+          'Tarefas do Dia',
+          style: pw.TextStyle(
+            fontSize: 18,
             fontWeight: pw.FontWeight.bold,
           ),
         ),
@@ -601,7 +609,7 @@ class _HomeScreenState extends State<HomeScreen> {
         pw.Text(
           '$dateLabel (${weekdayLabel[0].toUpperCase()}${weekdayLabel.substring(1)})',
           style: pw.TextStyle(
-            fontSize: 14,
+            fontSize: 13,
             color: PdfColors.grey700,
           ),
         ),
