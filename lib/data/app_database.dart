@@ -219,6 +219,24 @@ ORDER BY m.name;
     }
   }
 
+  void removeAssignment({
+    required int memberId,
+    required int taskId,
+    required String isoDate,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        'DELETE FROM member_tasks WHERE member_id = ? AND task_id = ? AND date = ?;',
+        [memberId, taskId, isoDate],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void insertMockData() {
     _db.execute('BEGIN IMMEDIATE');
     try {

@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../../data/models.dart';
 import 'member_card.dart';
 
-class TaskColumn extends StatelessWidget {
+class TaskColumn extends StatefulWidget {
   final Task task;
   final Color accentColor;
   final List<TaskAssignment> assignments;
   final void Function(Member member) onMemberDropped;
   final void Function(Member member)? onMemberDoubleTap;
   final VoidCallback? onTaskDoubleTap;
+  final void Function(int memberId, int taskId)? onRemoveAssignment;
 
   const TaskColumn({
     super.key,
@@ -19,12 +20,27 @@ class TaskColumn extends StatelessWidget {
     required this.onMemberDropped,
     this.onMemberDoubleTap,
     this.onTaskDoubleTap,
+    this.onRemoveAssignment,
   });
+
+  @override
+  State<TaskColumn> createState() => _TaskColumnState();
+}
+
+class _TaskColumnState extends State<TaskColumn> {
+  bool _showRemoveZone = false;
+
+  void _setRemoveZoneVisible(bool visible) {
+    if (_showRemoveZone == visible) return;
+    setState(() {
+      _showRemoveZone = visible;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return DragTarget<Member>(
-      onAcceptWithDetails: (details) => onMemberDropped(details.data),
+      onAcceptWithDetails: (details) => widget.onMemberDropped(details.data),
       builder: (context, candidateData, rejectedData) {
         final isActive = candidateData.isNotEmpty;
 
@@ -35,7 +51,7 @@ class TaskColumn extends StatelessWidget {
             color: isActive ? const Color(0xFFF0F6FF) : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isActive ? accentColor : const Color(0xFFE6E8EF),
+              color: isActive ? widget.accentColor : const Color(0xFFE6E8EF),
               width: isActive ? 2 : 1,
             ),
           ),
@@ -43,21 +59,21 @@ class TaskColumn extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               GestureDetector(
-                onDoubleTap: onTaskDoubleTap,
+                onDoubleTap: widget.onTaskDoubleTap,
                 child: Row(
                   children: [
                     Container(
                       width: 10,
                       height: 10,
                       decoration: BoxDecoration(
-                        color: accentColor,
+                        color: widget.accentColor,
                         shape: BoxShape.circle,
                       ),
                     ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        task.name,
+                        widget.task.name,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w700,
@@ -71,18 +87,18 @@ class TaskColumn extends StatelessWidget {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        assignments.length.toString(),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                        ),
+                      widget.assignments.length.toString(),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
                       ),
                     ),
                   ],
                 ),
               ),
               const SizedBox(height: 16),
-              if (assignments.isEmpty)
+              if (widget.assignments.isEmpty)
                 Expanded(
                   child: Container(
                     width: double.infinity,
@@ -111,21 +127,95 @@ class TaskColumn extends StatelessWidget {
               else
                 Expanded(
                   child: ListView.separated(
-                    itemCount: assignments.length,
+                    itemCount: widget.assignments.length,
                     separatorBuilder: (_, __) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
-                      final assignment = assignments[index];
-                      return MemberCard(
-                        member: assignment.member,
-                        dense: true,
-                        onDoubleTap: onMemberDoubleTap == null
-                            ? null
-                            : () => onMemberDoubleTap!(assignment.member),
+                      final assignment = widget.assignments[index];
+                      return Draggable<_AssignmentDragData>(
+                        data: _AssignmentDragData(
+                          memberId: assignment.member.id,
+                          taskId: assignment.taskId,
+                        ),
+                        onDragStarted: () => _setRemoveZoneVisible(true),
+                        onDragEnd: (_) => _setRemoveZoneVisible(false),
+                        onDragCompleted: () => _setRemoveZoneVisible(false),
+                        onDraggableCanceled: (_, __) => _setRemoveZoneVisible(false),
+                        feedback: Material(
+                          color: Colors.transparent,
+                          child: SizedBox(
+                            width: 220,
+                            child: MemberCard(
+                              member: assignment.member,
+                              dense: true,
+                            ),
+                          ),
+                        ),
+                        childWhenDragging: Opacity(
+                          opacity: 0.5,
+                          child: MemberCard(
+                            member: assignment.member,
+                            dense: true,
+                            onDoubleTap: widget.onMemberDoubleTap == null
+                                ? null
+                                : () => widget.onMemberDoubleTap!(assignment.member),
+                          ),
+                        ),
+                        child: MemberCard(
+                          member: assignment.member,
+                          dense: true,
+                          onDoubleTap: widget.onMemberDoubleTap == null
+                              ? null
+                              : () => widget.onMemberDoubleTap!(assignment.member),
+                        ),
                       );
                     },
                   ),
                 ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              AnimatedSwitcher(
+                duration: const Duration(milliseconds: 150),
+                child: _showRemoveZone
+                    ? DragTarget<_AssignmentDragData>(
+                        onAcceptWithDetails: (details) {
+                          final data = details.data;
+                          if (widget.onRemoveAssignment != null && data.taskId == widget.task.id) {
+                            widget.onRemoveAssignment!(data.memberId, data.taskId);
+                          }
+                        },
+                        builder: (context, candidateData, rejectedData) {
+                          final isActive = candidateData.isNotEmpty;
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 150),
+                            height: 56,
+                            width: double.infinity,
+                            decoration: BoxDecoration(
+                              color: isActive ? const Color(0xFFFEE2E2) : const Color(0xFFF7F8FB),
+                              borderRadius: BorderRadius.circular(14),
+                              border: Border.all(
+                                color: isActive ? const Color(0xFFDC2626) : const Color(0xFFE5E7EB),
+                                width: isActive ? 2 : 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: const [
+                                Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Drag here to remove',
+                                  style: TextStyle(
+                                    color: Color(0xFFDC2626),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      )
+                    : const SizedBox.shrink(),
+              ),
+              const SizedBox(height: 12),
               TextButton(
                 onPressed: null,
                 child: const Text('+ Add card'),
@@ -136,4 +226,14 @@ class TaskColumn extends StatelessWidget {
       },
     );
   }
+}
+
+class _AssignmentDragData {
+  final int memberId;
+  final int taskId;
+
+  const _AssignmentDragData({
+    required this.memberId,
+    required this.taskId,
+  });
 }

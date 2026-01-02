@@ -101,6 +101,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  void _handleRemoveAssignment(int memberId, int taskId) {
+    try {
+      widget.database.removeAssignment(
+        memberId: memberId,
+        taskId: taskId,
+        isoDate: _isoDate(_selectedDate),
+      );
+      _loadData();
+    } catch (e) {
+      _showMessage('Failed to remove assignment.');
+    }
+  }
+
   void _showMessage(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text(message)),
@@ -1312,6 +1325,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           onMemberDropped: (member) => _handleDrop(task, member),
                           onMemberDoubleTap: _openEditMemberDialog,
                           onTaskDoubleTap: () => _openEditTaskDialog(task),
+                          onRemoveAssignment: _handleRemoveAssignment,
                         ),
                       );
                     },
