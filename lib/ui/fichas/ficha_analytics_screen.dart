@@ -55,9 +55,9 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
     bool compact = false,
   }) {
     return Container(
-      padding: EdgeInsets.symmetric(
+      padding: const EdgeInsets.symmetric(
         horizontal: 14,
-        vertical: compact ? 10 : 16,
+        vertical: 16,
       ),
       decoration: BoxDecoration(
         color: const Color(0xFFF7FBFC),
@@ -76,7 +76,10 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
               Expanded(
                 child: Text(
                   label,
-                  style: const TextStyle(color: Colors.black54),
+                  style: const TextStyle(
+                    color: Colors.black54,
+                    fontSize: 12,
+                  ),
                 ),
               ),
             ],
@@ -84,7 +87,10 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w700,
+            ),
           ),
         ],
       ),
@@ -166,7 +172,11 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
     return value.toStringAsFixed(1).replaceFirst('.', ',');
   }
 
-  Widget _buildSectionCard({required String title, required Widget child}) {
+  Widget _buildSectionCard({
+    required String title,
+    required Widget child,
+    bool compact = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -213,10 +223,10 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
           : _errorMessage != null
               ? Center(child: Text(_errorMessage!))
               : Padding(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(12),
                   child: SizedBox.expand(
                     child: Container(
-                      padding: const EdgeInsets.all(20),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(20),
@@ -268,9 +278,10 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                     ),
                                   ],
                                 ),
-                                const SizedBox(height: 16),
+                                const SizedBox(height: 8),
                                 Expanded(
-                                  child: LayoutBuilder(
+                                  child: SingleChildScrollView(
+                                    child: LayoutBuilder(
                                     builder: (context, constraints) {
                                       final twoColumns =
                                           constraints.maxWidth >= 900;
@@ -280,49 +291,41 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                           'Casas visitadas',
                                           _analytics!.totalVisits.toString(),
                                           icon: Icons.home_outlined,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Pessoas visitadas',
                                           _analytics!.totalPeople.toString(),
                                           icon: Icons.people_outline,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Crianças visitadas',
                                           _analytics!.ageChildren.toString(),
                                           icon: Icons.child_care_outlined,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Literaturas distribuídas',
                                           _analytics!.totalLiterature.toString(),
                                           icon: Icons.menu_book_outlined,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Decisões por Cristo',
                                           _analytics!.totalAceitouJesus.toString(),
                                           icon: Icons.volunteer_activism,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Reconciliações',
                                           _analytics!.totalReconciliacao.toString(),
                                           icon: Icons.handshake_outlined,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Nova visita solicitada',
                                           _analytics!.totalNovaVisita.toString(),
                                           icon: Icons.event_repeat,
-                                          compact: true,
                                         ),
                                         _buildMetric(
                                           'Bairros alcançados',
                                           _analytics!.totalNeighborhoods.toString(),
                                           icon: Icons.map_outlined,
-                                          compact: true,
                                         ),
                                       ];
 
@@ -393,7 +396,6 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          const SizedBox(height: 16),
                                           _buildSectionCard(
                                             title: 'Indicadores',
                                             child: buildAdaptiveGrid(
@@ -405,7 +407,6 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                     _analytics!.totalVisits,
                                                   ),
                                                   icon: Icons.timeline,
-                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Taxa de decisões por visita',
@@ -416,7 +417,6 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                   ),
                                                   icon:
                                                       Icons.thumb_up_alt_outlined,
-                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Taxa de nova visita por ficha',
@@ -425,7 +425,6 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                     _analytics!.totalVisits,
                                                   ),
                                                   icon: Icons.repeat,
-                                                  compact: true,
                                                 ),
                                               ],
                                             ),
@@ -441,14 +440,12 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                       .toString(),
                                                   icon:
                                                       Icons.auto_graph_outlined,
-                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Ponte da Salvação',
                                                   _analytics!.totalPonteSalvacao
                                                       .toString(),
                                                   icon: Icons.alt_route_outlined,
-                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Decisões',
@@ -456,30 +453,26 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                       .toString(),
                                                   icon:
                                                       Icons.volunteer_activism,
-                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Reconciliações',
                                                   _analytics!
                                                       .totalReconciliacao
                                                       .toString(),
-                                                  icon: Icons.handshake_outlined,
-                                                  compact: true,
+                                                  icon:
+                                                      Icons.handshake_outlined,
                                                 ),
                                                 _buildMetric(
                                                   'Primeira vez no Evangelho',
                                                   _analytics!.totalPrimeiraVez
                                                       .toString(),
-                                                  icon:
-                                                      Icons.flash_on_outlined,
-                                                  compact: true,
+                                                  icon: Icons.flash_on_outlined,
                                                 ),
                                                 _buildMetric(
                                                   'Deseja nova visita',
                                                   _analytics!.totalNovaVisita
                                                       .toString(),
                                                   icon: Icons.event_repeat,
-                                                  compact: true,
                                                 ),
                                               ],
                                             ),
@@ -608,44 +601,39 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                       );
 
                                       if (twoColumns) {
-                                        return SingleChildScrollView(
-                                          child: Row(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Expanded(
-                                                child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    summarySection,
-                                                    const SizedBox(height: 16),
-                                                    leftColumn,
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 20),
-                                              Expanded(child: rightColumn),
-                                            ],
-                                          ),
-                                        );
-                                      }
-
-                                      return SingleChildScrollView(
-                                        child: Column(
+                                        return Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
                                             summarySection,
                                             const SizedBox(height: 16),
-                                            leftColumn,
-                                            const SizedBox(height: 20),
-                                            rightColumn,
+                                            Row(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                Expanded(child: leftColumn),
+                                                const SizedBox(width: 20),
+                                                Expanded(child: rightColumn),
+                                              ],
+                                            ),
                                           ],
-                                        ),
+                                        );
+                                      }
+
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          summarySection,
+                                          const SizedBox(height: 16),
+                                          leftColumn,
+                                          const SizedBox(height: 16),
+                                          rightColumn,
+                                        ],
                                       );
                                     },
                                   ),
+                                ),
                                 ),
                               ],
                             ),
