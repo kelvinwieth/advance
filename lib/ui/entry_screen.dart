@@ -1,20 +1,285 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 
 import '../data/app_database.dart';
 import 'fichas/fichas_home_screen.dart';
 import 'home_screen.dart';
+import 'widgets/app_dialog.dart';
 
 class EntryScreen extends StatelessWidget {
   final AppDatabase database;
 
   const EntryScreen({super.key, required this.database});
 
+  Future<void> _exportDatabaseCopy(BuildContext context) async {
+    final saveLocation = await getSaveLocation(
+      suggestedName: 'avanco.db',
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'SQLite', extensions: ['db']),
+      ],
+    );
+    if (saveLocation == null) return;
+
+    try {
+      final source = File(database.dbPath);
+      await source.copy(saveLocation.path);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Banco exportado com sucesso.')),
+      );
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Falha ao exportar o banco.')),
+      );
+    }
+  }
+
+  Future<bool> _confirmClearDatabase(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Limpar banco',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          child: const Text(
+            'Isso vai remover permanentemente membros, tarefas, fichas e atribuições. '
+            'Esta ação não pode ser desfeita.',
+          ),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.destructiveStyle(),
+                child: const Text('Limpar banco'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return confirmed ?? false;
+  }
+
+  Future<bool> _confirmMockDatabase(BuildContext context) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Banco de teste',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          child: const Text(
+            'Isso vai adicionar dados de teste para tarefas e fichas.',
+          ),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.primaryStyle(),
+                child: const Text('Adicionar dados de teste'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    return confirmed ?? false;
+  }
+
+  Future<void> _showConfigDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Configurações',
+          onClose: () => Navigator.of(dialogContext).pop(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: const [
+              Text(
+                'Gerencie dados e backups do backoffice.',
+                style: TextStyle(color: Colors.black54),
+              ),
+            ],
+          ),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () async {
+                  final confirm = await _confirmClearDatabase(dialogContext);
+                  if (!confirm) return;
+                  try {
+                    database.clearDatabase();
+                    if (!dialogContext.mounted) return;
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Banco limpo.')),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(content: Text('Falha ao limpar o banco.')),
+                    );
+                  }
+                },
+                style: AppDialog.destructiveStyle(),
+                child: const Text('Limpar banco'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () async {
+                  final confirm = await _confirmMockDatabase(dialogContext);
+                  if (!confirm) return;
+                  try {
+                    final now = DateTime.now();
+                    final isoDate =
+                        now.toIso8601String().split('T').first;
+                    database.insertMockData(isoDate: isoDate);
+                    database.insertMockVisitForms();
+                    if (!dialogContext.mounted) return;
+                    Navigator.of(dialogContext).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Dados de teste adicionados.'),
+                      ),
+                    );
+                  } catch (e) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Falha ao adicionar dados de teste.'),
+                      ),
+                    );
+                  }
+                },
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Banco de teste'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  await _exportDatabaseCopy(context);
+                },
+                style: AppDialog.primaryStyle(),
+                child: const Text('Exportar banco'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _promptConfigAccess(BuildContext context) async {
+    final controller = TextEditingController();
+    String? errorText;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return AppDialog(
+              title: 'Acesso às configurações',
+              onClose: () => Navigator.of(dialogContext).pop(false),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'Digite a senha para continuar.',
+                    style: TextStyle(color: Colors.black54),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: controller,
+                    obscureText: true,
+                    decoration: InputDecoration(
+                      hintText: 'Senha',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                    onSubmitted: (_) => setModalState(() {}),
+                  ),
+                  if (errorText != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      errorText!,
+                      style: const TextStyle(
+                        color: Color(0xFFDC2626),
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+              actions: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(false),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      if (controller.text.trim() != 'molodoy') {
+                        setModalState(() {
+                          errorText = 'Senha incorreta.';
+                        });
+                        return;
+                      }
+                      Navigator.of(dialogContext).pop(true);
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Acessar'),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+    controller.dispose();
+    if (confirmed == true) {
+      await _showConfigDialog(context);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
         child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: 820),
+          constraints: const BoxConstraints(maxWidth: 1080),
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -71,6 +336,12 @@ class EntryScreen extends StatelessWidget {
                           );
                         },
                       ),
+                      _ModuleCard(
+                        title: 'Configurações',
+                        description: 'Gerencie dados, testes e exportação.',
+                        icon: Icons.settings,
+                        onTap: () => _promptConfigAccess(context),
+                      ),
                     ];
 
                     if (isNarrow) {
@@ -79,6 +350,8 @@ class EntryScreen extends StatelessWidget {
                           children[0],
                           const SizedBox(height: 16),
                           children[1],
+                          const SizedBox(height: 16),
+                          children[2],
                         ],
                       );
                     }
@@ -87,6 +360,8 @@ class EntryScreen extends StatelessWidget {
                         Expanded(child: children[0]),
                         const SizedBox(width: 16),
                         Expanded(child: children[1]),
+                        const SizedBox(width: 16),
+                        Expanded(child: children[2]),
                       ],
                     );
                   },

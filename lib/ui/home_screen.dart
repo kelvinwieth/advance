@@ -1784,34 +1784,6 @@ class _HomeScreenState extends State<HomeScreen> {
             onPressed: _exportDayPdf,
             icon: const Icon(Icons.picture_as_pdf),
           ),
-          PopupMenuButton<String>(
-            color: Colors.white,
-            icon: const Icon(Icons.settings),
-            onSelected: (value) {
-              if (value == 'clear') {
-                _confirmClearDatabase();
-              } else if (value == 'mock') {
-                _confirmMockDatabase();
-              } else if (value == 'export') {
-                _exportDatabaseCopy();
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'clear',
-                child: Text('Limpar banco'),
-              ),
-              const PopupMenuItem(
-                value: 'mock',
-                child: Text('Banco de teste'),
-              ),
-              const PopupMenuItem(
-                value: 'export',
-                child: Text('Exportar banco'),
-              ),
-            ],
-          ),
-          const SizedBox(width: 8),
         ],
       ),
       body: _loading

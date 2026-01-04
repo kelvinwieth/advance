@@ -676,6 +676,7 @@ LIMIT ?;
       _db.execute('DELETE FROM member_tasks;');
       _db.execute('DELETE FROM members;');
       _db.execute('DELETE FROM tasks;');
+      _db.execute('DELETE FROM visit_forms;');
       _db.execute('COMMIT');
     } catch (e) {
       _db.execute('ROLLBACK');
@@ -821,6 +822,262 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         }
       }
 
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  void insertMockVisitForms({DateTime? baseDate}) {
+    final reference = baseDate ?? DateTime.now();
+    final visits = [
+      {
+        'visitAt': reference.subtract(const Duration(days: 1, hours: 2)),
+        'names': 'Ana, João',
+        'address': 'Rua do Churu',
+        'referencePoint': 'Próximo ao mercado',
+        'neighborhood': 'Felinos',
+        'city': 'Itaporanga',
+        'contacts': '83 99999-0001',
+        'literatureCount': 3,
+        'results': {
+          'evangelho': 1,
+          'ponte': 1,
+          'decisao': 1,
+          'reconciliacao': 0,
+          'primeira': 1,
+          'nova': 1,
+        },
+        'ages': {
+          'children': 1,
+          'youth': 1,
+          'adults': 1,
+          'elderly': 0,
+        },
+        'religion': {
+          'catolica': 1,
+          'espirita': 0,
+          'ateu': 0,
+          'desviado': 1,
+          'outros': 1,
+          'allLabel': null,
+        },
+        'notes': 'Família receptiva e aberta à oração.',
+        'prayer': 'Saúde da avó e emprego do pai.',
+        'team': 'Lucas, Camila',
+      },
+      {
+        'visitAt': reference.subtract(const Duration(days: 2, hours: 1)),
+        'names': 'Maria, Beatriz',
+        'address': 'Rua das Flores',
+        'referencePoint': 'Casa azul',
+        'neighborhood': 'Centro',
+        'city': 'Itaporanga',
+        'contacts': '83 98888-2211',
+        'literatureCount': 2,
+        'results': {
+          'evangelho': 1,
+          'ponte': 0,
+          'decisao': 0,
+          'reconciliacao': 1,
+          'primeira': 0,
+          'nova': 1,
+        },
+        'ages': {
+          'children': 0,
+          'youth': 1,
+          'adults': 1,
+          'elderly': 0,
+        },
+        'religion': {
+          'catolica': 2,
+          'espirita': 0,
+          'ateu': 0,
+          'desviado': 0,
+          'outros': 0,
+          'allLabel': 'catolica',
+        },
+        'notes': '',
+        'prayer': 'União da família.',
+        'team': 'Pedro, Larissa',
+      },
+      {
+        'visitAt': reference.subtract(const Duration(days: 3, hours: 3)),
+        'names': 'Carlos',
+        'address': 'Rua Nova Esperança',
+        'referencePoint': '',
+        'neighborhood': 'Santo Antônio',
+        'city': 'Itaporanga',
+        'contacts': '',
+        'literatureCount': 1,
+        'results': {
+          'evangelho': 1,
+          'ponte': 1,
+          'decisao': 1,
+          'reconciliacao': 0,
+          'primeira': 1,
+          'nova': 0,
+        },
+        'ages': {
+          'children': 0,
+          'youth': 0,
+          'adults': 1,
+          'elderly': 0,
+        },
+        'religion': {
+          'catolica': 0,
+          'espirita': 0,
+          'ateu': 1,
+          'desviado': 0,
+          'outros': 0,
+          'allLabel': 'ateu',
+        },
+        'notes': 'Pediu retorno para conversar mais.',
+        'prayer': '',
+        'team': 'Rafaela, Tiago',
+      },
+      {
+        'visitAt': reference.subtract(const Duration(days: 4, hours: 4)),
+        'names': 'Fernanda, Paula',
+        'address': 'Rua São José',
+        'referencePoint': 'Ao lado da praça',
+        'neighborhood': 'São João',
+        'city': 'Itaporanga',
+        'contacts': '83 97777-3344',
+        'literatureCount': 4,
+        'results': {
+          'evangelho': 1,
+          'ponte': 1,
+          'decisao': 1,
+          'reconciliacao': 1,
+          'primeira': 0,
+          'nova': 1,
+        },
+        'ages': {
+          'children': 0,
+          'youth': 0,
+          'adults': 2,
+          'elderly': 0,
+        },
+        'religion': {
+          'catolica': 0,
+          'espirita': 0,
+          'ateu': 0,
+          'desviado': 2,
+          'outros': 0,
+          'allLabel': 'desviado',
+        },
+        'notes': 'Reconciliação e oração.',
+        'prayer': 'Crescimento espiritual.',
+        'team': 'Mateus, Bia',
+      },
+      {
+        'visitAt': reference.subtract(const Duration(days: 5, hours: 2)),
+        'names': 'Helena, José',
+        'address': 'Rua do Rio',
+        'referencePoint': 'Próximo ao posto',
+        'neighborhood': 'Lagoa',
+        'city': 'Itaporanga',
+        'contacts': '',
+        'literatureCount': 2,
+        'results': {
+          'evangelho': 1,
+          'ponte': 0,
+          'decisao': 0,
+          'reconciliacao': 0,
+          'primeira': 1,
+          'nova': 0,
+        },
+        'ages': {
+          'children': 1,
+          'youth': 0,
+          'adults': 1,
+          'elderly': 0,
+        },
+        'religion': {
+          'catolica': 1,
+          'espirita': 0,
+          'ateu': 0,
+          'desviado': 0,
+          'outros': 1,
+          'allLabel': null,
+        },
+        'notes': '',
+        'prayer': 'Saúde da criança.',
+        'team': 'Isabela, André',
+      },
+    ];
+
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      for (final visit in visits) {
+        final results = visit['results'] as Map<String, Object?>;
+        final ages = visit['ages'] as Map<String, Object?>;
+        final religion = visit['religion'] as Map<String, Object?>;
+        _db.execute(
+          '''
+INSERT INTO visit_forms (
+  visit_at,
+  names,
+  address,
+  reference_point,
+  neighborhood,
+  city,
+  contacts,
+  literature_count,
+  result_evangelho,
+  result_ponte_salvacao,
+  result_aceitou_jesus,
+  result_reconciliacao,
+  result_primeira_vez,
+  result_nova_visita,
+  age_children,
+  age_youth,
+  age_adults,
+  age_elderly,
+  religion_catolica,
+  religion_espirita,
+  religion_ateu,
+  religion_desviado,
+  religion_outros,
+  religion_all_label,
+  notes,
+  prayer_requests,
+  team
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+''',
+          [
+            _formatDateTime(visit['visitAt'] as DateTime),
+            visit['names'],
+            visit['address'],
+            visit['referencePoint'],
+            visit['neighborhood'],
+            visit['city'],
+            visit['contacts'],
+            visit['literatureCount'],
+            results['evangelho'],
+            results['ponte'],
+            results['decisao'],
+            results['reconciliacao'],
+            results['primeira'],
+            results['nova'],
+            ages['children'],
+            ages['youth'],
+            ages['adults'],
+            ages['elderly'],
+            religion['catolica'],
+            religion['espirita'],
+            religion['ateu'],
+            religion['desviado'],
+            religion['outros'],
+            religion['allLabel'],
+            visit['notes'],
+            visit['prayer'],
+            visit['team'],
+          ],
+        );
+      }
       _db.execute('COMMIT');
     } catch (e) {
       _db.execute('ROLLBACK');

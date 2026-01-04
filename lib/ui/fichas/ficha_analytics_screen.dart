@@ -439,12 +439,23 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                   'Gráfico apresentado',
                                                   _analytics!.totalEvangelho
                                                       .toString(),
+                                                  icon:
+                                                      Icons.auto_graph_outlined,
                                                   compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Ponte da Salvação',
                                                   _analytics!.totalPonteSalvacao
                                                       .toString(),
+                                                  icon: Icons.alt_route_outlined,
+                                                  compact: true,
+                                                ),
+                                                _buildMetric(
+                                                  'Decisões',
+                                                  _analytics!.totalAceitouJesus
+                                                      .toString(),
+                                                  icon:
+                                                      Icons.volunteer_activism,
                                                   compact: true,
                                                 ),
                                                 _buildMetric(
@@ -452,12 +463,22 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                   _analytics!
                                                       .totalReconciliacao
                                                       .toString(),
+                                                  icon: Icons.handshake_outlined,
                                                   compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Primeira vez no Evangelho',
                                                   _analytics!.totalPrimeiraVez
                                                       .toString(),
+                                                  icon:
+                                                      Icons.flash_on_outlined,
+                                                  compact: true,
+                                                ),
+                                                _buildMetric(
+                                                  'Deseja nova visita',
+                                                  _analytics!.totalNovaVisita
+                                                      .toString(),
+                                                  icon: Icons.event_repeat,
                                                   compact: true,
                                                 ),
                                               ],
