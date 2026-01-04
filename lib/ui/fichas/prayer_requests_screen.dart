@@ -67,7 +67,16 @@ class _PrayerRequestsScreenState extends State<PrayerRequestsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Pedidos de oração'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/acev.png',
+              height: 26,
+            ),
+            const SizedBox(width: 10),
+            const Text('Pedidos de oração'),
+          ],
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),

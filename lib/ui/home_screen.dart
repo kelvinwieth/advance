@@ -1773,7 +1773,7 @@ class _HomeScreenState extends State<HomeScreen> {
               height: 28,
             ),
             const SizedBox(width: 10),
-            const Text('Avanço Missionário'),
+            const Text('Tarefas'),
           ],
         ),
         backgroundColor: Colors.white,
@@ -2029,99 +2029,133 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Flexible(
-                    child: FilterChip(
-                      label: const Text('Disponível'),
-                      selected: !_showAllMembers,
-                      onSelected: (selected) {
+                  Expanded(
+                    child: InkWell(
+                      borderRadius: BorderRadius.circular(12),
+                      onTap: () {
                         setState(() {
-                          _showAllMembers = !selected;
+                          _showAllMembers = !_showAllMembers;
                         });
                       },
-                      backgroundColor: const Color(0xFFF1F2F6),
-                      selectedColor: const Color(0xFFDFF7E8),
-                      checkmarkColor: const Color(0xFF118C4F),
-                      labelStyle: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: WidgetStateColor.fromMap(
-                          {
-                            WidgetState.selected: Colors.black,
-                            WidgetState.any: Colors.black,
-                          },
+                      child: Container(
+                        height: 36,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: !_showAllMembers
+                              ? const Color(0xFFDFF7E8)
+                              : const Color(0xFFF1F2F6),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (!_showAllMembers) ...[
+                              const Icon(
+                                Icons.check,
+                                size: 16,
+                                color: Color(0xFF118C4F),
+                              ),
+                              const SizedBox(width: 6),
+                            ],
+                            const Text(
+                              'Disponível',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.black,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  FilterChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_genderFilter == 'M') ...[
-                          const Icon(
-                            Icons.male,
-                            size: 14,
-                            color: Color(0xFF1D4ED8),
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        const Text('H'),
-                      ],
-                    ),
-                    selected: _genderFilter == 'M',
-                    onSelected: (selected) {
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
                       setState(() {
-                        _genderFilter = selected ? 'M' : 'all';
+                        _genderFilter = _genderFilter == 'M' ? 'all' : 'M';
                       });
                     },
-                    showCheckmark: false,
-                    backgroundColor: const Color(0xFFF1F2F6),
-                    selectedColor: const Color(0xFFE8F0FF),
-                    labelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: WidgetStateColor.fromMap(
-                        {
-                          WidgetState.selected: Colors.black,
-                          WidgetState.any: Colors.black,
-                        },
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _genderFilter == 'M'
+                            ? const Color(0xFFE8F0FF)
+                            : const Color(0xFFF1F2F6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_genderFilter == 'M') ...[
+                            const Icon(
+                              Icons.male,
+                              size: 14,
+                              color: Color(0xFF1D4ED8),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          const Text(
+                            'H',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
                   const SizedBox(width: 8),
-                  FilterChip(
-                    label: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (_genderFilter == 'F') ...[
-                          const Icon(
-                            Icons.female,
-                            size: 14,
-                            color: Color(0xFFBE185D),
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                        const Text('M'),
-                      ],
-                    ),
-                    selected: _genderFilter == 'F',
-                    onSelected: (selected) {
+                  InkWell(
+                    borderRadius: BorderRadius.circular(12),
+                    onTap: () {
                       setState(() {
-                        _genderFilter = selected ? 'F' : 'all';
+                        _genderFilter = _genderFilter == 'F' ? 'all' : 'F';
                       });
                     },
-                    showCheckmark: false,
-                    backgroundColor: const Color(0xFFF1F2F6),
-                    selectedColor: const Color(0xFFFFE7F3),
-                    labelStyle: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: WidgetStateColor.fromMap(
-                        {
-                          WidgetState.selected: Colors.black,
-                          WidgetState.any: Colors.black,
-                        },
+                    child: Container(
+                      height: 36,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _genderFilter == 'F'
+                            ? const Color(0xFFFFE7F3)
+                            : const Color(0xFFF1F2F6),
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (_genderFilter == 'F') ...[
+                            const Icon(
+                              Icons.female,
+                              size: 14,
+                              color: Color(0xFFBE185D),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          const Text(
+                            'M',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.black,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),

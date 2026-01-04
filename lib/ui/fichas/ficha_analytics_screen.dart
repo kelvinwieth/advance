@@ -195,7 +195,16 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Insights das Fichas'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/acev.png',
+              height: 26,
+            ),
+            const SizedBox(width: 10),
+            const Text('Insights'),
+          ],
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),

@@ -92,7 +92,16 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Fichas de Visita'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/acev.png',
+              height: 26,
+            ),
+            const SizedBox(width: 10),
+            const Text('Fichas'),
+          ],
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),

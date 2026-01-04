@@ -12,20 +12,6 @@ class EntryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            Image.asset(
-              'assets/acev.png',
-              height: 28,
-            ),
-            const SizedBox(width: 10),
-            const Text('Avanço Missionário'),
-          ],
-        ),
-        backgroundColor: Colors.white,
-        surfaceTintColor: Colors.white,
-      ),
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 820),
@@ -34,16 +20,24 @@ class EntryScreen extends StatelessWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
-                  'Bem-vindo ao backoffice missionário',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 22, fontWeight: FontWeight.w700),
+                Image.asset(
+                  'assets/acev.png',
+                  height: 68,
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 16),
+                const Text(
+                  'Avanço Missionário',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 34,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 10),
                 const Text(
                   'Escolha o módulo que você deseja acessar.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.black54),
+                  style: TextStyle(fontSize: 16, color: Colors.black54),
                 ),
                 const SizedBox(height: 24),
                 LayoutBuilder(

@@ -477,7 +477,16 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     final isEditing = widget.existing != null;
     return Scaffold(
       appBar: AppBar(
-        title: Text(isEditing ? 'Editar ficha' : 'Nova ficha'),
+        title: Row(
+          children: [
+            Image.asset(
+              'assets/acev.png',
+              height: 26,
+            ),
+            const SizedBox(width: 10),
+            Text(isEditing ? 'Editar ficha' : 'Nova ficha'),
+          ],
+        ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
       ),
