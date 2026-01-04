@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:sqlite3/sqlite3.dart';
@@ -1083,5 +1085,18 @@ INSERT INTO visit_forms (
       _db.execute('ROLLBACK');
       rethrow;
     }
+  }
+
+  void exportDatabase(String targetPath) {
+    final dir = p.dirname(_dbPath);
+    final tempPath = p.join(dir, 'avanco-export.db');
+    final escaped = tempPath.replaceAll("'", "''");
+    _db.execute('VACUUM INTO \'$escaped\';');
+    final targetFile = File(targetPath);
+    if (targetFile.existsSync()) {
+      targetFile.deleteSync();
+    }
+    File(tempPath).copySync(targetPath);
+    File(tempPath).deleteSync();
   }
 }

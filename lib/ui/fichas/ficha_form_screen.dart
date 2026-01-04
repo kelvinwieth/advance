@@ -413,7 +413,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
       controller: controller,
       maxLines: maxLines,
       decoration: InputDecoration(
-        hintText: hint,
+        labelText: hint,
         filled: true,
         fillColor: AppDialog.inputFill,
         border: OutlineInputBorder(
@@ -544,30 +544,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                         controller: _contactsController,
                         hint: 'Contatos (separados por vírgula)',
                       ),
-                      const SizedBox(height: 12),
-                      InkWell(
-                        onTap: _pickDateTime,
-                        borderRadius: BorderRadius.circular(12),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 14,
-                          ),
-                          decoration: BoxDecoration(
-                            color: AppDialog.inputFill,
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.calendar_today_outlined, size: 18),
-                              const SizedBox(width: 8),
-                              Text(_dateFormat.format(_visitAt)),
-                              const Spacer(),
-                              const Icon(Icons.edit_calendar_outlined, size: 18),
-                            ],
-                          ),
-                        ),
-                      ),
                     ],
                   ),
                 ),
@@ -578,53 +554,70 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 8,
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _ResultChip(
-                            label: 'Gráfico apresentado',
-                            selected: _resultEvangelho,
-                            onChanged: (value) =>
-                                setState(() => _resultEvangelho = value),
+                          Expanded(
+                            flex: 3,
+                            child: Wrap(
+                              spacing: 12,
+                              runSpacing: 8,
+                              children: [
+                                _ResultChip(
+                                  label: 'Gráfico apresentado',
+                                  selected: _resultEvangelho,
+                                  onChanged: (value) =>
+                                      setState(() => _resultEvangelho = value),
+                                ),
+                                _ResultChip(
+                                  label: 'Ponte da Salvação apresentada',
+                                  selected: _resultPonteSalvacao,
+                                  onChanged: (value) => setState(
+                                    () => _resultPonteSalvacao = value,
+                                  ),
+                                ),
+                                _ResultChip(
+                                  label: 'Decisão',
+                                  selected: _resultAceitouJesus,
+                                  onChanged: (value) =>
+                                      setState(() => _resultAceitouJesus = value),
+                                ),
+                                _ResultChip(
+                                  label: 'Reconciliação',
+                                  selected: _resultReconciliacao,
+                                  onChanged: (value) =>
+                                      setState(() => _resultReconciliacao = value),
+                                ),
+                                _ResultChip(
+                                  label:
+                                      'Primeira vez que ouviu falar do Evangelho',
+                                  selected: _resultPrimeiraVez,
+                                  onChanged: (value) =>
+                                      setState(() => _resultPrimeiraVez = value),
+                                ),
+                                _ResultChip(
+                                  label: 'Deseja nova visita',
+                                  selected: _resultNovaVisita,
+                                  onChanged: (value) =>
+                                      setState(() => _resultNovaVisita = value),
+                                ),
+                              ],
+                            ),
                           ),
-                          _ResultChip(
-                            label: 'Ponte da Salvação apresentada',
-                            selected: _resultPonteSalvacao,
-                            onChanged: (value) =>
-                                setState(() => _resultPonteSalvacao = value),
-                          ),
-                          _ResultChip(
-                            label: 'Decisão',
-                            selected: _resultAceitouJesus,
-                            onChanged: (value) =>
-                                setState(() => _resultAceitouJesus = value),
-                          ),
-                          _ResultChip(
-                            label: 'Reconciliação',
-                            selected: _resultReconciliacao,
-                            onChanged: (value) =>
-                                setState(() => _resultReconciliacao = value),
-                          ),
-                          _ResultChip(
-                            label:
-                                'Primeira vez que ouviu falar do Evangelho',
-                            selected: _resultPrimeiraVez,
-                            onChanged: (value) =>
-                                setState(() => _resultPrimeiraVez = value),
-                          ),
-                          _ResultChip(
-                            label: 'Deseja nova visita',
-                            selected: _resultNovaVisita,
-                            onChanged: (value) =>
-                                setState(() => _resultNovaVisita = value),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            flex: 1,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Quantidade de literaturas'),
+                                const SizedBox(height: 6),
+                                _buildCounterField(_literatureController),
+                              ],
+                            ),
                           ),
                         ],
                       ),
-                      const SizedBox(height: 16),
-                      const Text('Quantidade de literaturas distribuídas'),
-                      const SizedBox(height: 6),
-                      _buildCounterField(_literatureController),
                     ],
                   ),
                 ),
@@ -833,7 +826,8 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                                 ],
                               ),
                             ),
-                            const Spacer(),
+                            const SizedBox(width: 12),
+                            const Expanded(child: SizedBox.shrink()),
                           ],
                         ),
                       ],
@@ -862,6 +856,33 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                         hint: 'Equipe (nomes separados por vírgula)',
                       ),
                     ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Data e hora da visita',
+                  child: InkWell(
+                    onTap: _pickDateTime,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 14,
+                      ),
+                      decoration: BoxDecoration(
+                        color: AppDialog.inputFill,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.calendar_today_outlined, size: 18),
+                          const SizedBox(width: 8),
+                          Text(_dateFormat.format(_visitAt)),
+                          const Spacer(),
+                          const Icon(Icons.edit_calendar_outlined, size: 18),
+                        ],
+                      ),
+                    ),
                   ),
                 ),
                 if (_errorMessage != null) ...[
@@ -905,6 +926,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                     Expanded(
                       child: ElevatedButton(
                         onPressed: _saveForm,
+                        style: AppDialog.primaryStyle(),
                         child: const Text('Salvar ficha'),
                       ),
                     ),

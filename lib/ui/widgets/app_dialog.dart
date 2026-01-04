@@ -4,7 +4,7 @@ class AppDialog extends StatelessWidget {
   static const Color background = Color(0xFFF9FBFD);
   static const Color inputFill = Color(0xFFE9EFF2);
   static const Color sectionFill = Color(0xFFF1F5F7);
-  static const Color primaryButton = Color(0xFF0F5BFF);
+  static const Color primaryButton = Color(0xFF038A99);
 
   final String title;
   final String? subtitle;

@@ -23,8 +23,7 @@ class EntryScreen extends StatelessWidget {
     if (saveLocation == null) return;
 
     try {
-      final source = File(database.dbPath);
-      await source.copy(saveLocation.path);
+      database.exportDatabase(saveLocation.path);
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Banco exportado com sucesso.')),
       );
@@ -216,7 +215,7 @@ class EntryScreen extends StatelessWidget {
                     controller: controller,
                     obscureText: true,
                     decoration: InputDecoration(
-                      hintText: 'Senha',
+                      labelText: 'Senha',
                       filled: true,
                       fillColor: AppDialog.inputFill,
                       border: OutlineInputBorder(
