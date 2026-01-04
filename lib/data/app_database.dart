@@ -20,6 +20,11 @@ class AppDatabase {
     return AppDatabase._(db, dbPath);
   }
 
+  String _formatDateTime(DateTime value) {
+    final iso = value.toIso8601String().replaceFirst('T', ' ');
+    return iso.split('.').first;
+  }
+
   String get dbPath => _dbPath;
 
   static void _migrate(Database db) {
@@ -54,6 +59,40 @@ CREATE TABLE IF NOT EXISTS member_tasks (
 );
 ''');
       db.execute('''
+CREATE TABLE IF NOT EXISTS visit_forms (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  visit_at TEXT NOT NULL CHECK (visit_at = datetime(visit_at)),
+  names TEXT NOT NULL,
+  address TEXT NOT NULL,
+  reference_point TEXT NOT NULL,
+  neighborhood TEXT NOT NULL,
+  city TEXT NOT NULL,
+  contacts TEXT NOT NULL,
+  result_evangelho INTEGER NOT NULL DEFAULT 0 CHECK (result_evangelho IN (0, 1)),
+  result_ponte_salvacao INTEGER NOT NULL DEFAULT 0 CHECK (result_ponte_salvacao IN (0, 1)),
+  result_aceitou_jesus INTEGER NOT NULL DEFAULT 0 CHECK (result_aceitou_jesus IN (0, 1)),
+  result_reconciliacao INTEGER NOT NULL DEFAULT 0 CHECK (result_reconciliacao IN (0, 1)),
+  result_primeira_vez INTEGER NOT NULL DEFAULT 0 CHECK (result_primeira_vez IN (0, 1)),
+  result_nova_visita INTEGER NOT NULL DEFAULT 0 CHECK (result_nova_visita IN (0, 1)),
+  age_children INTEGER NOT NULL DEFAULT 0 CHECK (age_children >= 0),
+  age_youth INTEGER NOT NULL DEFAULT 0 CHECK (age_youth >= 0),
+  age_adults INTEGER NOT NULL DEFAULT 0 CHECK (age_adults >= 0),
+  age_elderly INTEGER NOT NULL DEFAULT 0 CHECK (age_elderly >= 0),
+  religion_catolica INTEGER NOT NULL DEFAULT 0 CHECK (religion_catolica >= 0),
+  religion_espirita INTEGER NOT NULL DEFAULT 0 CHECK (religion_espirita >= 0),
+  religion_ateu INTEGER NOT NULL DEFAULT 0 CHECK (religion_ateu >= 0),
+  religion_desviado INTEGER NOT NULL DEFAULT 0 CHECK (religion_desviado >= 0),
+  religion_outros INTEGER NOT NULL DEFAULT 0 CHECK (religion_outros >= 0),
+  religion_all_label TEXT NULL CHECK (
+    religion_all_label IN ('catolica', 'espirita', 'ateu', 'desviado', 'outros')
+  ),
+  notes TEXT NOT NULL,
+  prayer_requests TEXT NOT NULL,
+  team TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+''');
+      db.execute('''
 CREATE INDEX IF NOT EXISTS idx_member_tasks_date ON member_tasks(date);
 ''');
       db.execute('''
@@ -61,6 +100,12 @@ CREATE INDEX IF NOT EXISTS idx_member_tasks_task_date ON member_tasks(task_id, d
 ''');
       db.execute('''
 CREATE INDEX IF NOT EXISTS idx_member_tasks_member_date ON member_tasks(member_id, date);
+''');
+      db.execute('''
+CREATE INDEX IF NOT EXISTS idx_visit_forms_visit_at ON visit_forms(visit_at);
+''');
+      db.execute('''
+CREATE INDEX IF NOT EXISTS idx_visit_forms_city ON visit_forms(city);
 ''');
       db.execute('''
 CREATE TRIGGER IF NOT EXISTS member_tasks_gender_check
@@ -138,6 +183,280 @@ GROUP BY member_id;
       counts[row['member_id'] as int] = row['total'] as int;
     }
     return counts;
+  }
+
+  List<VisitForm> fetchVisitForms() {
+    final result = _db.select('''
+SELECT
+  id,
+  visit_at,
+  names,
+  address,
+  reference_point,
+  neighborhood,
+  city,
+  contacts,
+  result_evangelho,
+  result_ponte_salvacao,
+  result_aceitou_jesus,
+  result_reconciliacao,
+  result_primeira_vez,
+  result_nova_visita,
+  age_children,
+  age_youth,
+  age_adults,
+  age_elderly,
+  religion_catolica,
+  religion_espirita,
+  religion_ateu,
+  religion_desviado,
+  religion_outros,
+  religion_all_label,
+  notes,
+  prayer_requests,
+  team
+FROM visit_forms
+ORDER BY visit_at DESC, id DESC;
+''');
+    return result.map((row) => VisitForm.fromRow(row)).toList();
+  }
+
+  void insertVisitForm({
+    required DateTime visitAt,
+    required String names,
+    required String address,
+    required String referencePoint,
+    required String neighborhood,
+    required String city,
+    required String contacts,
+    required bool resultEvangelho,
+    required bool resultPonteSalvacao,
+    required bool resultAceitouJesus,
+    required bool resultReconciliacao,
+    required bool resultPrimeiraVez,
+    required bool resultNovaVisita,
+    required int ageChildren,
+    required int ageYouth,
+    required int ageAdults,
+    required int ageElderly,
+    required int religionCatolica,
+    required int religionEspirita,
+    required int religionAteu,
+    required int religionDesviado,
+    required int religionOutros,
+    required String? religionAllLabel,
+    required String notes,
+    required String prayerRequests,
+    required String team,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        '''
+INSERT INTO visit_forms (
+  visit_at,
+  names,
+  address,
+  reference_point,
+  neighborhood,
+  city,
+  contacts,
+  result_evangelho,
+  result_ponte_salvacao,
+  result_aceitou_jesus,
+  result_reconciliacao,
+  result_primeira_vez,
+  result_nova_visita,
+  age_children,
+  age_youth,
+  age_adults,
+  age_elderly,
+  religion_catolica,
+  religion_espirita,
+  religion_ateu,
+  religion_desviado,
+  religion_outros,
+  religion_all_label,
+  notes,
+  prayer_requests,
+  team
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+''',
+        [
+          _formatDateTime(visitAt),
+          names,
+          address,
+          referencePoint,
+          neighborhood,
+          city,
+          contacts,
+          resultEvangelho ? 1 : 0,
+          resultPonteSalvacao ? 1 : 0,
+          resultAceitouJesus ? 1 : 0,
+          resultReconciliacao ? 1 : 0,
+          resultPrimeiraVez ? 1 : 0,
+          resultNovaVisita ? 1 : 0,
+          ageChildren,
+          ageYouth,
+          ageAdults,
+          ageElderly,
+          religionCatolica,
+          religionEspirita,
+          religionAteu,
+          religionDesviado,
+          religionOutros,
+          religionAllLabel,
+          notes,
+          prayerRequests,
+          team,
+        ],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  void updateVisitForm({
+    required int id,
+    required DateTime visitAt,
+    required String names,
+    required String address,
+    required String referencePoint,
+    required String neighborhood,
+    required String city,
+    required String contacts,
+    required bool resultEvangelho,
+    required bool resultPonteSalvacao,
+    required bool resultAceitouJesus,
+    required bool resultReconciliacao,
+    required bool resultPrimeiraVez,
+    required bool resultNovaVisita,
+    required int ageChildren,
+    required int ageYouth,
+    required int ageAdults,
+    required int ageElderly,
+    required int religionCatolica,
+    required int religionEspirita,
+    required int religionAteu,
+    required int religionDesviado,
+    required int religionOutros,
+    required String? religionAllLabel,
+    required String notes,
+    required String prayerRequests,
+    required String team,
+  }) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute(
+        '''
+UPDATE visit_forms
+SET
+  visit_at = ?,
+  names = ?,
+  address = ?,
+  reference_point = ?,
+  neighborhood = ?,
+  city = ?,
+  contacts = ?,
+  result_evangelho = ?,
+  result_ponte_salvacao = ?,
+  result_aceitou_jesus = ?,
+  result_reconciliacao = ?,
+  result_primeira_vez = ?,
+  result_nova_visita = ?,
+  age_children = ?,
+  age_youth = ?,
+  age_adults = ?,
+  age_elderly = ?,
+  religion_catolica = ?,
+  religion_espirita = ?,
+  religion_ateu = ?,
+  religion_desviado = ?,
+  religion_outros = ?,
+  religion_all_label = ?,
+  notes = ?,
+  prayer_requests = ?,
+  team = ?
+WHERE id = ?;
+''',
+        [
+          _formatDateTime(visitAt),
+          names,
+          address,
+          referencePoint,
+          neighborhood,
+          city,
+          contacts,
+          resultEvangelho ? 1 : 0,
+          resultPonteSalvacao ? 1 : 0,
+          resultAceitouJesus ? 1 : 0,
+          resultReconciliacao ? 1 : 0,
+          resultPrimeiraVez ? 1 : 0,
+          resultNovaVisita ? 1 : 0,
+          ageChildren,
+          ageYouth,
+          ageAdults,
+          ageElderly,
+          religionCatolica,
+          religionEspirita,
+          religionAteu,
+          religionDesviado,
+          religionOutros,
+          religionAllLabel,
+          notes,
+          prayerRequests,
+          team,
+          id,
+        ],
+      );
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
+  VisitAnalytics fetchVisitAnalytics() {
+    final result = _db.select('''
+SELECT
+  COUNT(*) AS total_visits,
+  COALESCE(SUM(result_aceitou_jesus), 0) AS total_aceitou,
+  COALESCE(SUM(result_nova_visita), 0) AS total_nova,
+  COALESCE(SUM(age_children), 0) AS age_children,
+  COALESCE(SUM(age_youth), 0) AS age_youth,
+  COALESCE(SUM(age_adults), 0) AS age_adults,
+  COALESCE(SUM(age_elderly), 0) AS age_elderly,
+  COALESCE(SUM(religion_catolica), 0) AS religion_catolica,
+  COALESCE(SUM(religion_espirita), 0) AS religion_espirita,
+  COALESCE(SUM(religion_ateu), 0) AS religion_ateu,
+  COALESCE(SUM(religion_desviado), 0) AS religion_desviado,
+  COALESCE(SUM(religion_outros), 0) AS religion_outros
+FROM visit_forms;
+''');
+    final row = result.first;
+    final ageChildren = row['age_children'] as int;
+    final ageYouth = row['age_youth'] as int;
+    final ageAdults = row['age_adults'] as int;
+    final ageElderly = row['age_elderly'] as int;
+    final totalPeople = ageChildren + ageYouth + ageAdults + ageElderly;
+
+    return VisitAnalytics(
+      totalVisits: row['total_visits'] as int,
+      totalPeople: totalPeople,
+      totalAceitouJesus: row['total_aceitou'] as int,
+      totalNovaVisita: row['total_nova'] as int,
+      ageChildren: ageChildren,
+      ageYouth: ageYouth,
+      ageAdults: ageAdults,
+      ageElderly: ageElderly,
+      religionCatolica: row['religion_catolica'] as int,
+      religionEspirita: row['religion_espirita'] as int,
+      religionAteu: row['religion_ateu'] as int,
+      religionDesviado: row['religion_desviado'] as int,
+      religionOutros: row['religion_outros'] as int,
+    );
   }
 
   void assignMemberToTask({

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'data/app_database.dart';
-import 'ui/home_screen.dart';
+import 'ui/entry_screen.dart';
 
 class AvancoApp extends StatelessWidget {
   final AppDatabase database;
@@ -45,7 +45,7 @@ class AvancoApp extends StatelessWidget {
         dividerColor: outline,
         cardTheme: const CardThemeData(margin: EdgeInsets.zero, elevation: 0),
       ),
-      home: HomeScreen(database: database),
+      home: EntryScreen(database: database),
     );
   }
 }
