@@ -167,6 +167,10 @@ class VisitAnalytics {
   final int totalPeople;
   final int totalAceitouJesus;
   final int totalNovaVisita;
+  final int totalEvangelho;
+  final int totalPonteSalvacao;
+  final int totalReconciliacao;
+  final int totalPrimeiraVez;
   final int ageChildren;
   final int ageYouth;
   final int ageAdults;
@@ -182,6 +186,10 @@ class VisitAnalytics {
     required this.totalPeople,
     required this.totalAceitouJesus,
     required this.totalNovaVisita,
+    required this.totalEvangelho,
+    required this.totalPonteSalvacao,
+    required this.totalReconciliacao,
+    required this.totalPrimeiraVez,
     required this.ageChildren,
     required this.ageYouth,
     required this.ageAdults,
@@ -192,4 +200,11 @@ class VisitAnalytics {
     required this.religionDesviado,
     required this.religionOutros,
   });
+}
+
+class VisitCityCount {
+  final String city;
+  final int total;
+
+  const VisitCityCount({required this.city, required this.total});
 }

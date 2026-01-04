@@ -422,7 +422,11 @@ WHERE id = ?;
     final result = _db.select('''
 SELECT
   COUNT(*) AS total_visits,
+  COALESCE(SUM(result_evangelho), 0) AS total_evangelho,
+  COALESCE(SUM(result_ponte_salvacao), 0) AS total_ponte,
   COALESCE(SUM(result_aceitou_jesus), 0) AS total_aceitou,
+  COALESCE(SUM(result_reconciliacao), 0) AS total_reconciliacao,
+  COALESCE(SUM(result_primeira_vez), 0) AS total_primeira_vez,
   COALESCE(SUM(result_nova_visita), 0) AS total_nova,
   COALESCE(SUM(age_children), 0) AS age_children,
   COALESCE(SUM(age_youth), 0) AS age_youth,
@@ -445,7 +449,11 @@ FROM visit_forms;
     return VisitAnalytics(
       totalVisits: row['total_visits'] as int,
       totalPeople: totalPeople,
+      totalEvangelho: row['total_evangelho'] as int,
+      totalPonteSalvacao: row['total_ponte'] as int,
       totalAceitouJesus: row['total_aceitou'] as int,
+      totalReconciliacao: row['total_reconciliacao'] as int,
+      totalPrimeiraVez: row['total_primeira_vez'] as int,
       totalNovaVisita: row['total_nova'] as int,
       ageChildren: ageChildren,
       ageYouth: ageYouth,
@@ -457,6 +465,25 @@ FROM visit_forms;
       religionDesviado: row['religion_desviado'] as int,
       religionOutros: row['religion_outros'] as int,
     );
+  }
+
+  List<VisitCityCount> fetchVisitCityCounts({int limit = 6}) {
+    final result = _db.select('''
+SELECT city, COUNT(*) AS total
+FROM visit_forms
+WHERE city IS NOT NULL AND trim(city) != ''
+GROUP BY city
+ORDER BY total DESC, city ASC
+LIMIT ?;
+''', [limit]);
+    return result
+        .map(
+          (row) => VisitCityCount(
+            city: row['city'] as String,
+            total: row['total'] as int,
+          ),
+        )
+        .toList();
   }
 
   void assignMemberToTask({
