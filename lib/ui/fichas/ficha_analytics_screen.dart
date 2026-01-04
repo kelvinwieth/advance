@@ -16,7 +16,7 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
   bool _loading = true;
   String? _errorMessage;
   VisitAnalytics? _analytics;
-  List<VisitCityCount> _cityCounts = [];
+  List<VisitNeighborhoodCount> _neighborhoodCounts = [];
 
   @override
   void initState() {
@@ -32,11 +32,11 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
 
     try {
       final analytics = widget.database.fetchVisitAnalytics();
-      final cityCounts = widget.database.fetchVisitCityCounts();
+      final neighborhoodCounts = widget.database.fetchVisitNeighborhoodCounts();
       if (!mounted) return;
       setState(() {
         _analytics = analytics;
-        _cityCounts = cityCounts;
+        _neighborhoodCounts = neighborhoodCounts;
         _loading = false;
       });
     } catch (e) {
@@ -48,9 +48,17 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
     }
   }
 
-  Widget _buildMetric(String label, String value, {IconData? icon}) {
+  Widget _buildMetric(
+    String label,
+    String value, {
+    IconData? icon,
+    bool compact = false,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.symmetric(
+        horizontal: 14,
+        vertical: compact ? 10 : 16,
+      ),
       decoration: BoxDecoration(
         color: const Color(0xFFF7FBFC),
         borderRadius: BorderRadius.circular(16),
@@ -258,50 +266,129 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                       final twoColumns =
                                           constraints.maxWidth >= 900;
 
+                                      final summaryMetrics = [
+                                        _buildMetric(
+                                          'Casas visitadas',
+                                          _analytics!.totalVisits.toString(),
+                                          icon: Icons.home_outlined,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Pessoas visitadas',
+                                          _analytics!.totalPeople.toString(),
+                                          icon: Icons.people_outline,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Crianças visitadas',
+                                          _analytics!.ageChildren.toString(),
+                                          icon: Icons.child_care_outlined,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Literaturas distribuídas',
+                                          _analytics!.totalLiterature.toString(),
+                                          icon: Icons.menu_book_outlined,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Decisões por Cristo',
+                                          _analytics!.totalAceitouJesus.toString(),
+                                          icon: Icons.volunteer_activism,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Reconciliações',
+                                          _analytics!.totalReconciliacao.toString(),
+                                          icon: Icons.handshake_outlined,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Nova visita solicitada',
+                                          _analytics!.totalNovaVisita.toString(),
+                                          icon: Icons.event_repeat,
+                                          compact: true,
+                                        ),
+                                        _buildMetric(
+                                          'Bairros alcançados',
+                                          _analytics!.totalNeighborhoods.toString(),
+                                          icon: Icons.map_outlined,
+                                          compact: true,
+                                        ),
+                                      ];
+
+                                      final summarySection = _buildSectionCard(
+                                        title: 'Resumo geral',
+                                        child: LayoutBuilder(
+                                          builder: (context, summaryConstraints) {
+                                            final maxWidth =
+                                                summaryConstraints.maxWidth;
+                                            final targetWidth = 240.0;
+                                            final columns =
+                                                (maxWidth / targetWidth)
+                                                    .floor()
+                                                    .clamp(2, 4);
+                                            final spacing = 12.0;
+                                            final cardWidth = (maxWidth -
+                                                    (spacing * (columns - 1))) /
+                                                columns;
+
+                                            return Wrap(
+                                              spacing: spacing,
+                                              runSpacing: spacing,
+                                              children: [
+                                                for (final metric
+                                                    in summaryMetrics)
+                                                  SizedBox(
+                                                    width: cardWidth,
+                                                    child: metric,
+                                                  ),
+                                              ],
+                                            );
+                                          },
+                                        ),
+                                      );
+
+                                      Widget buildAdaptiveGrid(
+                                        List<Widget> items, {
+                                        double targetWidth = 240,
+                                      }) {
+                                        return LayoutBuilder(
+                                          builder: (context, gridConstraints) {
+                                            final maxWidth =
+                                                gridConstraints.maxWidth;
+                                            final columns = (maxWidth /
+                                                    targetWidth)
+                                                .floor()
+                                                .clamp(2, 4);
+                                            final spacing = 12.0;
+                                            final cardWidth = (maxWidth -
+                                                    (spacing * (columns - 1))) /
+                                                columns;
+                                            return Wrap(
+                                              spacing: spacing,
+                                              runSpacing: spacing,
+                                              children: [
+                                                for (final item in items)
+                                                  SizedBox(
+                                                    width: cardWidth,
+                                                    child: item,
+                                                  ),
+                                              ],
+                                            );
+                                          },
+                                        );
+                                      }
+
                                       final leftColumn = Column(
                                         crossAxisAlignment:
                                             CrossAxisAlignment.start,
                                         children: [
-                                          _buildSectionCard(
-                                            title: 'Resumo geral',
-                                            child: Wrap(
-                                              spacing: 12,
-                                              runSpacing: 12,
-                                              children: [
-                                                _buildMetric(
-                                                  'Total de visitas',
-                                                  _analytics!.totalVisits
-                                                      .toString(),
-                                                  icon: Icons.home_outlined,
-                                                ),
-                                                _buildMetric(
-                                                  'Pessoas alcançadas',
-                                                  _analytics!.totalPeople
-                                                      .toString(),
-                                                  icon: Icons.people_outline,
-                                                ),
-                                                _buildMetric(
-                                                  'Aceitaram Jesus',
-                                                  _analytics!.totalAceitouJesus
-                                                      .toString(),
-                                                  icon: Icons.favorite_border,
-                                                ),
-                                                _buildMetric(
-                                                  'Nova visita solicitada',
-                                                  _analytics!.totalNovaVisita
-                                                      .toString(),
-                                                  icon: Icons.event_repeat,
-                                                ),
-                                              ],
-                                            ),
-                                          ),
                                           const SizedBox(height: 16),
                                           _buildSectionCard(
                                             title: 'Indicadores',
-                                            child: Wrap(
-                                              spacing: 12,
-                                              runSpacing: 12,
-                                              children: [
+                                            child: buildAdaptiveGrid(
+                                              [
                                                 _buildMetric(
                                                   'Média de pessoas por visita',
                                                   _formatAverage(
@@ -309,24 +396,27 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                     _analytics!.totalVisits,
                                                   ),
                                                   icon: Icons.timeline,
+                                                  compact: true,
                                                 ),
                                                 _buildMetric(
-                                                  'Taxa de decisões',
+                                                  'Taxa de decisões por visita',
                                                   _formatPercent(
                                                     _analytics!
                                                         .totalAceitouJesus,
-                                                    _analytics!.totalPeople,
+                                                    _analytics!.totalVisits,
                                                   ),
                                                   icon:
                                                       Icons.thumb_up_alt_outlined,
+                                                  compact: true,
                                                 ),
                                                 _buildMetric(
-                                                  'Taxa de nova visita',
+                                                  'Taxa de nova visita por ficha',
                                                   _formatPercent(
                                                     _analytics!.totalNovaVisita,
                                                     _analytics!.totalVisits,
                                                   ),
                                                   icon: Icons.repeat,
+                                                  compact: true,
                                                 ),
                                               ],
                                             ),
@@ -334,30 +424,32 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                           const SizedBox(height: 16),
                                           _buildSectionCard(
                                             title: 'Resultados da visita',
-                                            child: Wrap(
-                                              spacing: 12,
-                                              runSpacing: 12,
-                                              children: [
+                                            child: buildAdaptiveGrid(
+                                              [
                                                 _buildMetric(
-                                                  'Evangelho apresentado',
+                                                  'Gráfico apresentado',
                                                   _analytics!.totalEvangelho
                                                       .toString(),
+                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Ponte da Salvação',
                                                   _analytics!.totalPonteSalvacao
                                                       .toString(),
+                                                  compact: true,
                                                 ),
                                                 _buildMetric(
                                                   'Reconciliações',
                                                   _analytics!
                                                       .totalReconciliacao
                                                       .toString(),
+                                                  compact: true,
                                                 ),
                                                 _buildMetric(
-                                                  'Primeira vez',
+                                                  'Primeira vez no Evangelho',
                                                   _analytics!.totalPrimeiraVez
                                                       .toString(),
+                                                  compact: true,
                                                 ),
                                               ],
                                             ),
@@ -450,16 +542,16 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                           ),
                                           const SizedBox(height: 16),
                                           _buildSectionCard(
-                                            title: 'Cidades com mais visitas',
-                                            child: _cityCounts.isEmpty
+                                            title: 'Bairros com mais visitas',
+                                            child: _neighborhoodCounts.isEmpty
                                                 ? const Text(
-                                                    'Nenhuma cidade registrada.',
+                                                    'Nenhum bairro registrado.',
                                                     style: TextStyle(
                                                       color: Colors.black54,
                                                     ),
                                                   )
                                                 : Column(
-                                                    children: _cityCounts
+                                                    children: _neighborhoodCounts
                                                         .map(
                                                           (item) => Padding(
                                                             padding:
@@ -469,7 +561,7 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                                             ),
                                                             child:
                                                                 _buildDistributionBar(
-                                                              label: item.city,
+                                                              label: item.neighborhood,
                                                               value: item.total,
                                                               total: _analytics!
                                                                   .totalVisits,
@@ -491,7 +583,17 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
-                                              Expanded(child: leftColumn),
+                                              Expanded(
+                                                child: Column(
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    summarySection,
+                                                    const SizedBox(height: 16),
+                                                    leftColumn,
+                                                  ],
+                                                ),
+                                              ),
                                               const SizedBox(width: 20),
                                               Expanded(child: rightColumn),
                                             ],
@@ -504,6 +606,8 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
+                                            summarySection,
+                                            const SizedBox(height: 16),
                                             leftColumn,
                                             const SizedBox(height: 20),
                                             rightColumn,

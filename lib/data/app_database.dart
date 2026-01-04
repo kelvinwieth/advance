@@ -68,6 +68,7 @@ CREATE TABLE IF NOT EXISTS visit_forms (
   neighborhood TEXT NOT NULL,
   city TEXT NOT NULL,
   contacts TEXT NOT NULL,
+  literature_count INTEGER NOT NULL DEFAULT 0 CHECK (literature_count >= 0),
   result_evangelho INTEGER NOT NULL DEFAULT 0 CHECK (result_evangelho IN (0, 1)),
   result_ponte_salvacao INTEGER NOT NULL DEFAULT 0 CHECK (result_ponte_salvacao IN (0, 1)),
   result_aceitou_jesus INTEGER NOT NULL DEFAULT 0 CHECK (result_aceitou_jesus IN (0, 1)),
@@ -129,6 +130,15 @@ END;
       final hasChurch = columns.any((row) => row['name'] == 'church');
       if (!hasChurch) {
         db.execute('ALTER TABLE members ADD COLUMN church TEXT NOT NULL DEFAULT \"\";');
+      }
+      final visitColumns = db.select('PRAGMA table_info(visit_forms);');
+      final hasLiterature = visitColumns.any(
+        (row) => row['name'] == 'literature_count',
+      );
+      if (!hasLiterature) {
+        db.execute(
+          'ALTER TABLE visit_forms ADD COLUMN literature_count INTEGER NOT NULL DEFAULT 0;',
+        );
       }
       db.execute('COMMIT');
     } catch (e) {
@@ -196,6 +206,7 @@ SELECT
   neighborhood,
   city,
   contacts,
+  literature_count,
   result_evangelho,
   result_ponte_salvacao,
   result_aceitou_jesus,
@@ -229,6 +240,7 @@ ORDER BY visit_at DESC, id DESC;
     required String neighborhood,
     required String city,
     required String contacts,
+    required int literatureCount,
     required bool resultEvangelho,
     required bool resultPonteSalvacao,
     required bool resultAceitouJesus,
@@ -261,6 +273,7 @@ INSERT INTO visit_forms (
   neighborhood,
   city,
   contacts,
+  literature_count,
   result_evangelho,
   result_ponte_salvacao,
   result_aceitou_jesus,
@@ -280,7 +293,7 @@ INSERT INTO visit_forms (
   notes,
   prayer_requests,
   team
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 ''',
         [
           _formatDateTime(visitAt),
@@ -290,6 +303,7 @@ INSERT INTO visit_forms (
           neighborhood,
           city,
           contacts,
+          literatureCount,
           resultEvangelho ? 1 : 0,
           resultPonteSalvacao ? 1 : 0,
           resultAceitouJesus ? 1 : 0,
@@ -327,6 +341,7 @@ INSERT INTO visit_forms (
     required String neighborhood,
     required String city,
     required String contacts,
+    required int literatureCount,
     required bool resultEvangelho,
     required bool resultPonteSalvacao,
     required bool resultAceitouJesus,
@@ -360,6 +375,7 @@ SET
   neighborhood = ?,
   city = ?,
   contacts = ?,
+  literature_count = ?,
   result_evangelho = ?,
   result_ponte_salvacao = ?,
   result_aceitou_jesus = ?,
@@ -389,6 +405,7 @@ WHERE id = ?;
           neighborhood,
           city,
           contacts,
+          literatureCount,
           resultEvangelho ? 1 : 0,
           resultPonteSalvacao ? 1 : 0,
           resultAceitouJesus ? 1 : 0,
@@ -418,10 +435,24 @@ WHERE id = ?;
     }
   }
 
+  void deleteVisitForm(int id) {
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      _db.execute('DELETE FROM visit_forms WHERE id = ?;', [id]);
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   VisitAnalytics fetchVisitAnalytics() {
     final result = _db.select('''
 SELECT
   COUNT(*) AS total_visits,
+  COALESCE(COUNT(DISTINCT CASE WHEN trim(neighborhood) != '' THEN neighborhood END), 0)
+    AS total_neighborhoods,
+  COALESCE(SUM(literature_count), 0) AS total_literature,
   COALESCE(SUM(result_evangelho), 0) AS total_evangelho,
   COALESCE(SUM(result_ponte_salvacao), 0) AS total_ponte,
   COALESCE(SUM(result_aceitou_jesus), 0) AS total_aceitou,
@@ -449,6 +480,8 @@ FROM visit_forms;
     return VisitAnalytics(
       totalVisits: row['total_visits'] as int,
       totalPeople: totalPeople,
+      totalNeighborhoods: row['total_neighborhoods'] as int,
+      totalLiterature: row['total_literature'] as int,
       totalEvangelho: row['total_evangelho'] as int,
       totalPonteSalvacao: row['total_ponte'] as int,
       totalAceitouJesus: row['total_aceitou'] as int,
@@ -467,19 +500,19 @@ FROM visit_forms;
     );
   }
 
-  List<VisitCityCount> fetchVisitCityCounts({int limit = 6}) {
+  List<VisitNeighborhoodCount> fetchVisitNeighborhoodCounts({int limit = 6}) {
     final result = _db.select('''
-SELECT city, COUNT(*) AS total
+SELECT neighborhood, COUNT(*) AS total
 FROM visit_forms
-WHERE city IS NOT NULL AND trim(city) != ''
-GROUP BY city
-ORDER BY total DESC, city ASC
+WHERE neighborhood IS NOT NULL AND trim(neighborhood) != ''
+GROUP BY neighborhood
+ORDER BY total DESC, neighborhood ASC
 LIMIT ?;
 ''', [limit]);
     return result
         .map(
-          (row) => VisitCityCount(
-            city: row['city'] as String,
+          (row) => VisitNeighborhoodCount(
+            neighborhood: row['neighborhood'] as String,
             total: row['total'] as int,
           ),
         )

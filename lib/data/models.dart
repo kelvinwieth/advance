@@ -79,6 +79,7 @@ class VisitForm {
   final String neighborhood;
   final String city;
   final String contacts;
+  final int literatureCount;
   final bool resultEvangelho;
   final bool resultPonteSalvacao;
   final bool resultAceitouJesus;
@@ -108,6 +109,7 @@ class VisitForm {
     required this.neighborhood,
     required this.city,
     required this.contacts,
+    required this.literatureCount,
     required this.resultEvangelho,
     required this.resultPonteSalvacao,
     required this.resultAceitouJesus,
@@ -139,6 +141,7 @@ class VisitForm {
       neighborhood: row['neighborhood'] as String,
       city: row['city'] as String,
       contacts: row['contacts'] as String,
+      literatureCount: row['literature_count'] as int,
       resultEvangelho: (row['result_evangelho'] as int) == 1,
       resultPonteSalvacao: (row['result_ponte_salvacao'] as int) == 1,
       resultAceitouJesus: (row['result_aceitou_jesus'] as int) == 1,
@@ -165,6 +168,8 @@ class VisitForm {
 class VisitAnalytics {
   final int totalVisits;
   final int totalPeople;
+  final int totalNeighborhoods;
+  final int totalLiterature;
   final int totalAceitouJesus;
   final int totalNovaVisita;
   final int totalEvangelho;
@@ -184,6 +189,8 @@ class VisitAnalytics {
   const VisitAnalytics({
     required this.totalVisits,
     required this.totalPeople,
+    required this.totalNeighborhoods,
+    required this.totalLiterature,
     required this.totalAceitouJesus,
     required this.totalNovaVisita,
     required this.totalEvangelho,
@@ -202,9 +209,12 @@ class VisitAnalytics {
   });
 }
 
-class VisitCityCount {
-  final String city;
+class VisitNeighborhoodCount {
+  final String neighborhood;
   final int total;
 
-  const VisitCityCount({required this.city, required this.total});
+  const VisitNeighborhoodCount({
+    required this.neighborhood,
+    required this.total,
+  });
 }

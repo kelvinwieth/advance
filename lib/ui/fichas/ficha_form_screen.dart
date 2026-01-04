@@ -30,6 +30,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
   late TextEditingController _neighborhoodController;
   late TextEditingController _cityController;
   late TextEditingController _contactsController;
+  late TextEditingController _literatureController;
   late TextEditingController _notesController;
   late TextEditingController _prayerController;
   late TextEditingController _teamController;
@@ -67,8 +68,13 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
         TextEditingController(text: existing?.referencePoint ?? '');
     _neighborhoodController =
         TextEditingController(text: existing?.neighborhood ?? '');
-    _cityController = TextEditingController(text: existing?.city ?? '');
+    _cityController = TextEditingController(
+      text: existing?.city ?? 'Itaporanga',
+    );
     _contactsController = TextEditingController(text: existing?.contacts ?? '');
+    _literatureController = TextEditingController(
+      text: (existing?.literatureCount ?? 0).toString(),
+    );
     _notesController = TextEditingController(text: existing?.notes ?? '');
     _prayerController =
         TextEditingController(text: existing?.prayerRequests ?? '');
@@ -118,6 +124,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     _neighborhoodController.dispose();
     _cityController.dispose();
     _contactsController.dispose();
+    _literatureController.dispose();
     _notesController.dispose();
     _prayerController.dispose();
     _teamController.dispose();
@@ -173,6 +180,32 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     final ageAdults = _parseInt(_ageAdultsController);
     final ageElderly = _parseInt(_ageElderlyController);
     final totalPeople = ageChildren + ageYouth + ageAdults + ageElderly;
+
+    if (!(_resultEvangelho ||
+        _resultPonteSalvacao ||
+        _resultAceitouJesus ||
+        _resultReconciliacao ||
+        _resultPrimeiraVez ||
+        _resultNovaVisita)) {
+      setState(() {
+        _errorMessage = 'Selecione ao menos um resultado da visita.';
+      });
+      return;
+    }
+
+    if (totalPeople == 0) {
+      setState(() {
+        _errorMessage = 'Informe ao menos uma faixa etária.';
+      });
+      return;
+    }
+
+    if (_teamController.text.trim().isEmpty) {
+      setState(() {
+        _errorMessage = 'Informe a equipe que realizou a visita.';
+      });
+      return;
+    }
 
     if (_religionAll && (_religionAllLabel == null)) {
       setState(() {
@@ -232,6 +265,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
           neighborhood: _neighborhoodController.text.trim(),
           city: _cityController.text.trim(),
           contacts: _contactsController.text.trim(),
+          literatureCount: _parseInt(_literatureController),
           resultEvangelho: _resultEvangelho,
           resultPonteSalvacao: _resultPonteSalvacao,
           resultAceitouJesus: _resultAceitouJesus,
@@ -262,6 +296,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
           neighborhood: _neighborhoodController.text.trim(),
           city: _cityController.text.trim(),
           contacts: _contactsController.text.trim(),
+          literatureCount: _parseInt(_literatureController),
           resultEvangelho: _resultEvangelho,
           resultPonteSalvacao: _resultPonteSalvacao,
           resultAceitouJesus: _resultAceitouJesus,
@@ -291,6 +326,42 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     }
   }
 
+  Future<bool> _confirmDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Excluir ficha',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          child: const Text(
+            'Esta ação vai remover a ficha definitivamente. '
+            'Deseja continuar?',
+          ),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.destructiveStyle(),
+                child: const Text('Excluir ficha'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+
+    return confirmed ?? false;
+  }
+
   Widget _buildSectionTitle(String title, {String? subtitle}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -308,6 +379,28 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
         ],
         const SizedBox(height: 8),
       ],
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    String? subtitle,
+    required Widget child,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF7FBFC),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0xFFE6E8EF)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildSectionTitle(title, subtitle: subtitle),
+          child,
+        ],
+      ),
     );
   }
 
@@ -331,18 +424,50 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     );
   }
 
-  Widget _buildNumberField(TextEditingController controller) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.number,
-      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: AppDialog.inputFill,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
-        ),
+  Widget _buildCounterField(TextEditingController controller) {
+    void updateValue(int delta) {
+      final current = int.tryParse(controller.text.trim()) ?? 0;
+      final next = (current + delta).clamp(0, 9999);
+      controller.text = next.toString();
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      decoration: BoxDecoration(
+        color: AppDialog.inputFill,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: [
+          IconButton(
+            onPressed: () => updateValue(-1),
+            icon: const Icon(Icons.remove),
+            tooltip: 'Diminuir',
+          ),
+          Expanded(
+            child: TextField(
+              controller: controller,
+              textAlign: TextAlign.center,
+              keyboardType: TextInputType.number,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                isDense: true,
+              ),
+              onChanged: (value) {
+                final parsed = int.tryParse(value);
+                if (parsed != null && parsed < 0) {
+                  controller.text = '0';
+                }
+              },
+            ),
+          ),
+          IconButton(
+            onPressed: () => updateValue(1),
+            icon: const Icon(Icons.add),
+            tooltip: 'Aumentar',
+          ),
+        ],
       ),
     );
   }
@@ -369,325 +494,366 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildSectionTitle('Dados da visita'),
-                _buildTextField(
-                  controller: _namesController,
-                  hint: 'Nomes (separados por vírgula)',
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _addressController,
-                  hint: 'Endereço',
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _referenceController,
-                  hint: 'Ponto de referência',
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _neighborhoodController,
-                        hint: 'Bairro',
+                _buildSectionCard(
+                  title: 'Dados da visita',
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        controller: _namesController,
+                        hint: 'Nomes (separados por vírgula)',
                       ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildTextField(
-                        controller: _cityController,
-                        hint: 'Cidade',
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _addressController,
+                        hint: 'Endereço',
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _contactsController,
-                  hint: 'Contatos (separados por vírgula)',
-                ),
-                const SizedBox(height: 12),
-                InkWell(
-                  onTap: _pickDateTime,
-                  borderRadius: BorderRadius.circular(12),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 14,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppDialog.inputFill,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.calendar_today_outlined, size: 18),
-                        const SizedBox(width: 8),
-                        Text(_dateFormat.format(_visitAt)),
-                        const Spacer(),
-                        const Icon(Icons.edit_calendar_outlined, size: 18),
-                      ],
-                    ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _referenceController,
+                        hint: 'Ponto de referência',
+                      ),
+                      const SizedBox(height: 12),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _neighborhoodController,
+                              hint: 'Bairro',
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _buildTextField(
+                              controller: _cityController,
+                              hint: 'Cidade',
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _contactsController,
+                        hint: 'Contatos (separados por vírgula)',
+                      ),
+                      const SizedBox(height: 12),
+                      InkWell(
+                        onTap: _pickDateTime,
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: AppDialog.inputFill,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.calendar_today_outlined, size: 18),
+                              const SizedBox(width: 8),
+                              Text(_dateFormat.format(_visitAt)),
+                              const Spacer(),
+                              const Icon(Icons.edit_calendar_outlined, size: 18),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 24),
-                _buildSectionTitle(
-                  'Resultados da visita',
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Resultados da visita',
                   subtitle: 'Selecione tudo o que aconteceu na visita.',
-                ),
-                Wrap(
-                  spacing: 12,
-                  runSpacing: 8,
-                  children: [
-                    _ResultChip(
-                      label: 'Evangelho apresentado',
-                      selected: _resultEvangelho,
-                      onChanged: (value) =>
-                          setState(() => _resultEvangelho = value),
-                    ),
-                    _ResultChip(
-                      label: 'Ponte da Salvação apresentada',
-                      selected: _resultPonteSalvacao,
-                      onChanged: (value) =>
-                          setState(() => _resultPonteSalvacao = value),
-                    ),
-                    _ResultChip(
-                      label: 'Aceitou a Jesus',
-                      selected: _resultAceitouJesus,
-                      onChanged: (value) =>
-                          setState(() => _resultAceitouJesus = value),
-                    ),
-                    _ResultChip(
-                      label: 'Reconciliação',
-                      selected: _resultReconciliacao,
-                      onChanged: (value) =>
-                          setState(() => _resultReconciliacao = value),
-                    ),
-                    _ResultChip(
-                      label: 'Primeira vez que ouviu falar de Cristo',
-                      selected: _resultPrimeiraVez,
-                      onChanged: (value) =>
-                          setState(() => _resultPrimeiraVez = value),
-                    ),
-                    _ResultChip(
-                      label: 'Deseja nova visita',
-                      selected: _resultNovaVisita,
-                      onChanged: (value) =>
-                          setState(() => _resultNovaVisita = value),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Faixa etária'),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Crianças'),
-                          const SizedBox(height: 6),
-                          _buildNumberField(_ageChildrenController),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Jovens'),
-                          const SizedBox(height: 6),
-                          _buildNumberField(_ageYouthController),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Adultos'),
-                          const SizedBox(height: 6),
-                          _buildNumberField(_ageAdultsController),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Text('Idosos'),
-                          const SizedBox(height: 6),
-                          _buildNumberField(_ageElderlyController),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildSectionTitle('Religião'),
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppDialog.sectionFill,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: const Color(0xFFB3DFE9)),
-                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Row(
+                      Wrap(
+                        spacing: 12,
+                        runSpacing: 8,
                         children: [
-                          Checkbox(
-                            value: _religionAll,
-                            onChanged: (value) {
-                              setState(() {
-                                _religionAll = value ?? false;
-                              });
-                            },
+                          _ResultChip(
+                            label: 'Gráfico apresentado',
+                            selected: _resultEvangelho,
+                            onChanged: (value) =>
+                                setState(() => _resultEvangelho = value),
                           ),
-                          const Expanded(
-                            child: Text(
-                              'Todos pertencem à mesma religião',
-                              style: TextStyle(fontWeight: FontWeight.w600),
-                            ),
+                          _ResultChip(
+                            label: 'Ponte da Salvação apresentada',
+                            selected: _resultPonteSalvacao,
+                            onChanged: (value) =>
+                                setState(() => _resultPonteSalvacao = value),
+                          ),
+                          _ResultChip(
+                            label: 'Decisão',
+                            selected: _resultAceitouJesus,
+                            onChanged: (value) =>
+                                setState(() => _resultAceitouJesus = value),
+                          ),
+                          _ResultChip(
+                            label: 'Reconciliação',
+                            selected: _resultReconciliacao,
+                            onChanged: (value) =>
+                                setState(() => _resultReconciliacao = value),
+                          ),
+                          _ResultChip(
+                            label:
+                                'Primeira vez que ouviu falar do Evangelho',
+                            selected: _resultPrimeiraVez,
+                            onChanged: (value) =>
+                                setState(() => _resultPrimeiraVez = value),
+                          ),
+                          _ResultChip(
+                            label: 'Deseja nova visita',
+                            selected: _resultNovaVisita,
+                            onChanged: (value) =>
+                                setState(() => _resultNovaVisita = value),
                           ),
                         ],
                       ),
-                      if (_religionAll) ...[
-                        const SizedBox(height: 8),
-                        DropdownButtonFormField<String>(
-                          value: _religionAllLabel,
-                          items: const [
-                            DropdownMenuItem(
-                              value: 'catolica',
-                              child: Text('Católica'),
+                      const SizedBox(height: 16),
+                      const Text('Quantidade de literaturas distribuídas'),
+                      const SizedBox(height: 6),
+                      _buildCounterField(_literatureController),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Faixa etária',
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Crianças'),
+                            const SizedBox(height: 6),
+                            _buildCounterField(_ageChildrenController),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Jovens'),
+                            const SizedBox(height: 6),
+                            _buildCounterField(_ageYouthController),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Adultos'),
+                            const SizedBox(height: 6),
+                            _buildCounterField(_ageAdultsController),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Text('Idosos'),
+                            const SizedBox(height: 6),
+                            _buildCounterField(_ageElderlyController),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Religião',
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: AppDialog.sectionFill,
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: const Color(0xFFB3DFE9)),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Checkbox(
+                                  value: _religionAll,
+                                  onChanged: (value) {
+                                    setState(() {
+                                      _religionAll = value ?? false;
+                                    });
+                                  },
+                                ),
+                                const Expanded(
+                                  child: Text(
+                                    'Todos pertencem à mesma religião',
+                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                  ),
+                                ),
+                              ],
                             ),
-                            DropdownMenuItem(
-                              value: 'espirita',
-                              child: Text('Espírita'),
+                            if (_religionAll) ...[
+                              const SizedBox(height: 8),
+                              DropdownButtonFormField<String>(
+                                value: _religionAllLabel,
+                                items: const [
+                                  DropdownMenuItem(
+                                    value: 'catolica',
+                                    child: Text('Católica'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'espirita',
+                                    child: Text('Espírita'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'ateu',
+                                    child: Text('Ateu'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'desviado',
+                                    child: Text('Desviado'),
+                                  ),
+                                  DropdownMenuItem(
+                                    value: 'outros',
+                                    child: Text('Outros'),
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  setState(() {
+                                    _religionAllLabel = value;
+                                  });
+                                },
+                                decoration: InputDecoration(
+                                  filled: true,
+                                  fillColor: AppDialog.inputFill,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                    borderSide: BorderSide.none,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
+                      ),
+                      if (!_religionAll) ...[
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Católica'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(
+                                    _religionCatolicaController,
+                                  ),
+                                ],
+                              ),
                             ),
-                            DropdownMenuItem(
-                              value: 'ateu',
-                              child: Text('Ateu'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'desviado',
-                              child: Text('Desviado'),
-                            ),
-                            DropdownMenuItem(
-                              value: 'outros',
-                              child: Text('Outros'),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Espírita'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(
+                                    _religionEspiritaController,
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
-                          onChanged: (value) {
-                            setState(() {
-                              _religionAllLabel = value;
-                            });
-                          },
-                          decoration: InputDecoration(
-                            filled: true,
-                            fillColor: AppDialog.inputFill,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Ateu'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(
+                                    _religionAteuController,
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Desviado'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(
+                                    _religionDesviadoController,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Outros'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(
+                                    _religionOutrosController,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Spacer(),
+                          ],
                         ),
                       ],
                     ],
                   ),
                 ),
-                if (!_religionAll) ...[
-                  const SizedBox(height: 12),
-                  Row(
+                const SizedBox(height: 16),
+                _buildSectionCard(
+                  title: 'Campos livres',
+                  child: Column(
                     children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Católica'),
-                            const SizedBox(height: 6),
-                            _buildNumberField(_religionCatolicaController),
-                          ],
-                        ),
+                      _buildTextField(
+                        controller: _notesController,
+                        hint: 'Observações da visita',
+                        maxLines: 3,
                       ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Espírita'),
-                            const SizedBox(height: 6),
-                            _buildNumberField(_religionEspiritaController),
-                          ],
-                        ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _prayerController,
+                        hint: 'Pedidos de oração',
+                        maxLines: 3,
+                      ),
+                      const SizedBox(height: 12),
+                      _buildTextField(
+                        controller: _teamController,
+                        hint: 'Equipe (nomes separados por vírgula)',
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Ateu'),
-                            const SizedBox(height: 6),
-                            _buildNumberField(_religionAteuController),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Desviado'),
-                            const SizedBox(height: 6),
-                            _buildNumberField(_religionDesviadoController),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Outros'),
-                            const SizedBox(height: 6),
-                            _buildNumberField(_religionOutrosController),
-                          ],
-                        ),
-                      ),
-                      const Spacer(),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 24),
-                _buildSectionTitle('Campos livres'),
-                _buildTextField(
-                  controller: _notesController,
-                  hint: 'Observações da visita',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _prayerController,
-                  hint: 'Pedidos de oração',
-                  maxLines: 3,
-                ),
-                const SizedBox(height: 12),
-                _buildTextField(
-                  controller: _teamController,
-                  hint: 'Equipe (nomes separados por vírgula)',
                 ),
                 if (_errorMessage != null) ...[
                   const SizedBox(height: 12),
@@ -700,12 +866,40 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                   ),
                 ],
                 const SizedBox(height: 20),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: _saveForm,
-                    child: const Text('Salvar ficha'),
-                  ),
+                Row(
+                  children: [
+                    if (isEditing) ...[
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: () async {
+                            final confirm = await _confirmDelete();
+                            if (!confirm) return;
+                            try {
+                              widget.database
+                                  .deleteVisitForm(widget.existing!.id);
+                              if (!mounted) return;
+                              Navigator.of(context).pop();
+                            } catch (e) {
+                              setState(() {
+                                _errorMessage =
+                                    'Falha ao excluir a ficha.';
+                              });
+                            }
+                          },
+                          style: AppDialog.destructiveStyle(),
+                          icon: const Icon(Icons.delete_outline),
+                          label: const Text('Excluir'),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                    ],
+                    Expanded(
+                      child: ElevatedButton(
+                        onPressed: _saveForm,
+                        child: const Text('Salvar ficha'),
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
