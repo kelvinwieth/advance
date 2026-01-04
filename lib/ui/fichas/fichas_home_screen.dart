@@ -5,6 +5,7 @@ import '../../data/app_database.dart';
 import '../../data/models.dart';
 import 'ficha_analytics_screen.dart';
 import 'ficha_form_screen.dart';
+import 'prayer_requests_screen.dart';
 
 class FichasHomeScreen extends StatefulWidget {
   final AppDatabase database;
@@ -120,6 +121,18 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                           ),
                         ),
                         const Spacer(),
+                        OutlinedButton.icon(
+                          onPressed: () => Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => PrayerRequestsScreen(
+                                database: widget.database,
+                              ),
+                            ),
+                          ),
+                          icon: const Icon(Icons.favorite_border),
+                          label: const Text('Pedidos de oração'),
+                        ),
+                        const SizedBox(width: 12),
                         OutlinedButton.icon(
                           onPressed: () => Navigator.of(context).push(
                             MaterialPageRoute(
