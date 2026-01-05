@@ -15,10 +15,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Resolve Flutter version
+        id: flutter
+        shell: pwsh
+        run: |
+          $content = Get-Content pubspec.yaml -Raw
+          $match = [Regex]::Match($content, '(?m)^\s*flutter:\s*"?[<>=^~\s]*([0-9]+\.[0-9]+\.[0-9]+)')
+          if (-not $match.Success) {
+            throw "Flutter version constraint not found in pubspec.yaml"
+          }
+          $version = $match.Groups[1].Value
+          "version=$version" >> $env:GITHUB_OUTPUT
+
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
-          channel: stable
+          flutter-version: ${{ steps.flutter.outputs.version }}
 
       - name: Install dependencies
         run: flutter pub get
