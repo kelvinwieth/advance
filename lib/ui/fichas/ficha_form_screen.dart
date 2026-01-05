@@ -64,10 +64,12 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     _visitAt = existing?.visitAt ?? DateTime.now();
     _namesController = TextEditingController(text: existing?.names ?? '');
     _addressController = TextEditingController(text: existing?.address ?? '');
-    _referenceController =
-        TextEditingController(text: existing?.referencePoint ?? '');
-    _neighborhoodController =
-        TextEditingController(text: existing?.neighborhood ?? '');
+    _referenceController = TextEditingController(
+      text: existing?.referencePoint ?? '',
+    );
+    _neighborhoodController = TextEditingController(
+      text: existing?.neighborhood ?? '',
+    );
     _cityController = TextEditingController(
       text: existing?.city ?? 'Itaporanga',
     );
@@ -76,18 +78,23 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
       text: (existing?.literatureCount ?? 0).toString(),
     );
     _notesController = TextEditingController(text: existing?.notes ?? '');
-    _prayerController =
-        TextEditingController(text: existing?.prayerRequests ?? '');
+    _prayerController = TextEditingController(
+      text: existing?.prayerRequests ?? '',
+    );
     _teamController = TextEditingController(text: existing?.team ?? '');
 
-    _ageChildrenController =
-        TextEditingController(text: (existing?.ageChildren ?? 0).toString());
-    _ageYouthController =
-        TextEditingController(text: (existing?.ageYouth ?? 0).toString());
-    _ageAdultsController =
-        TextEditingController(text: (existing?.ageAdults ?? 0).toString());
-    _ageElderlyController =
-        TextEditingController(text: (existing?.ageElderly ?? 0).toString());
+    _ageChildrenController = TextEditingController(
+      text: (existing?.ageChildren ?? 0).toString(),
+    );
+    _ageYouthController = TextEditingController(
+      text: (existing?.ageYouth ?? 0).toString(),
+    );
+    _ageAdultsController = TextEditingController(
+      text: (existing?.ageAdults ?? 0).toString(),
+    );
+    _ageElderlyController = TextEditingController(
+      text: (existing?.ageElderly ?? 0).toString(),
+    );
 
     _religionCatolicaController = TextEditingController(
       text: (existing?.religionCatolica ?? 0).toString(),
@@ -216,8 +223,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
 
     if (_religionAll && totalPeople == 0) {
       setState(() {
-        _errorMessage =
-            'Informe as faixas etárias para usar a opção "Todos".';
+        _errorMessage = 'Informe as faixas etárias para usar a opção "Todos".';
       });
       return;
     }
@@ -334,10 +340,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
         return AppDialog(
           title: 'Excluir ficha',
           onClose: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(
-            'Esta ação vai remover a ficha definitivamente. '
-            'Deseja continuar?',
-          ),
           actions: [
             Expanded(
               child: OutlinedButton(
@@ -355,6 +357,10 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
               ),
             ),
           ],
+          child: const Text(
+            'Esta ação vai remover a ficha definitivamente. '
+            'Deseja continuar?',
+          ),
         );
       },
     );
@@ -552,7 +558,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 3,
+                      flex: 5,
                       child: _buildSectionCard(
                         title: 'Resultados da visita',
                         subtitle: 'Selecione tudo o que aconteceu na visita.',
@@ -693,7 +699,9 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                                 const Expanded(
                                   child: Text(
                                     'Todos pertencem à mesma religião',
-                                    style: TextStyle(fontWeight: FontWeight.w600),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
@@ -701,7 +709,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                             if (_religionAll) ...[
                               const SizedBox(height: 8),
                               DropdownButtonFormField<String>(
-                                value: _religionAllLabel,
+                                initialValue: _religionAllLabel,
                                 items: const [
                                   DropdownMenuItem(
                                     value: 'catolica',
@@ -887,14 +895,14 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                             final confirm = await _confirmDelete();
                             if (!confirm) return;
                             try {
-                              widget.database
-                                  .deleteVisitForm(widget.existing!.id);
+                              widget.database.deleteVisitForm(
+                                widget.existing!.id,
+                              );
                               if (!mounted) return;
                               Navigator.of(context).pop();
                             } catch (e) {
                               setState(() {
-                                _errorMessage =
-                                    'Falha ao excluir a ficha.';
+                                _errorMessage = 'Falha ao excluir a ficha.';
                               });
                             }
                           },
