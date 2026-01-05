@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   DateTime _selectedDate = DateTime.now();
   bool _loading = true;
   bool _showAllMembers = false;
-  String _memberSortField = 'name';
+  String _memberSortField = 'tasks';
   bool _memberSortAsc = true;
   String _genderFilter = 'all';
   String? _errorMessage;
@@ -1216,9 +1216,6 @@ class _HomeScreenState extends State<HomeScreen> {
         return AppDialog(
           title: 'Excluir membro',
           onClose: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(
-            'Esta ação vai remover o membro e todas as atribuições associadas.',
-          ),
           actions: [
             Expanded(
               child: OutlinedButton(
@@ -1236,6 +1233,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
             ),
           ],
+          child: const Text(
+            'Esta ação vai remover o membro e todas as atribuições associadas.',
+          ),
         );
       },
     );
@@ -1916,20 +1916,16 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                       itemBuilder: (context) => [
                         const PopupMenuItem(
-                          value: 'name',
-                          child: Text('Nome'),
+                          value: 'tasks',
+                          child: Text('Qtd. tarefas'),
                         ),
                         const PopupMenuItem(
                           value: 'church',
                           child: Text('Igreja'),
                         ),
                         const PopupMenuItem(
-                          value: 'age',
-                          child: Text('Idade'),
-                        ),
-                        const PopupMenuItem(
-                          value: 'tasks',
-                          child: Text('Qtd. tarefas'),
+                          value: 'name',
+                          child: Text('Nome'),
                         ),
                       ],
                       child: Container(

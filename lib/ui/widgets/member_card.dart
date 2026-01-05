@@ -20,13 +20,16 @@ class MemberCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final parts =
-        member.name.trim().split(RegExp(r'\s+')).where((part) => part.isNotEmpty).toList();
+    final parts = member.name
+        .trim()
+        .split(RegExp(r'\s+'))
+        .where((part) => part.isNotEmpty)
+        .toList();
     final initials = parts.isEmpty
         ? '?'
         : parts.length == 1
-            ? parts.first[0]
-            : '${parts.first[0]}${parts.last[0]}';
+        ? parts.first[0]
+        : '${parts.first[0]}${parts.last[0]}';
 
     final avatarBackgroundColor = member.gender == 'M'
         ? const Color(0xFFE8F0FF)
@@ -48,14 +51,14 @@ class MemberCard extends StatelessWidget {
           children: [
             CircleAvatar(
               radius: dense ? 18 : 20,
-            backgroundColor: avatarBackgroundColor,
-            child: Text(
-              initials.toUpperCase(),
-              style: TextStyle(
-                color: avatarTextColor,
-                fontWeight: FontWeight.w600,
-                fontSize: dense ? 12 : 14,
-              ),
+              backgroundColor: avatarBackgroundColor,
+              child: Text(
+                initials.toUpperCase(),
+                style: TextStyle(
+                  color: avatarTextColor,
+                  fontWeight: FontWeight.w600,
+                  fontSize: dense ? 12 : 14,
+                ),
               ),
             ),
             const SizedBox(width: 12),
@@ -72,7 +75,7 @@ class MemberCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${member.age}, ${member.church}',
+                    member.church,
                     style: TextStyle(
                       color: Colors.black54,
                       fontSize: dense ? 12 : 13,
@@ -92,7 +95,10 @@ class MemberCard extends StatelessWidget {
               ),
             if (showStatus)
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFDFF7E8),
                   borderRadius: BorderRadius.circular(12),

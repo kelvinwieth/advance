@@ -554,121 +554,129 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                SizedBox(
+                  width: double.maxFinite,
+                  child: _buildSectionCard(
+                    title: 'Resultados da visita',
+                    subtitle: 'Selecione tudo o que aconteceu na visita.',
+                    child: Wrap(
+                      spacing: 12,
+                      runSpacing: 8,
+                      children: [
+                        _ResultChip(
+                          label: 'Gráfico apresentado',
+                          selected: _resultEvangelho,
+                          onChanged: (value) =>
+                              setState(() => _resultEvangelho = value),
+                        ),
+                        _ResultChip(
+                          label: 'Ponte da Salvação apresentada',
+                          selected: _resultPonteSalvacao,
+                          onChanged: (value) => setState(
+                            () => _resultPonteSalvacao = value,
+                          ),
+                        ),
+                        _ResultChip(
+                          label: 'Decisão',
+                          selected: _resultAceitouJesus,
+                          onChanged: (value) =>
+                              setState(() => _resultAceitouJesus = value),
+                        ),
+                        _ResultChip(
+                          label: 'Reconciliação',
+                          selected: _resultReconciliacao,
+                          onChanged: (value) =>
+                              setState(() => _resultReconciliacao = value),
+                        ),
+                        _ResultChip(
+                          label: 'Primeira vez que ouviu falar do Evangelho',
+                          selected: _resultPrimeiraVez,
+                          onChanged: (value) =>
+                              setState(() => _resultPrimeiraVez = value),
+                        ),
+                        _ResultChip(
+                          label: 'Deseja nova visita',
+                          selected: _resultNovaVisita,
+                          onChanged: (value) =>
+                              setState(() => _resultNovaVisita = value),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 16),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Expanded(
-                      flex: 5,
+                      flex: 1,
                       child: _buildSectionCard(
-                        title: 'Resultados da visita',
-                        subtitle: 'Selecione tudo o que aconteceu na visita.',
-                        child: Wrap(
-                          spacing: 12,
-                          runSpacing: 8,
+                        title: 'Literaturas',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            _ResultChip(
-                              label: 'Gráfico apresentado',
-                              selected: _resultEvangelho,
-                              onChanged: (value) =>
-                                  setState(() => _resultEvangelho = value),
-                            ),
-                            _ResultChip(
-                              label: 'Ponte da Salvação apresentada',
-                              selected: _resultPonteSalvacao,
-                              onChanged: (value) => setState(
-                                () => _resultPonteSalvacao = value,
-                              ),
-                            ),
-                            _ResultChip(
-                              label: 'Decisão',
-                              selected: _resultAceitouJesus,
-                              onChanged: (value) =>
-                                  setState(() => _resultAceitouJesus = value),
-                            ),
-                            _ResultChip(
-                              label: 'Reconciliação',
-                              selected: _resultReconciliacao,
-                              onChanged: (value) =>
-                                  setState(() => _resultReconciliacao = value),
-                            ),
-                            _ResultChip(
-                              label:
-                                  'Primeira vez que ouviu falar do Evangelho',
-                              selected: _resultPrimeiraVez,
-                              onChanged: (value) =>
-                                  setState(() => _resultPrimeiraVez = value),
-                            ),
-                            _ResultChip(
-                              label: 'Deseja nova visita',
-                              selected: _resultNovaVisita,
-                              onChanged: (value) =>
-                                  setState(() => _resultNovaVisita = value),
-                            ),
+                            const Text('Quantidade distribuída'),
+                            const SizedBox(height: 6),
+                            _buildCounterField(_literatureController),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
-                      flex: 1,
+                      flex: 4,
                       child: _buildSectionCard(
-                        title: 'Literaturas',
-                        subtitle: 'Quantidade distribuída',
-                        child: _buildCounterField(_literatureController),
+                        title: 'Faixa etária',
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Crianças'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(_ageChildrenController),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Jovens'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(_ageYouthController),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Adultos'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(_ageAdultsController),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  const Text('Idosos'),
+                                  const SizedBox(height: 6),
+                                  _buildCounterField(_ageElderlyController),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
-                ),
-                const SizedBox(height: 16),
-                _buildSectionCard(
-                  title: 'Faixa etária',
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Crianças'),
-                            const SizedBox(height: 6),
-                            _buildCounterField(_ageChildrenController),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Jovens'),
-                            const SizedBox(height: 6),
-                            _buildCounterField(_ageYouthController),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Adultos'),
-                            const SizedBox(height: 6),
-                            _buildCounterField(_ageAdultsController),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text('Idosos'),
-                            const SizedBox(height: 6),
-                            _buildCounterField(_ageElderlyController),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
                 ),
                 const SizedBox(height: 16),
                 _buildSectionCard(
