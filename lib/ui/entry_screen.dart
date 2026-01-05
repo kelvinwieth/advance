@@ -32,7 +32,7 @@ class _EntryScreenState extends State<EntryScreen> {
   }
 
   Future<void> _checkForUpdates() async {
-    if (_checkedUpdates || !Platform.isWindows) return;
+    if (kDebugMode || _checkedUpdates || !Platform.isWindows) return;
     _checkedUpdates = true;
     try {
       final info = await UpdateService.fetchLatestRelease();
