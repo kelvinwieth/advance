@@ -163,41 +163,22 @@ class _HomeScreenState extends State<HomeScreen> {
       return a.name.toLowerCase().compareTo(b.name.toLowerCase());
     });
 
-    final constrainedTasks = _tasks
-        .where((task) => task.genderConstraint != null)
-        .toList();
-    final unconstrainedTasks = _tasks
-        .where((task) => task.genderConstraint == null)
-        .toList();
-
     final assignmentsToCreate = <List<int>>[];
 
-    for (final task in constrainedTasks) {
-      if ((taskAssignmentCounts[task.id] ?? 0) > 0) continue;
-      final memberIndex = availableMembers.indexWhere(
-        (member) => member.gender == task.genderConstraint,
-      );
-      if (memberIndex == -1) continue;
-      final member = availableMembers.removeAt(memberIndex);
-      assignmentsToCreate.add([member.id, task.id]);
-      taskAssignmentCounts[task.id] = (taskAssignmentCounts[task.id] ?? 0) + 1;
-    }
-
     for (final member in List<Member>.from(availableMembers)) {
-      final candidates = [
-        ...constrainedTasks.where(
-          (task) => task.genderConstraint == member.gender,
-        ),
-        ...unconstrainedTasks,
-      ];
+      final candidates = _tasks.where((task) {
+        if (task.genderConstraint == null) return true;
+        return task.genderConstraint == member.gender;
+      }).toList();
       if (candidates.isEmpty) continue;
       candidates.sort((a, b) {
+        final countA = taskAssignmentCounts[a.id] ?? 0;
+        final countB = taskAssignmentCounts[b.id] ?? 0;
+        if (countA != countB) return countA.compareTo(countB);
         final aRank = a.genderConstraint != null ? 0 : 1;
         final bRank = b.genderConstraint != null ? 0 : 1;
         if (aRank != bRank) return aRank.compareTo(bRank);
-        final countA = taskAssignmentCounts[a.id] ?? 0;
-        final countB = taskAssignmentCounts[b.id] ?? 0;
-        return countA.compareTo(countB);
+        return a.name.toLowerCase().compareTo(b.name.toLowerCase());
       });
       final chosen = candidates.first;
       assignmentsToCreate.add([member.id, chosen.id]);
