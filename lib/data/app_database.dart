@@ -183,7 +183,9 @@ END;
       final columns = db.select('PRAGMA table_info(members);');
       final hasChurch = columns.any((row) => row['name'] == 'church');
       if (!hasChurch) {
-        db.execute('ALTER TABLE members ADD COLUMN church TEXT NOT NULL DEFAULT \"\";');
+        db.execute(
+          'ALTER TABLE members ADD COLUMN church TEXT NOT NULL DEFAULT "";',
+        );
       }
       final visitColumns = db.select('PRAGMA table_info(visit_forms);');
       final hasLiterature = visitColumns.any(
@@ -202,17 +204,22 @@ END;
   }
 
   List<Member> fetchMembers() {
-    final result = _db.select('SELECT id, name, age, gender, church FROM members ORDER BY name;');
+    final result = _db.select(
+      'SELECT id, name, age, gender, church FROM members ORDER BY name;',
+    );
     return result.map((row) => Member.fromRow(row)).toList();
   }
 
   List<Task> fetchTasks() {
-    final result = _db.select('SELECT id, name, gender_constraint FROM tasks ORDER BY id;');
+    final result = _db.select(
+      'SELECT id, name, gender_constraint FROM tasks ORDER BY id;',
+    );
     return result.map((row) => Task.fromRow(row)).toList();
   }
 
   Map<int, List<TaskAssignment>> fetchAssignmentsByTaskForDate(String isoDate) {
-    final result = _db.select('''
+    final result = _db.select(
+      '''
 SELECT
   mt.id AS assignment_id,
   mt.task_id AS task_id,
@@ -225,7 +232,9 @@ FROM member_tasks mt
 JOIN members m ON m.id = mt.member_id
 WHERE mt.date = ?
 ORDER BY m.name;
-''', [isoDate]);
+''',
+      [isoDate],
+    );
 
     final Map<int, List<TaskAssignment>> grouped = {};
     for (final row in result) {
@@ -236,12 +245,15 @@ ORDER BY m.name;
   }
 
   Map<int, int> fetchTaskCountsUpTo(String isoDate) {
-    final result = _db.select('''
+    final result = _db.select(
+      '''
 SELECT member_id, COUNT(*) AS total
 FROM member_tasks
 WHERE date <= ?
 GROUP BY member_id;
-''', [isoDate]);
+''',
+      [isoDate],
+    );
     final counts = <int, int>{};
     for (final row in result) {
       counts[row['member_id'] as int] = row['total'] as int;
@@ -543,14 +555,17 @@ FROM visit_forms;
   }
 
   List<VisitNeighborhoodCount> fetchVisitNeighborhoodCounts({int limit = 6}) {
-    final result = _db.select('''
+    final result = _db.select(
+      '''
 SELECT neighborhood, COUNT(*) AS total
 FROM visit_forms
 WHERE neighborhood IS NOT NULL AND trim(neighborhood) != ''
 GROUP BY neighborhood
 ORDER BY total DESC, neighborhood ASC
 LIMIT ?;
-''', [limit]);
+''',
+      [limit],
+    );
     return result
         .map(
           (row) => VisitNeighborhoodCount(
@@ -872,8 +887,8 @@ INSERT INTO tasks (name, gender_constraint) VALUES
           final pool = constraint == 'M'
               ? maleIds
               : constraint == 'F'
-                  ? femaleIds
-                  : allIds;
+              ? femaleIds
+              : allIds;
 
           if (pool.isEmpty) continue;
 
@@ -1380,7 +1395,8 @@ _ParsedResults _parseResults(String raw) {
 
   return _ParsedResults(
     evangelho: hasMatch('passado grafico') || hasMatch('grafico'),
-    ponte: hasMatch('passado ponte da salvacao') ||
+    ponte:
+        hasMatch('passado ponte da salvacao') ||
         (hasMatch('ponte') && hasMatch('salvacao')),
     decisao: hasMatch('entregou a vida a jesus') || hasMatch('decisao'),
     reconciliacao: hasMatch('reconciliacao'),
@@ -1392,8 +1408,7 @@ _ParsedResults _parseResults(String raw) {
 _ParsedReligions _parseReligions(String raw) {
   final normalized = _normalizeText(raw);
   final parts = normalized.split(',').map((value) => value.trim()).toList();
-  bool hasMatch(String key) =>
-      parts.any((part) => part.contains(key));
+  bool hasMatch(String key) => parts.any((part) => part.contains(key));
 
   return _ParsedReligions(
     catolica: hasMatch('catolica'),

@@ -83,73 +83,71 @@ class _PrayerRequestsScreenState extends State<PrayerRequestsScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _errorMessage != null
-              ? Center(child: Text(_errorMessage!))
-              : Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFE6E8EF)),
-                    ),
-                    child: _forms.isEmpty
-                        ? const Center(
-                            child: Text('Nenhum pedido de oração registrado.'),
-                          )
-                        : ListView.separated(
-                            itemCount: _forms.length,
-                            separatorBuilder: (_, __) =>
-                                const SizedBox(height: 12),
-                            itemBuilder: (context, index) {
-                              final form = _forms[index];
-                              return InkWell(
+          ? Center(child: Text(_errorMessage!))
+          : Padding(
+              padding: const EdgeInsets.all(16),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0xFFE6E8EF)),
+                ),
+                child: _forms.isEmpty
+                    ? const Center(
+                        child: Text('Nenhum pedido de oração registrado.'),
+                      )
+                    : ListView.separated(
+                        itemCount: _forms.length,
+                        separatorBuilder: (_, _) => const SizedBox(height: 12),
+                        itemBuilder: (context, index) {
+                          final form = _forms[index];
+                          return InkWell(
+                            borderRadius: BorderRadius.circular(16),
+                            onTap: () => _openForm(form),
+                            child: Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF7FBFC),
                                 borderRadius: BorderRadius.circular(16),
-                                onTap: () => _openForm(form),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFF7FBFC),
-                                    borderRadius: BorderRadius.circular(16),
-                                    border: Border.all(
-                                      color: const Color(0xFFE6E8EF),
+                                border: Border.all(
+                                  color: const Color(0xFFE6E8EF),
+                                ),
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    form.prayerRequests,
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w700,
+                                      color: Color(0xFF1D1D1D),
                                     ),
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        form.prayerRequests,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.w700,
-                                          color: Color(0xFF1D1D1D),
-                                        ),
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Text(
-                                        '${form.names.isEmpty ? 'Visita sem nomes' : form.names} · ${form.neighborhood}',
-                                        style: const TextStyle(
-                                          color: Colors.black54,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        '${_dateFormat.format(form.visitAt)} · ${form.team.isEmpty ? 'Equipe não informada' : form.team}',
-                                        style: const TextStyle(
-                                          color: Colors.black54,
-                                          fontSize: 12,
-                                        ),
-                                      ),
-                                    ],
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    '${form.names.isEmpty ? 'Visita sem nomes' : form.names} · ${form.neighborhood}',
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
                                   ),
-                                ),
-                              );
-                            },
-                          ),
-                  ),
-                ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '${_dateFormat.format(form.visitAt)} · ${form.team.isEmpty ? 'Equipe não informada' : form.team}',
+                                    style: const TextStyle(
+                                      color: Colors.black54,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ),
     );
   }
 }

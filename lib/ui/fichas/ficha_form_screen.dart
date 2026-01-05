@@ -106,7 +106,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     _resultReconciliacao = existing?.resultReconciliacao ?? false;
     _resultPrimeiraVez = existing?.resultPrimeiraVez ?? false;
     _resultNovaVisita = existing?.resultNovaVisita ?? false;
-
   }
 
   @override
@@ -142,8 +141,10 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
       lastDate: DateTime(2100),
     );
     if (date == null) return;
+    final ctx = context;
+    if (!ctx.mounted) return;
     final time = await showTimePicker(
-      context: context,
+      context: ctx,
       initialTime: TimeOfDay.fromDateTime(_visitAt),
     );
     if (time == null) return;
@@ -724,7 +725,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                               widget.database.deleteVisitForm(
                                 widget.existing!.id,
                               );
-                              if (!mounted) return;
+                              if (!context.mounted) return;
                               Navigator.of(context).pop();
                             } catch (e) {
                               setState(() {

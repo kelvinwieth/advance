@@ -39,8 +39,10 @@ class _EntryScreenState extends State<EntryScreen> {
       if (info == null) return;
       final packageInfo = await PackageInfo.fromPlatform();
       final currentVersion = packageInfo.version;
-      final comparison =
-          UpdateService.compareVersions(currentVersion, info.version);
+      final comparison = UpdateService.compareVersions(
+        currentVersion,
+        info.version,
+      );
       if (comparison >= 0 || !mounted) return;
       final shouldUpdate = await showDialog<bool>(
         context: context,
@@ -49,11 +51,6 @@ class _EntryScreenState extends State<EntryScreen> {
           return AppDialog(
             title: 'Atualização disponível',
             onClose: () => Navigator.of(dialogContext).pop(false),
-            child: Text(
-              'Versão atual: $currentVersion\n'
-              'Nova versão: ${info.version}\n\n'
-              'Deseja baixar e instalar agora?',
-            ),
             actions: [
               Expanded(
                 child: OutlinedButton(
@@ -71,6 +68,11 @@ class _EntryScreenState extends State<EntryScreen> {
                 ),
               ),
             ],
+            child: Text(
+              'Versão atual: $currentVersion\n'
+              'Nova versão: ${info.version}\n\n'
+              'Deseja baixar e instalar agora?',
+            ),
           );
         },
       );
@@ -189,6 +191,7 @@ class _EntryScreenState extends State<EntryScreen> {
           );
     controller.dispose();
     if (confirmed == true) {
+      if (!context.mounted) return;
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (_) => ConfigScreen(database: widget.database),

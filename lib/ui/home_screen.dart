@@ -261,24 +261,6 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _exportDatabaseCopy() async {
-    final saveLocation = await getSaveLocation(
-      suggestedName: 'avanco.db',
-      acceptedTypeGroups: const [
-        XTypeGroup(label: 'SQLite', extensions: ['db']),
-      ],
-    );
-    if (saveLocation == null) return;
-
-    try {
-      final source = File(widget.database.dbPath);
-      await source.copy(saveLocation.path);
-      _showMessage('Banco exportado com sucesso.');
-    } catch (e) {
-      _showMessage('Falha ao exportar o banco.');
-    }
-  }
-
   Future<bool> _showCsvInstructions() async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -441,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     height: 320,
                     child: ListView.separated(
                       itemCount: members.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 12),
+                      separatorBuilder: (_, _) => const SizedBox(height: 12),
                       itemBuilder: (context, index) {
                         return Container(
                           padding: const EdgeInsets.all(12),
@@ -991,7 +973,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (!confirm) return;
                       try {
                         widget.database.deleteMember(member.id);
-                        if (!mounted) return;
+                        if (!dialogContext.mounted) return;
                         Navigator.of(dialogContext).pop();
                         _loadData();
                       } catch (e) {
@@ -1243,93 +1225,6 @@ class _HomeScreenState extends State<HomeScreen> {
     return confirmed ?? false;
   }
 
-  Future<void> _confirmClearDatabase() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AppDialog(
-          title: 'Limpar banco',
-          onClose: () => Navigator.of(dialogContext).pop(false),
-          actions: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                style: AppDialog.outlinedStyle(),
-                child: const Text('Cancelar'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: AppDialog.destructiveStyle(),
-                child: const Text('Limpar banco'),
-              ),
-            ),
-          ],
-          child: const Text(
-            'Isso vai remover permanentemente membros, tarefas e atribuições. '
-            'Esta ação não pode ser desfeita.',
-          ),
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      try {
-        await widget.database.clearDatabase();
-        await _loadData();
-        _showMessage('Banco limpo.');
-      } catch (e) {
-        _showMessage('Falha ao limpar o banco.');
-      }
-    }
-  }
-
-  Future<void> _confirmMockDatabase() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      barrierDismissible: false,
-      builder: (dialogContext) {
-        return AppDialog(
-          title: 'Banco de teste',
-          onClose: () => Navigator.of(dialogContext).pop(false),
-          actions: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(false),
-                style: AppDialog.outlinedStyle(),
-                child: const Text('Cancelar'),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: ElevatedButton(
-                onPressed: () => Navigator.of(dialogContext).pop(true),
-                style: AppDialog.primaryStyle(),
-                child: const Text('Adicionar dados de teste'),
-              ),
-            ),
-          ],
-          child: const Text(
-            'Isso vai adicionar 30 membros e 8 tarefas ao banco.',
-          ),
-        );
-      },
-    );
-
-    if (confirmed == true) {
-      try {
-        widget.database.insertMockData(isoDate: _isoDate(_selectedDate));
-        await _loadData();
-        _showMessage('Dados de teste adicionados.');
-      } catch (e) {
-        _showMessage('Falha ao adicionar dados de teste.');
-      }
-    }
-  }
-
   Future<void> _openAddTaskDialog() async {
     final taskController = TextEditingController();
     bool limitByGender = false;
@@ -1542,7 +1437,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       if (!confirm) return;
                       try {
                         widget.database.deleteTask(task.id);
-                        if (!mounted) return;
+                        if (!dialogContext.mounted) return;
                         Navigator.of(dialogContext).pop();
                         _loadData();
                       } catch (e) {
@@ -1833,9 +1728,6 @@ class _HomeScreenState extends State<HomeScreen> {
       return _memberSortAsc ? result : -result;
     });
 
-    final availableCount = _members
-        .where((member) => !assignedIds.contains(member.id))
-        .length;
     final displayedCount = filteredMembers.length;
 
     return DragTarget<AssignmentDragData>(
@@ -2133,7 +2025,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Expanded(
                 child: ListView.separated(
                   itemCount: filteredMembers.length,
-                  separatorBuilder: (_, __) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
                   itemBuilder: (context, index) {
                     final member = filteredMembers[index];
                     return Draggable<Member>(
@@ -2258,8 +2150,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       : ListView.separated(
                           scrollDirection: Axis.horizontal,
                           itemCount: _tasks.length,
-                          separatorBuilder: (_, __) =>
-                              const SizedBox(width: 16),
+                          separatorBuilder: (_, _) => const SizedBox(width: 16),
                           itemBuilder: (context, index) {
                             final task = _tasks[index];
                             final assignments = _assignments[task.id] ?? [];

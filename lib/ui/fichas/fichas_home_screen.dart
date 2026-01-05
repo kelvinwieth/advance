@@ -100,16 +100,15 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
     );
     if (file == null) return;
 
+    final ctx = context;
+    if (!ctx.mounted) return;
     final confirmed = await showDialog<bool>(
-      context: context,
+      context: ctx,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AppDialog(
           title: 'Importar fichas',
           onClose: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(
-            'As fichas do CSV serão adicionadas ao banco atual.',
-          ),
           actions: [
             Expanded(
               child: OutlinedButton(
@@ -127,24 +126,28 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
               ),
             ),
           ],
+          child: const Text(
+            'As fichas do CSV serão adicionadas ao banco atual.',
+          ),
         );
       },
     );
     if (confirmed != true) return;
 
+    if (!ctx.mounted) return;
     showDialog<void>(
-      context: context,
+      context: ctx,
       barrierDismissible: false,
       builder: (_) => const Center(child: CircularProgressIndicator()),
     );
 
     try {
       final csvContent = await File(file.path).readAsString();
-      final result =
-          await widget.database.importVisitFormsFromCsv(csvContent);
+      final result = await widget.database.importVisitFormsFromCsv(csvContent);
       if (!mounted) return;
       Navigator.of(context).pop();
       await _loadData();
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
@@ -470,7 +473,7 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
         ? const Center(child: Text('Nenhuma ficha encontrada.'))
         : ListView.separated(
             itemCount: filtered.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: 12),
             itemBuilder: (context, index) {
               final form = filtered[index];
               return InkWell(

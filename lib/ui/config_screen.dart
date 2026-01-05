@@ -20,10 +20,12 @@ class ConfigScreen extends StatelessWidget {
 
     try {
       database.exportDatabase(saveLocation.path);
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Banco exportado com sucesso.')),
       );
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Falha ao exportar o banco.')),
       );
@@ -38,10 +40,12 @@ class ConfigScreen extends StatelessWidget {
     );
     if (file == null) return;
 
+    if (!context.mounted) return;
     final confirmed = await _confirmImportDatabase(context);
     if (!confirmed) return;
 
     try {
+      if (!context.mounted) return;
       showDialog<void>(
         context: context,
         barrierDismissible: false,
@@ -53,6 +57,7 @@ class ConfigScreen extends StatelessWidget {
       if (context.mounted) {
         Navigator.of(context).pop();
       }
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Banco importado com sucesso.')),
       );
@@ -60,6 +65,7 @@ class ConfigScreen extends StatelessWidget {
       if (context.mounted) {
         Navigator.of(context).pop();
       }
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Falha ao importar o banco.')),
       );
@@ -74,10 +80,6 @@ class ConfigScreen extends StatelessWidget {
         return AppDialog(
           title: 'Limpar banco',
           onClose: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(
-            'Isso vai remover permanentemente membros, tarefas, fichas e atribuições. '
-            'Esta ação não pode ser desfeita.',
-          ),
           actions: [
             Expanded(
               child: OutlinedButton(
@@ -95,6 +97,10 @@ class ConfigScreen extends StatelessWidget {
               ),
             ),
           ],
+          child: const Text(
+            'Isso vai remover permanentemente membros, tarefas, fichas e atribuições. '
+            'Esta ação não pode ser desfeita.',
+          ),
         );
       },
     );
@@ -109,9 +115,6 @@ class ConfigScreen extends StatelessWidget {
         return AppDialog(
           title: 'Banco de teste',
           onClose: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(
-            'Isso vai adicionar dados de teste para tarefas e fichas.',
-          ),
           actions: [
             Expanded(
               child: OutlinedButton(
@@ -129,6 +132,9 @@ class ConfigScreen extends StatelessWidget {
               ),
             ),
           ],
+          child: const Text(
+            'Isso vai adicionar dados de teste para tarefas e fichas.',
+          ),
         );
       },
     );
@@ -143,9 +149,6 @@ class ConfigScreen extends StatelessWidget {
         return AppDialog(
           title: 'Importar banco',
           onClose: () => Navigator.of(dialogContext).pop(false),
-          child: const Text(
-            'Isso vai substituir o banco atual pelos dados importados.',
-          ),
           actions: [
             Expanded(
               child: OutlinedButton(
@@ -163,6 +166,9 @@ class ConfigScreen extends StatelessWidget {
               ),
             ),
           ],
+          child: const Text(
+            'Isso vai substituir o banco atual pelos dados importados.',
+          ),
         );
       },
     );
@@ -215,18 +221,21 @@ class ConfigScreen extends StatelessWidget {
                             description:
                                 'Remove todas as tarefas, fichas e atribuições.',
                             icon: Icons.delete_outline,
-                          onTap: () async {
-                            final confirm =
-                                await _confirmClearDatabase(context);
-                            if (!confirm) return;
-                            try {
-                              await database.clearDatabase();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Banco limpo.'),
-                                ),
+                            onTap: () async {
+                              final confirm = await _confirmClearDatabase(
+                                context,
                               );
+                              if (!confirm) return;
+                              try {
+                                await database.clearDatabase();
+                                if (!context.mounted) return;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('Banco limpo.'),
+                                  ),
+                                );
                               } catch (e) {
+                                if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('Falha ao limpar o banco.'),
@@ -241,22 +250,28 @@ class ConfigScreen extends StatelessWidget {
                                 'Adiciona dados simulados para tarefas e fichas.',
                             icon: Icons.auto_fix_high_outlined,
                             onTap: () async {
-                              final confirm =
-                                  await _confirmMockDatabase(context);
+                              final confirm = await _confirmMockDatabase(
+                                context,
+                              );
                               if (!confirm) return;
                               try {
                                 final now = DateTime.now();
-                                final isoDate =
-                                    now.toIso8601String().split('T').first;
+                                final isoDate = now
+                                    .toIso8601String()
+                                    .split('T')
+                                    .first;
                                 database.insertMockData(isoDate: isoDate);
                                 database.insertMockVisitForms();
+                                if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
-                                    content:
-                                        Text('Dados de teste adicionados.'),
+                                    content: Text(
+                                      'Dados de teste adicionados.',
+                                    ),
                                   ),
                                 );
                               } catch (e) {
+                                if (!context.mounted) return;
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text(

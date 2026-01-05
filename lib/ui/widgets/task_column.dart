@@ -8,7 +8,8 @@ class TaskColumn extends StatefulWidget {
   final Color accentColor;
   final List<TaskAssignment> assignments;
   final Future<void> Function(Member member) onMemberDropped;
-  final void Function(int memberId, int fromTaskId, int toTaskId)? onMoveAssignment;
+  final void Function(int memberId, int fromTaskId, int toTaskId)?
+  onMoveAssignment;
   final void Function(Member member)? onMemberDoubleTap;
   final VoidCallback? onTaskDoubleTap;
   final void Function(int memberId, int taskId)? onRemoveAssignment;
@@ -46,13 +47,13 @@ class _TaskColumnState extends State<TaskColumn> {
     final genderTint = widget.task.genderConstraint == 'M'
         ? const Color(0xFFF5F9FF)
         : widget.task.genderConstraint == 'F'
-            ? const Color(0xFFFFF7FB)
-            : Colors.white;
+        ? const Color(0xFFFFF7FB)
+        : Colors.white;
     final subtitle = widget.task.genderConstraint == 'M'
         ? 'Somente homens'
         : widget.task.genderConstraint == 'F'
-            ? 'Somente mulheres'
-            : null;
+        ? 'Somente mulheres'
+        : null;
 
     return DragTarget<Object>(
       onAcceptWithDetails: (details) {
@@ -61,7 +62,11 @@ class _TaskColumnState extends State<TaskColumn> {
           widget.onMemberDropped(data);
         } else if (data is AssignmentDragData) {
           if (data.taskId == widget.task.id) return;
-          widget.onMoveAssignment?.call(data.memberId, data.taskId, widget.task.id);
+          widget.onMoveAssignment?.call(
+            data.memberId,
+            data.taskId,
+            widget.task.id,
+          );
         }
       },
       builder: (context, candidateData, rejectedData) {
@@ -104,17 +109,20 @@ class _TaskColumnState extends State<TaskColumn> {
                       ),
                     ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFF1F2F6),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                      widget.assignments.length.toString(),
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
+                        widget.assignments.length.toString(),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
@@ -125,7 +133,9 @@ class _TaskColumnState extends State<TaskColumn> {
                 Row(
                   children: [
                     Icon(
-                      widget.task.genderConstraint == 'M' ? Icons.male : Icons.female,
+                      widget.task.genderConstraint == 'M'
+                          ? Icons.male
+                          : Icons.female,
                       size: 14,
                       color: Colors.black54,
                     ),
@@ -172,7 +182,7 @@ class _TaskColumnState extends State<TaskColumn> {
                 Expanded(
                   child: ListView.separated(
                     itemCount: widget.assignments.length,
-                    separatorBuilder: (_, __) => const SizedBox(height: 12),
+                    separatorBuilder: (_, _) => const SizedBox(height: 12),
                     itemBuilder: (context, index) {
                       final assignment = widget.assignments[index];
                       return Draggable<AssignmentDragData>(
@@ -183,7 +193,8 @@ class _TaskColumnState extends State<TaskColumn> {
                         onDragStarted: () => _setRemoveZoneVisible(true),
                         onDragEnd: (_) => _setRemoveZoneVisible(false),
                         onDragCompleted: () => _setRemoveZoneVisible(false),
-                        onDraggableCanceled: (_, __) => _setRemoveZoneVisible(false),
+                        onDraggableCanceled: (_, _) =>
+                            _setRemoveZoneVisible(false),
                         feedback: Material(
                           color: Colors.transparent,
                           child: SizedBox(
@@ -191,7 +202,8 @@ class _TaskColumnState extends State<TaskColumn> {
                             child: MemberCard(
                               member: assignment.member,
                               dense: true,
-                              taskCount: widget.taskCounts[assignment.member.id] ?? 0,
+                              taskCount:
+                                  widget.taskCounts[assignment.member.id] ?? 0,
                             ),
                           ),
                         ),
@@ -200,19 +212,25 @@ class _TaskColumnState extends State<TaskColumn> {
                           child: MemberCard(
                             member: assignment.member,
                             dense: true,
-                            taskCount: widget.taskCounts[assignment.member.id] ?? 0,
+                            taskCount:
+                                widget.taskCounts[assignment.member.id] ?? 0,
                             onDoubleTap: widget.onMemberDoubleTap == null
                                 ? null
-                                : () => widget.onMemberDoubleTap!(assignment.member),
+                                : () => widget.onMemberDoubleTap!(
+                                    assignment.member,
+                                  ),
                           ),
                         ),
                         child: MemberCard(
                           member: assignment.member,
                           dense: true,
-                          taskCount: widget.taskCounts[assignment.member.id] ?? 0,
+                          taskCount:
+                              widget.taskCounts[assignment.member.id] ?? 0,
                           onDoubleTap: widget.onMemberDoubleTap == null
                               ? null
-                              : () => widget.onMemberDoubleTap!(assignment.member),
+                              : () => widget.onMemberDoubleTap!(
+                                  assignment.member,
+                                ),
                         ),
                       );
                     },
@@ -225,8 +243,12 @@ class _TaskColumnState extends State<TaskColumn> {
                     ? DragTarget<AssignmentDragData>(
                         onAcceptWithDetails: (details) {
                           final data = details.data;
-                          if (widget.onRemoveAssignment != null && data.taskId == widget.task.id) {
-                            widget.onRemoveAssignment!(data.memberId, data.taskId);
+                          if (widget.onRemoveAssignment != null &&
+                              data.taskId == widget.task.id) {
+                            widget.onRemoveAssignment!(
+                              data.memberId,
+                              data.taskId,
+                            );
                           }
                         },
                         builder: (context, candidateData, rejectedData) {
@@ -236,17 +258,24 @@ class _TaskColumnState extends State<TaskColumn> {
                             height: 56,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: isActive ? const Color(0xFFFEE2E2) : const Color(0xFFF7F8FB),
+                              color: isActive
+                                  ? const Color(0xFFFEE2E2)
+                                  : const Color(0xFFF7F8FB),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: isActive ? const Color(0xFFDC2626) : const Color(0xFFE5E7EB),
+                                color: isActive
+                                    ? const Color(0xFFDC2626)
+                                    : const Color(0xFFE5E7EB),
                                 width: isActive ? 2 : 1,
                               ),
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: const [
-                                Icon(Icons.delete_outline, color: Color(0xFFDC2626)),
+                                Icon(
+                                  Icons.delete_outline,
+                                  color: Color(0xFFDC2626),
+                                ),
                                 SizedBox(width: 8),
                                 Text(
                                   'Arraste aqui para remover',
