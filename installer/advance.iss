@@ -36,14 +36,10 @@ Name: "desktopicon"; Description: "{cm:CreateDesktopIcon}"; GroupDescription: "{
 Source: "..\\build\\windows\\x64\\runner\\Release\\{#MyAppExeName}"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\\build\\windows\\x64\\runner\\Release\\file_selector_windows_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\\build\\windows\\x64\\runner\\Release\\flutter_windows.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\\build\\windows\\x64\\runner\\Release\\msvcp140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\\build\\windows\\x64\\runner\\Release\\msvcp140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\\build\\windows\\x64\\runner\\Release\\msvcp140_2.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\\build\\windows\\x64\\runner\\Release\\sqlite3.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\\build\\windows\\x64\\runner\\Release\\sqlite3_flutter_libs_plugin.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\\build\\windows\\x64\\runner\\Release\\vcruntime140.dll"; DestDir: "{app}"; Flags: ignoreversion
-Source: "..\\build\\windows\\x64\\runner\\Release\\vcruntime140_1.dll"; DestDir: "{app}"; Flags: ignoreversion
 Source: "..\\build\\windows\\x64\\runner\\Release\\data\\*"; DestDir: "{app}\\data"; Flags: ignoreversion recursesubdirs createallsubdirs
+Source: "vc_redist.x64.exe"; DestDir: "{tmp}"; Flags: deleteafterinstall
 
 [Icons]
 Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
@@ -51,4 +47,5 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
 
 [Run]
+Filename: "{tmp}\\vc_redist.x64.exe"; Parameters: "/install /quiet /norestart"; Flags: waituntilterminated runhidden
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent
