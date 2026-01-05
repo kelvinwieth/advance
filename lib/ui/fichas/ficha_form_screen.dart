@@ -548,78 +548,70 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildSectionCard(
-                  title: 'Resultados da visita',
-                  subtitle: 'Selecione tudo o que aconteceu na visita.',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            flex: 3,
-                            child: Wrap(
-                              spacing: 12,
-                              runSpacing: 8,
-                              children: [
-                                _ResultChip(
-                                  label: 'Gráfico apresentado',
-                                  selected: _resultEvangelho,
-                                  onChanged: (value) =>
-                                      setState(() => _resultEvangelho = value),
-                                ),
-                                _ResultChip(
-                                  label: 'Ponte da Salvação apresentada',
-                                  selected: _resultPonteSalvacao,
-                                  onChanged: (value) => setState(
-                                    () => _resultPonteSalvacao = value,
-                                  ),
-                                ),
-                                _ResultChip(
-                                  label: 'Decisão',
-                                  selected: _resultAceitouJesus,
-                                  onChanged: (value) =>
-                                      setState(() => _resultAceitouJesus = value),
-                                ),
-                                _ResultChip(
-                                  label: 'Reconciliação',
-                                  selected: _resultReconciliacao,
-                                  onChanged: (value) =>
-                                      setState(() => _resultReconciliacao = value),
-                                ),
-                                _ResultChip(
-                                  label:
-                                      'Primeira vez que ouviu falar do Evangelho',
-                                  selected: _resultPrimeiraVez,
-                                  onChanged: (value) =>
-                                      setState(() => _resultPrimeiraVez = value),
-                                ),
-                                _ResultChip(
-                                  label: 'Deseja nova visita',
-                                  selected: _resultNovaVisita,
-                                  onChanged: (value) =>
-                                      setState(() => _resultNovaVisita = value),
-                                ),
-                              ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(
+                      flex: 3,
+                      child: _buildSectionCard(
+                        title: 'Resultados da visita',
+                        subtitle: 'Selecione tudo o que aconteceu na visita.',
+                        child: Wrap(
+                          spacing: 12,
+                          runSpacing: 8,
+                          children: [
+                            _ResultChip(
+                              label: 'Gráfico apresentado',
+                              selected: _resultEvangelho,
+                              onChanged: (value) =>
+                                  setState(() => _resultEvangelho = value),
                             ),
-                          ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            flex: 1,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text('Quantidade de literaturas'),
-                                const SizedBox(height: 6),
-                                _buildCounterField(_literatureController),
-                              ],
+                            _ResultChip(
+                              label: 'Ponte da Salvação apresentada',
+                              selected: _resultPonteSalvacao,
+                              onChanged: (value) => setState(
+                                () => _resultPonteSalvacao = value,
+                              ),
                             ),
-                          ),
-                        ],
+                            _ResultChip(
+                              label: 'Decisão',
+                              selected: _resultAceitouJesus,
+                              onChanged: (value) =>
+                                  setState(() => _resultAceitouJesus = value),
+                            ),
+                            _ResultChip(
+                              label: 'Reconciliação',
+                              selected: _resultReconciliacao,
+                              onChanged: (value) =>
+                                  setState(() => _resultReconciliacao = value),
+                            ),
+                            _ResultChip(
+                              label:
+                                  'Primeira vez que ouviu falar do Evangelho',
+                              selected: _resultPrimeiraVez,
+                              onChanged: (value) =>
+                                  setState(() => _resultPrimeiraVez = value),
+                            ),
+                            _ResultChip(
+                              label: 'Deseja nova visita',
+                              selected: _resultNovaVisita,
+                              onChanged: (value) =>
+                                  setState(() => _resultNovaVisita = value),
+                            ),
+                          ],
+                        ),
                       ),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      flex: 1,
+                      child: _buildSectionCard(
+                        title: 'Literaturas',
+                        subtitle: 'Quantidade distribuída',
+                        child: _buildCounterField(_literatureController),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 _buildSectionCard(
@@ -779,11 +771,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -809,11 +797,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                                 ],
                               ),
                             ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
+                            const SizedBox(width: 12),
                             Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -826,8 +810,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                                 ],
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            const Expanded(child: SizedBox.shrink()),
                           ],
                         ),
                       ],
