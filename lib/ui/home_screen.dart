@@ -1889,135 +1889,36 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: InkWell(
-                      borderRadius: BorderRadius.circular(12),
-                      onTap: () {
-                        setState(() {
-                          _showAllMembers = !_showAllMembers;
-                        });
-                      },
-                      child: Container(
-                        height: 36,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: !_showAllMembers
-                              ? const Color(0xFFDFF7E8)
-                              : const Color(0xFFF1F2F6),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            if (!_showAllMembers) ...[
-                              const Icon(
-                                Icons.check,
-                                size: 16,
-                                color: Color(0xFF118C4F),
-                              ),
-                              const SizedBox(width: 6),
-                            ],
-                            const Text(
-                              'Disponível',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                                color: Colors.black,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+                  _FilterChipButton(
+                    label: 'Disponível',
+                    selected: !_showAllMembers,
+                    onTap: () {
+                      setState(() {
+                        _showAllMembers = !_showAllMembers;
+                      });
+                    },
                   ),
                   const SizedBox(width: 8),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
+                  _FilterChipButton(
+                    label: 'H',
+                    icon: Icon(Icons.male_rounded, color: Colors.blue),
+                    selected: _genderFilter == 'M',
                     onTap: () {
                       setState(() {
                         _genderFilter = _genderFilter == 'M' ? 'all' : 'M';
                       });
                     },
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _genderFilter == 'M'
-                            ? const Color(0xFFE8F0FF)
-                            : const Color(0xFFF1F2F6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_genderFilter == 'M') ...[
-                            const Icon(
-                              Icons.male,
-                              size: 14,
-                              color: Color(0xFF1D4ED8),
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          const Text(
-                            'H',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                   const SizedBox(width: 8),
-                  InkWell(
-                    borderRadius: BorderRadius.circular(12),
+                  _FilterChipButton(
+                    label: 'M',
+                    icon: Icon(Icons.female_rounded, color: Colors.pink),
+                    selected: _genderFilter == 'F',
                     onTap: () {
                       setState(() {
                         _genderFilter = _genderFilter == 'F' ? 'all' : 'F';
                       });
                     },
-                    child: Container(
-                      height: 36,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: _genderFilter == 'F'
-                            ? const Color(0xFFFFE7F3)
-                            : const Color(0xFFF1F2F6),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          if (_genderFilter == 'F') ...[
-                            const Icon(
-                              Icons.female,
-                              size: 14,
-                              color: Color(0xFFBE185D),
-                            ),
-                            const SizedBox(width: 6),
-                          ],
-                          const Text(
-                            'M',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w600,
-                              color: Colors.black,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ),
                 ],
               ),
@@ -2189,6 +2090,44 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FilterChipButton extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final Icon? icon;
+
+  const _FilterChipButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.icon,
+  });
+  @override
+  Widget build(BuildContext context) {
+    return FilterChip(
+      label: Text(label),
+      avatar: icon,
+      showCheckmark: icon == null,
+      selected: selected,
+      onSelected: (_) => onTap(),
+      backgroundColor: const Color(0xFFF1F2F6),
+      selectedColor: const Color(0xFFE1F2F4),
+      checkmarkColor: const Color(0xFF038A99),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(
+          color: selected ? const Color(0xFF8CC9CE) : Colors.transparent,
+        ),
+      ),
+      labelStyle: const TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: Color(0xFF1D1D1D),
       ),
     );
   }
