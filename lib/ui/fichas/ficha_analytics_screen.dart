@@ -520,51 +520,6 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                           ),
                                           const SizedBox(height: 16),
                                           _buildSectionCard(
-                                            title: 'Distribuição por religião',
-                                            child: Column(
-                                              children: [
-                                                _buildDistributionBar(
-                                                  label: 'Católica',
-                                                  value:
-                                                      _analytics!.religionCatolica,
-                                                  total: _analytics!.totalPeople,
-                                                  color: const Color(0xFF038A99),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                _buildDistributionBar(
-                                                  label: 'Espírita',
-                                                  value:
-                                                      _analytics!.religionEspirita,
-                                                  total: _analytics!.totalPeople,
-                                                  color: const Color(0xFF4FA5AE),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                _buildDistributionBar(
-                                                  label: 'Ateu',
-                                                  value: _analytics!.religionAteu,
-                                                  total: _analytics!.totalPeople,
-                                                  color: const Color(0xFF8CC9CE),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                _buildDistributionBar(
-                                                  label: 'Desviado',
-                                                  value:
-                                                      _analytics!.religionDesviado,
-                                                  total: _analytics!.totalPeople,
-                                                  color: const Color(0xFFB3DFE9),
-                                                ),
-                                                const SizedBox(height: 10),
-                                                _buildDistributionBar(
-                                                  label: 'Outros',
-                                                  value: _analytics!.religionOutros,
-                                                  total: _analytics!.totalPeople,
-                                                  color: const Color(0xFF1D1D1D),
-                                                ),
-                                              ],
-                                            ),
-                                          ),
-                                          const SizedBox(height: 16),
-                                          _buildSectionCard(
                                             title: 'Bairros com mais visitas',
                                             child: _neighborhoodCounts.isEmpty
                                                 ? const Text(

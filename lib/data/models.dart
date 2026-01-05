@@ -90,12 +90,11 @@ class VisitForm {
   final int ageYouth;
   final int ageAdults;
   final int ageElderly;
-  final int religionCatolica;
-  final int religionEspirita;
-  final int religionAteu;
-  final int religionDesviado;
-  final int religionOutros;
-  final String? religionAllLabel;
+  final bool religionCatolica;
+  final bool religionEspirita;
+  final bool religionAteu;
+  final bool religionDesviado;
+  final bool religionOutros;
   final String notes;
   final String prayerRequests;
   final String team;
@@ -125,7 +124,6 @@ class VisitForm {
     required this.religionAteu,
     required this.religionDesviado,
     required this.religionOutros,
-    required this.religionAllLabel,
     required this.notes,
     required this.prayerRequests,
     required this.team,
@@ -152,12 +150,11 @@ class VisitForm {
       ageYouth: row['age_youth'] as int,
       ageAdults: row['age_adults'] as int,
       ageElderly: row['age_elderly'] as int,
-      religionCatolica: row['religion_catolica'] as int,
-      religionEspirita: row['religion_espirita'] as int,
-      religionAteu: row['religion_ateu'] as int,
-      religionDesviado: row['religion_desviado'] as int,
-      religionOutros: row['religion_outros'] as int,
-      religionAllLabel: row['religion_all_label'] as String?,
+      religionCatolica: (row['religion_catolica'] as int) > 0,
+      religionEspirita: (row['religion_espirita'] as int) > 0,
+      religionAteu: (row['religion_ateu'] as int) > 0,
+      religionDesviado: (row['religion_desviado'] as int) > 0,
+      religionOutros: (row['religion_outros'] as int) > 0,
       notes: row['notes'] as String,
       prayerRequests: row['prayer_requests'] as String,
       team: row['team'] as String,
@@ -180,11 +177,6 @@ class VisitAnalytics {
   final int ageYouth;
   final int ageAdults;
   final int ageElderly;
-  final int religionCatolica;
-  final int religionEspirita;
-  final int religionAteu;
-  final int religionDesviado;
-  final int religionOutros;
 
   const VisitAnalytics({
     required this.totalVisits,
@@ -201,11 +193,6 @@ class VisitAnalytics {
     required this.ageYouth,
     required this.ageAdults,
     required this.ageElderly,
-    required this.religionCatolica,
-    required this.religionEspirita,
-    required this.religionAteu,
-    required this.religionDesviado,
-    required this.religionOutros,
   });
 }
 

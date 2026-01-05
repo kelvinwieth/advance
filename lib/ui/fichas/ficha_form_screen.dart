@@ -40,11 +40,11 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
   late TextEditingController _ageAdultsController;
   late TextEditingController _ageElderlyController;
 
-  late TextEditingController _religionCatolicaController;
-  late TextEditingController _religionEspiritaController;
-  late TextEditingController _religionAteuController;
-  late TextEditingController _religionDesviadoController;
-  late TextEditingController _religionOutrosController;
+  bool _religionCatolica = false;
+  bool _religionEspirita = false;
+  bool _religionAteu = false;
+  bool _religionDesviado = false;
+  bool _religionOutros = false;
 
   bool _resultEvangelho = false;
   bool _resultPonteSalvacao = false;
@@ -53,8 +53,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
   bool _resultPrimeiraVez = false;
   bool _resultNovaVisita = false;
 
-  bool _religionAll = false;
-  String? _religionAllLabel;
   String? _errorMessage;
 
   @override
@@ -96,21 +94,11 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
       text: (existing?.ageElderly ?? 0).toString(),
     );
 
-    _religionCatolicaController = TextEditingController(
-      text: (existing?.religionCatolica ?? 0).toString(),
-    );
-    _religionEspiritaController = TextEditingController(
-      text: (existing?.religionEspirita ?? 0).toString(),
-    );
-    _religionAteuController = TextEditingController(
-      text: (existing?.religionAteu ?? 0).toString(),
-    );
-    _religionDesviadoController = TextEditingController(
-      text: (existing?.religionDesviado ?? 0).toString(),
-    );
-    _religionOutrosController = TextEditingController(
-      text: (existing?.religionOutros ?? 0).toString(),
-    );
+    _religionCatolica = existing?.religionCatolica ?? false;
+    _religionEspirita = existing?.religionEspirita ?? false;
+    _religionAteu = existing?.religionAteu ?? false;
+    _religionDesviado = existing?.religionDesviado ?? false;
+    _religionOutros = existing?.religionOutros ?? false;
 
     _resultEvangelho = existing?.resultEvangelho ?? false;
     _resultPonteSalvacao = existing?.resultPonteSalvacao ?? false;
@@ -119,8 +107,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     _resultPrimeiraVez = existing?.resultPrimeiraVez ?? false;
     _resultNovaVisita = existing?.resultNovaVisita ?? false;
 
-    _religionAllLabel = existing?.religionAllLabel;
-    _religionAll = _religionAllLabel != null;
   }
 
   @override
@@ -139,11 +125,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
     _ageYouthController.dispose();
     _ageAdultsController.dispose();
     _ageElderlyController.dispose();
-    _religionCatolicaController.dispose();
-    _religionEspiritaController.dispose();
-    _religionAteuController.dispose();
-    _religionDesviadoController.dispose();
-    _religionOutrosController.dispose();
     super.dispose();
   }
 
@@ -214,53 +195,6 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
       return;
     }
 
-    if (_religionAll && (_religionAllLabel == null)) {
-      setState(() {
-        _errorMessage = 'Selecione a religião para o modo "Todos".';
-      });
-      return;
-    }
-
-    if (_religionAll && totalPeople == 0) {
-      setState(() {
-        _errorMessage = 'Informe as faixas etárias para usar a opção "Todos".';
-      });
-      return;
-    }
-
-    int religionCatolica = _parseInt(_religionCatolicaController);
-    int religionEspirita = _parseInt(_religionEspiritaController);
-    int religionAteu = _parseInt(_religionAteuController);
-    int religionDesviado = _parseInt(_religionDesviadoController);
-    int religionOutros = _parseInt(_religionOutrosController);
-    String? religionAllLabel;
-
-    if (_religionAll) {
-      religionAllLabel = _religionAllLabel;
-      religionCatolica = 0;
-      religionEspirita = 0;
-      religionAteu = 0;
-      religionDesviado = 0;
-      religionOutros = 0;
-      switch (_religionAllLabel) {
-        case 'catolica':
-          religionCatolica = totalPeople;
-          break;
-        case 'espirita':
-          religionEspirita = totalPeople;
-          break;
-        case 'ateu':
-          religionAteu = totalPeople;
-          break;
-        case 'desviado':
-          religionDesviado = totalPeople;
-          break;
-        case 'outros':
-          religionOutros = totalPeople;
-          break;
-      }
-    }
-
     try {
       if (widget.existing == null) {
         widget.database.insertVisitForm(
@@ -282,12 +216,11 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
           ageYouth: ageYouth,
           ageAdults: ageAdults,
           ageElderly: ageElderly,
-          religionCatolica: religionCatolica,
-          religionEspirita: religionEspirita,
-          religionAteu: religionAteu,
-          religionDesviado: religionDesviado,
-          religionOutros: religionOutros,
-          religionAllLabel: religionAllLabel,
+          religionCatolica: _religionCatolica,
+          religionEspirita: _religionEspirita,
+          religionAteu: _religionAteu,
+          religionDesviado: _religionDesviado,
+          religionOutros: _religionOutros,
           notes: _notesController.text.trim(),
           prayerRequests: _prayerController.text.trim(),
           team: _teamController.text.trim(),
@@ -313,12 +246,11 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
           ageYouth: ageYouth,
           ageAdults: ageAdults,
           ageElderly: ageElderly,
-          religionCatolica: religionCatolica,
-          religionEspirita: religionEspirita,
-          religionAteu: religionAteu,
-          religionDesviado: religionDesviado,
-          religionOutros: religionOutros,
-          religionAllLabel: religionAllLabel,
+          religionCatolica: _religionCatolica,
+          religionEspirita: _religionEspirita,
+          religionAteu: _religionAteu,
+          religionDesviado: _religionDesviado,
+          religionOutros: _religionOutros,
           notes: _notesController.text.trim(),
           prayerRequests: _prayerController.text.trim(),
           team: _teamController.text.trim(),
@@ -681,154 +613,40 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                 const SizedBox(height: 16),
                 _buildSectionCard(
                   title: 'Religião',
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  child: Wrap(
+                    spacing: 12,
+                    runSpacing: 10,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: AppDialog.sectionFill,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFB3DFE9)),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Checkbox(
-                                  value: _religionAll,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _religionAll = value ?? false;
-                                    });
-                                  },
-                                ),
-                                const Expanded(
-                                  child: Text(
-                                    'Todos pertencem à mesma religião',
-                                    style: TextStyle(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            if (_religionAll) ...[
-                              const SizedBox(height: 8),
-                              DropdownButtonFormField<String>(
-                                value: _religionAllLabel,
-                                items: const [
-                                  DropdownMenuItem(
-                                    value: 'catolica',
-                                    child: Text('Católica'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'espirita',
-                                    child: Text('Espírita'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'ateu',
-                                    child: Text('Ateu'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'desviado',
-                                    child: Text('Desviado'),
-                                  ),
-                                  DropdownMenuItem(
-                                    value: 'outros',
-                                    child: Text('Outros'),
-                                  ),
-                                ],
-                                onChanged: (value) {
-                                  setState(() {
-                                    _religionAllLabel = value;
-                                  });
-                                },
-                                decoration: InputDecoration(
-                                  filled: true,
-                                  fillColor: AppDialog.inputFill,
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(12),
-                                    borderSide: BorderSide.none,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
+                      _ReligionChip(
+                        label: 'Católica',
+                        selected: _religionCatolica,
+                        onChanged: (value) =>
+                            setState(() => _religionCatolica = value),
                       ),
-                      if (!_religionAll) ...[
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Católica'),
-                                  const SizedBox(height: 6),
-                                  _buildCounterField(
-                                    _religionCatolicaController,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Espírita'),
-                                  const SizedBox(height: 6),
-                                  _buildCounterField(
-                                    _religionEspiritaController,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Ateu'),
-                                  const SizedBox(height: 6),
-                                  _buildCounterField(
-                                    _religionAteuController,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Desviado'),
-                                  const SizedBox(height: 6),
-                                  _buildCounterField(
-                                    _religionDesviadoController,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  const Text('Outros'),
-                                  const SizedBox(height: 6),
-                                  _buildCounterField(
-                                    _religionOutrosController,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
+                      _ReligionChip(
+                        label: 'Espírita',
+                        selected: _religionEspirita,
+                        onChanged: (value) =>
+                            setState(() => _religionEspirita = value),
+                      ),
+                      _ReligionChip(
+                        label: 'Ateu',
+                        selected: _religionAteu,
+                        onChanged: (value) =>
+                            setState(() => _religionAteu = value),
+                      ),
+                      _ReligionChip(
+                        label: 'Desviado',
+                        selected: _religionDesviado,
+                        onChanged: (value) =>
+                            setState(() => _religionDesviado = value),
+                      ),
+                      _ReligionChip(
+                        label: 'Outros',
+                        selected: _religionOutros,
+                        onChanged: (value) =>
+                            setState(() => _religionOutros = value),
+                      ),
                     ],
                   ),
                 ),
@@ -967,6 +785,55 @@ class _ResultChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
           color: selected ? const Color(0xFF8CC9CE) : Colors.transparent,
+        ),
+      ),
+    );
+  }
+}
+
+class _ReligionChip extends StatelessWidget {
+  final String label;
+  final bool selected;
+  final ValueChanged<bool> onChanged;
+
+  const _ReligionChip({
+    required this.label,
+    required this.selected,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(12),
+      onTap: () => onChanged(!selected),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+        decoration: BoxDecoration(
+          color: selected ? const Color(0xFFE1F2F4) : const Color(0xFFF1F2F6),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? const Color(0xFF8CC9CE) : Colors.transparent,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Checkbox(
+              value: selected,
+              onChanged: (value) => onChanged(value ?? false),
+              materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+              visualDensity: VisualDensity.compact,
+              activeColor: const Color(0xFF038A99),
+            ),
+            Text(
+              label,
+              style: TextStyle(
+                color: selected ? const Color(0xFF1D1D1D) : Colors.black87,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

@@ -61,6 +61,26 @@ class AppDatabase {
     _migrate(_db);
   }
 
+  Future<({int inserted, int skipped})> importVisitFormsFromCsv(
+    String csvContent,
+  ) async {
+    final dbPath = _dbPath;
+    _db.dispose();
+    final result = await Isolate.run(() {
+      return _importVisitFormsCsv(csvContent, dbPath);
+    });
+    _db = sqlite3.open(dbPath);
+    _db.execute('PRAGMA foreign_keys = ON;');
+    _db.execute('PRAGMA busy_timeout = 2000;');
+    try {
+      _db.execute('PRAGMA journal_mode = WAL;');
+    } catch (_) {
+      // Ignore if another connection is still releasing the lock.
+    }
+    _migrate(_db);
+    return result;
+  }
+
   static void _migrate(Database db) {
     db.execute('BEGIN');
     try {
@@ -113,11 +133,11 @@ CREATE TABLE IF NOT EXISTS visit_forms (
   age_youth INTEGER NOT NULL DEFAULT 0 CHECK (age_youth >= 0),
   age_adults INTEGER NOT NULL DEFAULT 0 CHECK (age_adults >= 0),
   age_elderly INTEGER NOT NULL DEFAULT 0 CHECK (age_elderly >= 0),
-  religion_catolica INTEGER NOT NULL DEFAULT 0 CHECK (religion_catolica >= 0),
-  religion_espirita INTEGER NOT NULL DEFAULT 0 CHECK (religion_espirita >= 0),
-  religion_ateu INTEGER NOT NULL DEFAULT 0 CHECK (religion_ateu >= 0),
-  religion_desviado INTEGER NOT NULL DEFAULT 0 CHECK (religion_desviado >= 0),
-  religion_outros INTEGER NOT NULL DEFAULT 0 CHECK (religion_outros >= 0),
+  religion_catolica INTEGER NOT NULL DEFAULT 0 CHECK (religion_catolica IN (0, 1)),
+  religion_espirita INTEGER NOT NULL DEFAULT 0 CHECK (religion_espirita IN (0, 1)),
+  religion_ateu INTEGER NOT NULL DEFAULT 0 CHECK (religion_ateu IN (0, 1)),
+  religion_desviado INTEGER NOT NULL DEFAULT 0 CHECK (religion_desviado IN (0, 1)),
+  religion_outros INTEGER NOT NULL DEFAULT 0 CHECK (religion_outros IN (0, 1)),
   religion_all_label TEXT NULL CHECK (
     religion_all_label IN ('catolica', 'espirita', 'ateu', 'desviado', 'outros')
   ),
@@ -285,12 +305,11 @@ ORDER BY visit_at DESC, id DESC;
     required int ageYouth,
     required int ageAdults,
     required int ageElderly,
-    required int religionCatolica,
-    required int religionEspirita,
-    required int religionAteu,
-    required int religionDesviado,
-    required int religionOutros,
-    required String? religionAllLabel,
+    required bool religionCatolica,
+    required bool religionEspirita,
+    required bool religionAteu,
+    required bool religionDesviado,
+    required bool religionOutros,
     required String notes,
     required String prayerRequests,
     required String team,
@@ -348,12 +367,12 @@ INSERT INTO visit_forms (
           ageYouth,
           ageAdults,
           ageElderly,
-          religionCatolica,
-          religionEspirita,
-          religionAteu,
-          religionDesviado,
-          religionOutros,
-          religionAllLabel,
+          religionCatolica ? 1 : 0,
+          religionEspirita ? 1 : 0,
+          religionAteu ? 1 : 0,
+          religionDesviado ? 1 : 0,
+          religionOutros ? 1 : 0,
+          null,
           notes,
           prayerRequests,
           team,
@@ -386,12 +405,11 @@ INSERT INTO visit_forms (
     required int ageYouth,
     required int ageAdults,
     required int ageElderly,
-    required int religionCatolica,
-    required int religionEspirita,
-    required int religionAteu,
-    required int religionDesviado,
-    required int religionOutros,
-    required String? religionAllLabel,
+    required bool religionCatolica,
+    required bool religionEspirita,
+    required bool religionAteu,
+    required bool religionDesviado,
+    required bool religionOutros,
     required String notes,
     required String prayerRequests,
     required String team,
@@ -450,12 +468,12 @@ WHERE id = ?;
           ageYouth,
           ageAdults,
           ageElderly,
-          religionCatolica,
-          religionEspirita,
-          religionAteu,
-          religionDesviado,
-          religionOutros,
-          religionAllLabel,
+          religionCatolica ? 1 : 0,
+          religionEspirita ? 1 : 0,
+          religionAteu ? 1 : 0,
+          religionDesviado ? 1 : 0,
+          religionOutros ? 1 : 0,
+          null,
           notes,
           prayerRequests,
           team,
@@ -496,12 +514,7 @@ SELECT
   COALESCE(SUM(age_children), 0) AS age_children,
   COALESCE(SUM(age_youth), 0) AS age_youth,
   COALESCE(SUM(age_adults), 0) AS age_adults,
-  COALESCE(SUM(age_elderly), 0) AS age_elderly,
-  COALESCE(SUM(religion_catolica), 0) AS religion_catolica,
-  COALESCE(SUM(religion_espirita), 0) AS religion_espirita,
-  COALESCE(SUM(religion_ateu), 0) AS religion_ateu,
-  COALESCE(SUM(religion_desviado), 0) AS religion_desviado,
-  COALESCE(SUM(religion_outros), 0) AS religion_outros
+  COALESCE(SUM(age_elderly), 0) AS age_elderly
 FROM visit_forms;
 ''');
     final row = result.first;
@@ -526,11 +539,6 @@ FROM visit_forms;
       ageYouth: ageYouth,
       ageAdults: ageAdults,
       ageElderly: ageElderly,
-      religionCatolica: row['religion_catolica'] as int,
-      religionEspirita: row['religion_espirita'] as int,
-      religionAteu: row['religion_ateu'] as int,
-      religionDesviado: row['religion_desviado'] as int,
-      religionOutros: row['religion_outros'] as int,
     );
   }
 
@@ -903,12 +911,12 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         'contacts': '83 99999-0001',
         'literatureCount': 3,
         'results': {
-          'evangelho': 1,
-          'ponte': 1,
-          'decisao': 1,
-          'reconciliacao': 0,
-          'primeira': 1,
-          'nova': 1,
+          'evangelho': true,
+          'ponte': true,
+          'decisao': true,
+          'reconciliacao': false,
+          'primeira': true,
+          'nova': true,
         },
         'ages': {
           'children': 1,
@@ -917,12 +925,11 @@ INSERT INTO tasks (name, gender_constraint) VALUES
           'elderly': 0,
         },
         'religion': {
-          'catolica': 1,
-          'espirita': 0,
-          'ateu': 0,
-          'desviado': 1,
-          'outros': 1,
-          'allLabel': null,
+          'catolica': true,
+          'espirita': false,
+          'ateu': false,
+          'desviado': true,
+          'outros': true,
         },
         'notes': 'Família receptiva e aberta à oração.',
         'prayer': 'Saúde da avó e emprego do pai.',
@@ -938,12 +945,12 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         'contacts': '83 98888-2211',
         'literatureCount': 2,
         'results': {
-          'evangelho': 1,
-          'ponte': 0,
-          'decisao': 0,
-          'reconciliacao': 1,
-          'primeira': 0,
-          'nova': 1,
+          'evangelho': true,
+          'ponte': false,
+          'decisao': false,
+          'reconciliacao': true,
+          'primeira': false,
+          'nova': true,
         },
         'ages': {
           'children': 0,
@@ -952,12 +959,11 @@ INSERT INTO tasks (name, gender_constraint) VALUES
           'elderly': 0,
         },
         'religion': {
-          'catolica': 2,
-          'espirita': 0,
-          'ateu': 0,
-          'desviado': 0,
-          'outros': 0,
-          'allLabel': 'catolica',
+          'catolica': true,
+          'espirita': false,
+          'ateu': false,
+          'desviado': false,
+          'outros': false,
         },
         'notes': '',
         'prayer': 'União da família.',
@@ -973,12 +979,12 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         'contacts': '',
         'literatureCount': 1,
         'results': {
-          'evangelho': 1,
-          'ponte': 1,
-          'decisao': 1,
-          'reconciliacao': 0,
-          'primeira': 1,
-          'nova': 0,
+          'evangelho': true,
+          'ponte': true,
+          'decisao': true,
+          'reconciliacao': false,
+          'primeira': true,
+          'nova': false,
         },
         'ages': {
           'children': 0,
@@ -987,12 +993,11 @@ INSERT INTO tasks (name, gender_constraint) VALUES
           'elderly': 0,
         },
         'religion': {
-          'catolica': 0,
-          'espirita': 0,
-          'ateu': 1,
-          'desviado': 0,
-          'outros': 0,
-          'allLabel': 'ateu',
+          'catolica': false,
+          'espirita': false,
+          'ateu': true,
+          'desviado': false,
+          'outros': false,
         },
         'notes': 'Pediu retorno para conversar mais.',
         'prayer': '',
@@ -1008,12 +1013,12 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         'contacts': '83 97777-3344',
         'literatureCount': 4,
         'results': {
-          'evangelho': 1,
-          'ponte': 1,
-          'decisao': 1,
-          'reconciliacao': 1,
-          'primeira': 0,
-          'nova': 1,
+          'evangelho': true,
+          'ponte': true,
+          'decisao': true,
+          'reconciliacao': true,
+          'primeira': false,
+          'nova': true,
         },
         'ages': {
           'children': 0,
@@ -1022,12 +1027,11 @@ INSERT INTO tasks (name, gender_constraint) VALUES
           'elderly': 0,
         },
         'religion': {
-          'catolica': 0,
-          'espirita': 0,
-          'ateu': 0,
-          'desviado': 2,
-          'outros': 0,
-          'allLabel': 'desviado',
+          'catolica': false,
+          'espirita': false,
+          'ateu': false,
+          'desviado': true,
+          'outros': false,
         },
         'notes': 'Reconciliação e oração.',
         'prayer': 'Crescimento espiritual.',
@@ -1043,12 +1047,12 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         'contacts': '',
         'literatureCount': 2,
         'results': {
-          'evangelho': 1,
-          'ponte': 0,
-          'decisao': 0,
-          'reconciliacao': 0,
-          'primeira': 1,
-          'nova': 0,
+          'evangelho': true,
+          'ponte': false,
+          'decisao': false,
+          'reconciliacao': false,
+          'primeira': true,
+          'nova': false,
         },
         'ages': {
           'children': 1,
@@ -1057,12 +1061,11 @@ INSERT INTO tasks (name, gender_constraint) VALUES
           'elderly': 0,
         },
         'religion': {
-          'catolica': 1,
-          'espirita': 0,
-          'ateu': 0,
-          'desviado': 0,
-          'outros': 1,
-          'allLabel': null,
+          'catolica': true,
+          'espirita': false,
+          'ateu': false,
+          'desviado': false,
+          'outros': true,
         },
         'notes': '',
         'prayer': 'Saúde da criança.',
@@ -1117,22 +1120,22 @@ INSERT INTO visit_forms (
             visit['city'],
             visit['contacts'],
             visit['literatureCount'],
-            results['evangelho'],
-            results['ponte'],
-            results['decisao'],
-            results['reconciliacao'],
-            results['primeira'],
-            results['nova'],
+            results['evangelho'] == true ? 1 : 0,
+            results['ponte'] == true ? 1 : 0,
+            results['decisao'] == true ? 1 : 0,
+            results['reconciliacao'] == true ? 1 : 0,
+            results['primeira'] == true ? 1 : 0,
+            results['nova'] == true ? 1 : 0,
             ages['children'],
             ages['youth'],
             ages['adults'],
             ages['elderly'],
-            religion['catolica'],
-            religion['espirita'],
-            religion['ateu'],
-            religion['desviado'],
-            religion['outros'],
-            religion['allLabel'],
+            religion['catolica'] == true ? 1 : 0,
+            religion['espirita'] == true ? 1 : 0,
+            religion['ateu'] == true ? 1 : 0,
+            religion['desviado'] == true ? 1 : 0,
+            religion['outros'] == true ? 1 : 0,
+            null,
             visit['notes'],
             visit['prayer'],
             visit['team'],
@@ -1170,4 +1173,403 @@ void _copyDatabaseFiles(String sourcePath, String dbPath) {
   if (shmFile.existsSync()) {
     shmFile.deleteSync();
   }
+}
+
+({int inserted, int skipped}) _importVisitFormsCsv(
+  String csvContent,
+  String dbPath,
+) {
+  final rows = _parseCsv(csvContent);
+  if (rows.length <= 1) {
+    return (inserted: 0, skipped: 0);
+  }
+
+  final headers = rows.first;
+  final headerIndex = <String, int>{};
+  for (var i = 0; i < headers.length; i++) {
+    headerIndex[_normalizeHeader(headers[i])] = i;
+  }
+
+  String valueFor(List<String> row, List<String> keys) {
+    for (final key in keys) {
+      final index = headerIndex[key];
+      if (index != null && index < row.length) {
+        return row[index].trim();
+      }
+    }
+    return '';
+  }
+
+  final db = sqlite3.open(dbPath);
+  db.execute('PRAGMA foreign_keys = ON;');
+  db.execute('PRAGMA busy_timeout = 5000;');
+
+  var inserted = 0;
+  var skipped = 0;
+
+  db.execute('BEGIN IMMEDIATE;');
+  try {
+    for (var i = 1; i < rows.length; i++) {
+      final row = rows[i];
+      if (row.isEmpty || row.every((value) => value.trim().isEmpty)) {
+        continue;
+      }
+
+      try {
+        final timestamp = valueFor(row, ['carimbodedatahora']);
+        final dateValue = valueFor(row, ['datadaficha']);
+        final timeValue = valueFor(row, ['horario']);
+        final visitAt = _parseVisitDateTime(
+          dateValue,
+          timeValue,
+          timestamp,
+        );
+        if (visitAt == null) {
+          skipped++;
+          continue;
+        }
+
+        final names = valueFor(row, ['nomes']);
+        final address = valueFor(row, ['endereco']);
+        final referencePoint = valueFor(row, ['pontodereferencia']);
+        final neighborhood = valueFor(row, ['bairro']);
+        final city = valueFor(row, ['cidade']);
+        final contacts = valueFor(row, ['contatos']);
+        final literatureText = valueFor(row, ['literaturasdistribuidas']);
+        final literatureCount = _parseFlexibleInt(literatureText);
+
+        final resultsText = valueFor(
+          row,
+          ['resultadosdavisita', 'resultadosdavista'],
+        );
+        final results = _parseResults(resultsText);
+
+        final ageChildren = _parseFlexibleInt(valueFor(row, ['crianca']));
+        final ageYouth = _parseFlexibleInt(valueFor(row, ['jovem']));
+        final ageAdults = _parseFlexibleInt(valueFor(row, ['adulto']));
+        final ageElderly = _parseFlexibleInt(valueFor(row, ['terceiraidade']));
+
+        final religionText = valueFor(row, ['religiao']);
+        final religions = _parseReligions(religionText);
+
+        final notes = valueFor(row, ['observacoesdavista']);
+        final prayerRequests = valueFor(row, ['pedidosdeoracao']);
+        final team = valueFor(row, ['equipe']);
+
+        if (literatureText.trim().isEmpty || team.trim().isEmpty) {
+          skipped++;
+          continue;
+        }
+
+        db.execute(
+          '''
+INSERT INTO visit_forms (
+  visit_at,
+  names,
+  address,
+  reference_point,
+  neighborhood,
+  city,
+  contacts,
+  literature_count,
+  result_evangelho,
+  result_ponte_salvacao,
+  result_aceitou_jesus,
+  result_reconciliacao,
+  result_primeira_vez,
+  result_nova_visita,
+  age_children,
+  age_youth,
+  age_adults,
+  age_elderly,
+  religion_catolica,
+  religion_espirita,
+  religion_ateu,
+  religion_desviado,
+  religion_outros,
+  religion_all_label,
+  notes,
+  prayer_requests,
+  team
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+''',
+          [
+            _formatDateTimeValue(visitAt),
+            names,
+            address,
+            referencePoint,
+            neighborhood,
+            city,
+            contacts,
+            literatureCount,
+            results.evangelho ? 1 : 0,
+            results.ponte ? 1 : 0,
+            results.decisao ? 1 : 0,
+            results.reconciliacao ? 1 : 0,
+            results.primeira ? 1 : 0,
+            results.novaVisita ? 1 : 0,
+            ageChildren,
+            ageYouth,
+            ageAdults,
+            ageElderly,
+            religions.catolica ? 1 : 0,
+            religions.espirita ? 1 : 0,
+            religions.ateu ? 1 : 0,
+            religions.desviado ? 1 : 0,
+            religions.outros ? 1 : 0,
+            null,
+            notes,
+            prayerRequests,
+            team,
+          ],
+        );
+        inserted++;
+      } catch (_) {
+        skipped++;
+      }
+    }
+    db.execute('COMMIT;');
+  } catch (_) {
+    db.execute('ROLLBACK;');
+    skipped = rows.length - 1 - inserted;
+  } finally {
+    db.dispose();
+  }
+
+  return (inserted: inserted, skipped: skipped);
+}
+
+class _ParsedResults {
+  final bool evangelho;
+  final bool ponte;
+  final bool decisao;
+  final bool reconciliacao;
+  final bool primeira;
+  final bool novaVisita;
+
+  const _ParsedResults({
+    required this.evangelho,
+    required this.ponte,
+    required this.decisao,
+    required this.reconciliacao,
+    required this.primeira,
+    required this.novaVisita,
+  });
+}
+
+class _ParsedReligions {
+  final bool catolica;
+  final bool espirita;
+  final bool ateu;
+  final bool desviado;
+  final bool outros;
+
+  const _ParsedReligions({
+    required this.catolica,
+    required this.espirita,
+    required this.ateu,
+    required this.desviado,
+    required this.outros,
+  });
+}
+
+_ParsedResults _parseResults(String raw) {
+  final normalized = _normalizeText(raw);
+  final parts = normalized.split(',').map((value) => value.trim()).toList();
+  bool hasMatch(String key) => parts.any((part) => part.contains(key));
+
+  return _ParsedResults(
+    evangelho: hasMatch('passado grafico') || hasMatch('grafico'),
+    ponte: hasMatch('passado ponte da salvacao') ||
+        (hasMatch('ponte') && hasMatch('salvacao')),
+    decisao: hasMatch('entregou a vida a jesus') || hasMatch('decisao'),
+    reconciliacao: hasMatch('reconciliacao'),
+    primeira: hasMatch('primeira vez') || hasMatch('ouviu falar do evangelho'),
+    novaVisita: hasMatch('deseja uma nova visita') || hasMatch('nova visita'),
+  );
+}
+
+_ParsedReligions _parseReligions(String raw) {
+  final normalized = _normalizeText(raw);
+  final parts = normalized.split(',').map((value) => value.trim()).toList();
+  bool hasMatch(String key) =>
+      parts.any((part) => part.contains(key));
+
+  return _ParsedReligions(
+    catolica: hasMatch('catolica'),
+    espirita: hasMatch('espirita'),
+    ateu: hasMatch('ateu'),
+    desviado: hasMatch('desviado'),
+    outros: hasMatch('outros'),
+  );
+}
+
+String _formatDateTimeValue(DateTime value) {
+  final iso = value.toIso8601String().replaceFirst('T', ' ');
+  return iso.split('.').first;
+}
+
+DateTime? _parseVisitDateTime(
+  String dateValue,
+  String timeValue,
+  String timestampValue,
+) {
+  final date = _parseDate(dateValue);
+  if (date != null) {
+    final time = _parseTime(timeValue);
+    return DateTime(
+      date.year,
+      date.month,
+      date.day,
+      time?.hour ?? 0,
+      time?.minute ?? 0,
+      time?.second ?? 0,
+    );
+  }
+  return _parseDateTime(timestampValue);
+}
+
+DateTime? _parseDateTime(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return null;
+  final parts = trimmed.split(RegExp(r'\s+'));
+  if (parts.isEmpty) return null;
+  final date = _parseDate(parts.first);
+  if (date == null) return null;
+  final time = parts.length > 1 ? _parseTime(parts[1]) : null;
+  return DateTime(
+    date.year,
+    date.month,
+    date.day,
+    time?.hour ?? 0,
+    time?.minute ?? 0,
+    time?.second ?? 0,
+  );
+}
+
+DateTime? _parseDate(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return null;
+  final parts = trimmed.split('/');
+  if (parts.length != 3) return null;
+  final day = int.tryParse(parts[0]);
+  final month = int.tryParse(parts[1]);
+  final year = int.tryParse(parts[2]);
+  if (day == null || month == null || year == null) return null;
+  return DateTime(year, month, day);
+}
+
+DateTime? _parseTime(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return null;
+  final parts = trimmed.split(':');
+  if (parts.length < 2) return null;
+  final hour = int.tryParse(parts[0]);
+  final minute = int.tryParse(parts[1]);
+  final second = parts.length > 2 ? int.tryParse(parts[2]) ?? 0 : 0;
+  if (hour == null || minute == null) return null;
+  return DateTime(0, 1, 1, hour, minute, second);
+}
+
+int _parseFlexibleInt(String value) {
+  final trimmed = value.trim();
+  if (trimmed.isEmpty) return 0;
+  final parsed = int.tryParse(trimmed);
+  if (parsed != null) return parsed;
+  final normalized = _normalizeText(trimmed);
+  const words = {
+    'zero': 0,
+    'um': 1,
+    'uma': 1,
+    'dois': 2,
+    'duas': 2,
+    'tres': 3,
+    'quatro': 4,
+    'cinco': 5,
+    'seis': 6,
+    'sete': 7,
+    'oito': 8,
+    'nove': 9,
+    'dez': 10,
+  };
+  return words[normalized] ?? 0;
+}
+
+List<List<String>> _parseCsv(String input) {
+  final rows = <List<String>>[];
+  final currentRow = <String>[];
+  final buffer = StringBuffer();
+  var inQuotes = false;
+  var i = 0;
+
+  while (i < input.length) {
+    final char = input[i];
+    if (char == '"') {
+      final nextChar = i + 1 < input.length ? input[i + 1] : null;
+      if (inQuotes && nextChar == '"') {
+        buffer.write('"');
+        i += 2;
+        continue;
+      }
+      inQuotes = !inQuotes;
+      i++;
+      continue;
+    }
+
+    if (char == ',' && !inQuotes) {
+      currentRow.add(buffer.toString());
+      buffer.clear();
+      i++;
+      continue;
+    }
+
+    if ((char == '\n' || char == '\r') && !inQuotes) {
+      if (char == '\r' && i + 1 < input.length && input[i + 1] == '\n') {
+        i++;
+      }
+      currentRow.add(buffer.toString());
+      buffer.clear();
+      rows.add(List<String>.from(currentRow));
+      currentRow.clear();
+      i++;
+      continue;
+    }
+
+    buffer.write(char);
+    i++;
+  }
+
+  if (buffer.length > 0 || currentRow.isNotEmpty) {
+    currentRow.add(buffer.toString());
+    rows.add(List<String>.from(currentRow));
+  }
+
+  return rows;
+}
+
+String _normalizeHeader(String value) {
+  final lowered = _normalizeText(value);
+  return lowered.replaceAll(RegExp(r'[^a-z0-9]'), '');
+}
+
+String _normalizeText(String value) {
+  var result = value.trim().toLowerCase();
+  const replacements = {
+    'á': 'a',
+    'à': 'a',
+    'â': 'a',
+    'ã': 'a',
+    'é': 'e',
+    'ê': 'e',
+    'í': 'i',
+    'ó': 'o',
+    'ô': 'o',
+    'õ': 'o',
+    'ú': 'u',
+    'ç': 'c',
+  };
+  replacements.forEach((key, replacement) {
+    result = result.replaceAll(key, replacement);
+  });
+  return result;
 }

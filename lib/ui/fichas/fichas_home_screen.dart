@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import '../../data/app_database.dart';
 import '../../data/models.dart';
+import '../widgets/app_dialog.dart';
 import 'ficha_analytics_screen.dart';
 import 'ficha_form_screen.dart';
 import 'prayer_requests_screen.dart';
@@ -88,6 +92,76 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
     });
   }
 
+  Future<void> _importCsv() async {
+    final file = await openFile(
+      acceptedTypeGroups: const [
+        XTypeGroup(label: 'CSV', extensions: ['csv']),
+      ],
+    );
+    if (file == null) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Importar fichas',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          child: const Text(
+            'As fichas do CSV serão adicionadas ao banco atual.',
+          ),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.primaryStyle(),
+                child: const Text('Importar'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+    if (confirmed != true) return;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    try {
+      final csvContent = await File(file.path).readAsString();
+      final result =
+          await widget.database.importVisitFormsFromCsv(csvContent);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      await _loadData();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            'Importadas ${result.inserted} fichas. '
+            '${result.skipped} ignoradas.',
+          ),
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Falha ao importar o CSV.')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -152,6 +226,12 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                           ),
                           icon: const Icon(Icons.insights_outlined),
                           label: const Text('Insights'),
+                        ),
+                        const SizedBox(width: 12),
+                        OutlinedButton.icon(
+                          onPressed: _importCsv,
+                          icon: const Icon(Icons.upload_file_outlined),
+                          label: const Text('Importar CSV'),
                         ),
                         const SizedBox(width: 12),
                         ElevatedButton.icon(
