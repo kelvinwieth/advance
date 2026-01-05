@@ -434,7 +434,7 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              '${form.neighborhood} · ${form.address}${form.referencePoint.isEmpty ? '' : ' - ${form.referencePoint}'}',
+                              '${form.neighborhood} · ${form.address}${form.referencePoint.isEmpty ? '' : ' · ${form.referencePoint}'}',
                               style: const TextStyle(
                                 color: Colors.black54,
                               ),
