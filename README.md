@@ -4,7 +4,7 @@ A production desktop app built for the Avanço Missionário event, organized by 
 
 ## Demo
 
-![](./docs/demo.gif)
+<img src="./docs/demo.gif" width="100%">
 
 ## Why it matters
 
