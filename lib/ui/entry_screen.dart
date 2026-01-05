@@ -1,16 +1,99 @@
+import 'dart:io';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 
 import '../data/app_database.dart';
+import '../services/update_service.dart';
 import 'config_screen.dart';
 import 'fichas/fichas_home_screen.dart';
 import 'home_screen.dart';
 import 'widgets/app_dialog.dart';
 
-class EntryScreen extends StatelessWidget {
+class EntryScreen extends StatefulWidget {
   final AppDatabase database;
 
   const EntryScreen({super.key, required this.database});
+
+  @override
+  State<EntryScreen> createState() => _EntryScreenState();
+}
+
+class _EntryScreenState extends State<EntryScreen> {
+  bool _checkedUpdates = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkForUpdates();
+    });
+  }
+
+  Future<void> _checkForUpdates() async {
+    if (_checkedUpdates || !Platform.isWindows) return;
+    _checkedUpdates = true;
+    try {
+      final info = await UpdateService.fetchLatestRelease();
+      if (info == null) return;
+      final packageInfo = await PackageInfo.fromPlatform();
+      final currentVersion = packageInfo.version;
+      final comparison =
+          UpdateService.compareVersions(currentVersion, info.version);
+      if (comparison >= 0 || !mounted) return;
+      final shouldUpdate = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (dialogContext) {
+          return AppDialog(
+            title: 'Atualização disponível',
+            onClose: () => Navigator.of(dialogContext).pop(false),
+            child: Text(
+              'Versão atual: $currentVersion\n'
+              'Nova versão: ${info.version}\n\n'
+              'Deseja baixar e instalar agora?',
+            ),
+            actions: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  style: AppDialog.outlinedStyle(),
+                  child: const Text('Agora não'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  style: AppDialog.primaryStyle(),
+                  child: const Text('Atualizar'),
+                ),
+              ),
+            ],
+          );
+        },
+      );
+      if (shouldUpdate != true || !mounted) return;
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) {
+          return const Center(child: CircularProgressIndicator());
+        },
+      );
+      try {
+        await UpdateService.downloadAndInstall(info.downloadUrl);
+      } catch (_) {
+        if (mounted) {
+          Navigator.of(context).pop();
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Falha ao atualizar o aplicativo.')),
+          );
+        }
+      }
+    } catch (_) {}
+  }
 
   Future<void> _promptConfigAccess(BuildContext context) async {
     final controller = TextEditingController();
@@ -108,7 +191,7 @@ class EntryScreen extends StatelessWidget {
     if (confirmed == true) {
       await Navigator.of(context).push(
         MaterialPageRoute(
-          builder: (_) => ConfigScreen(database: database),
+          builder: (_) => ConfigScreen(database: widget.database),
         ),
       );
     }
@@ -157,7 +240,8 @@ class EntryScreen extends StatelessWidget {
                         onTap: () {
                           Navigator.of(context).push(
                             MaterialPageRoute(
-                              builder: (_) => HomeScreen(database: database),
+                              builder: (_) =>
+                                  HomeScreen(database: widget.database),
                             ),
                           );
                         },
@@ -171,7 +255,7 @@ class EntryScreen extends StatelessWidget {
                           Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) =>
-                                  FichasHomeScreen(database: database),
+                                  FichasHomeScreen(database: widget.database),
                             ),
                           );
                         },
