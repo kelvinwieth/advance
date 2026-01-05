@@ -130,6 +130,127 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Future<void> _autoAssignTasksForDay() async {
+    if (_tasks.isEmpty) {
+      _showMessage('Nenhuma tarefa cadastrada.');
+      return;
+    }
+
+    final isoDate = _isoDate(_selectedDate);
+    final assignedMemberIds = <int>{};
+    final taskAssignmentCounts = <int, int>{};
+    for (final task in _tasks) {
+      final count = _assignments[task.id]?.length ?? 0;
+      taskAssignmentCounts[task.id] = count;
+      for (final assignment in _assignments[task.id] ?? []) {
+        assignedMemberIds.add(assignment.member.id);
+      }
+    }
+
+    final availableMembers = _members
+        .where((member) => !assignedMemberIds.contains(member.id))
+        .toList();
+    if (availableMembers.isEmpty) {
+      _showMessage('Não há membros disponíveis para distribuir.');
+      return;
+    }
+
+    availableMembers.sort((a, b) {
+      final countA = _taskCounts[a.id] ?? 0;
+      final countB = _taskCounts[b.id] ?? 0;
+      final diff = countA.compareTo(countB);
+      if (diff != 0) return diff;
+      return a.name.toLowerCase().compareTo(b.name.toLowerCase());
+    });
+
+    final constrainedTasks = _tasks
+        .where((task) => task.genderConstraint != null)
+        .toList();
+    final unconstrainedTasks = _tasks
+        .where((task) => task.genderConstraint == null)
+        .toList();
+
+    final assignmentsToCreate = <List<int>>[];
+
+    for (final task in constrainedTasks) {
+      if ((taskAssignmentCounts[task.id] ?? 0) > 0) continue;
+      final memberIndex = availableMembers.indexWhere(
+        (member) => member.gender == task.genderConstraint,
+      );
+      if (memberIndex == -1) continue;
+      final member = availableMembers.removeAt(memberIndex);
+      assignmentsToCreate.add([member.id, task.id]);
+      taskAssignmentCounts[task.id] = (taskAssignmentCounts[task.id] ?? 0) + 1;
+    }
+
+    for (final member in List<Member>.from(availableMembers)) {
+      final candidates = [
+        ...constrainedTasks.where(
+          (task) => task.genderConstraint == member.gender,
+        ),
+        ...unconstrainedTasks,
+      ];
+      if (candidates.isEmpty) continue;
+      candidates.sort((a, b) {
+        final aRank = a.genderConstraint != null ? 0 : 1;
+        final bRank = b.genderConstraint != null ? 0 : 1;
+        if (aRank != bRank) return aRank.compareTo(bRank);
+        final countA = taskAssignmentCounts[a.id] ?? 0;
+        final countB = taskAssignmentCounts[b.id] ?? 0;
+        return countA.compareTo(countB);
+      });
+      final chosen = candidates.first;
+      assignmentsToCreate.add([member.id, chosen.id]);
+      taskAssignmentCounts[chosen.id] =
+          (taskAssignmentCounts[chosen.id] ?? 0) + 1;
+    }
+
+    if (assignmentsToCreate.isEmpty) {
+      _showMessage('Nenhuma atribuição disponível para distribuir.');
+      return;
+    }
+
+    try {
+      widget.database.assignMembersToTasksBulk(
+        isoDate: isoDate,
+        assignments: assignmentsToCreate,
+      );
+      await _loadData();
+    } catch (e) {
+      _showMessage('Falha ao distribuir as tarefas.');
+      return;
+    }
+
+    final tasksWithoutMembers = _tasks.where(
+      (task) => (taskAssignmentCounts[task.id] ?? 0) == 0,
+    );
+    if (tasksWithoutMembers.isNotEmpty && mounted) {
+      await showDialog<void>(
+        context: context,
+        builder: (dialogContext) {
+          return AppDialog(
+            title: 'Distribuição incompleta',
+            onClose: () => Navigator.of(dialogContext).pop(),
+            actions: [
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  style: AppDialog.primaryStyle(),
+                  child: const Text('Entendi'),
+                ),
+              ),
+            ],
+            child: Text(
+              'Não foi possível preencher '
+              '${tasksWithoutMembers.length} tarefa(s). '
+              'Verifique a quantidade de membros disponíveis e restrições de gênero.',
+            ),
+          );
+        },
+      );
+    }
+  }
+
   void _handleRemoveAssignment(int memberId, int taskId) {
     try {
       widget.database.removeAssignment(
@@ -1673,13 +1794,6 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         backgroundColor: Colors.white,
         surfaceTintColor: Colors.white,
-        actions: [
-          IconButton(
-            tooltip: 'Salvar PDF',
-            onPressed: _exportDayPdf,
-            icon: const Icon(Icons.picture_as_pdf),
-          ),
-        ],
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())
@@ -2077,17 +2191,31 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         ),
                 ),
-                Positioned(
-                  right: 12,
-                  bottom: 12,
-                  child: FloatingActionButton.extended(
-                    onPressed: _openAddTaskDialog,
-                    label: Text('Nova tarefa'),
-                    icon: const Icon(Icons.add),
-                  ),
-                ),
               ],
             ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const Spacer(),
+              OutlinedButton.icon(
+                onPressed: _exportDayPdf,
+                icon: const Icon(Icons.picture_as_pdf_outlined),
+                label: const Text('Salvar PDF'),
+              ),
+              const SizedBox(width: 8),
+              OutlinedButton.icon(
+                onPressed: _autoAssignTasksForDay,
+                icon: const Icon(Icons.auto_fix_high_outlined),
+                label: const Text('Distribuir tarefas'),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton.icon(
+                onPressed: _openAddTaskDialog,
+                icon: const Icon(Icons.add),
+                label: const Text('Nova tarefa'),
+              ),
+            ],
           ),
         ],
       ),
@@ -2107,6 +2235,7 @@ class _FilterChipButton extends StatelessWidget {
     required this.onTap,
     this.icon,
   });
+
   @override
   Widget build(BuildContext context) {
     return FilterChip(

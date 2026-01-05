@@ -594,6 +594,26 @@ LIMIT ?;
     }
   }
 
+  void assignMembersToTasksBulk({
+    required String isoDate,
+    required List<List<int>> assignments,
+  }) {
+    if (assignments.isEmpty) return;
+    _db.execute('BEGIN IMMEDIATE');
+    try {
+      for (final assignment in assignments) {
+        _db.execute(
+          'INSERT OR IGNORE INTO member_tasks (member_id, task_id, date) VALUES (?, ?, ?);',
+          [assignment[0], assignment[1], isoDate],
+        );
+      }
+      _db.execute('COMMIT');
+    } catch (e) {
+      _db.execute('ROLLBACK');
+      rethrow;
+    }
+  }
+
   void insertMember({
     required String name,
     required int age,
