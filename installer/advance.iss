@@ -1,6 +1,8 @@
 ; Inno Setup script for Avanco Missionario
 #define MyAppName "Avanço Missionário"
+#ifndef MyAppVersion
 #define MyAppVersion "0.0.0"
+#endif
 #define MyAppPublisher "Wieth Tecnologia"
 #define MyAppURL "http://kelvin.sh"
 #define MyAppExeName "advance.exe"
