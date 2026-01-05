@@ -1,67 +1,40 @@
 # Avanço Missionário
 
-> Nota: Este app foi desenvolvido em 8 horas usando Codex, com pouca ou nenhuma supervisão sobre a qualidade do código.
+A production desktop app built for the Avanço Missionário event, organized by the church [ACEV](https://acevbrasil.org.br/) Ação Evangélica, from [Patos](https://en.wikipedia.org/wiki/Patos), Paraíba. It helps the staff team plan and distribute daily tasks during a fast-paced, multi-day mission trip. This is a real-world Flutter desktop project shipped to users on Windows.
 
-## Contexto
+## Demo
 
-Avanço Missionário é um projeto missionário da ACEV, uma igreja brasileira do estado da Paraíba. O app é usado pela equipe de staff para organizar tarefas diárias (lavar louça, limpar banheiros, recepção, etc.), ajudando a distribuição justa do trabalho e a rotina do evento.
+![](https://raw.githubusercontent.com/kelvinwieth/advance/refs/heads/master/docs/demo.mov)
 
-## Visão geral
+## Why it matters
 
-Aplicativo desktop em Flutter com banco local SQLite. Permite:
+The event runs on people, not paperwork. The app makes task assignment clear and fair, so volunteers can focus on serving rather than coordinating. It is a small tool with a big impact on daily operations.
 
-- Cadastro e edição de membros e tarefas
-- Atribuição diária via drag-and-drop
-- Exportação do dia em PDF (formato tabela)
-- Exportação do banco completo (.db)
+## What it does
 
-## Capturas de tela
+- Centralizes staff, tasks, and daily assignments
+- Balances team workload with quick drag-and-drop assignment
+- Generates daily PDFs for printed distribution
+- Ships as a Windows installer for non-technical staff
 
-<img src="./docs/print1.jpeg">
-<img src="./docs/print6.jpeg">
-<img src="./docs/print2.jpeg">
-<img src="./docs/print3.jpeg">
-<img src="./docs/print4.jpeg">
-<img src="./docs/print5.jpeg">
+## Design story
 
-## Principais funcionalidades
+The UX started as a hand-drawn low-fidelity sketch, then moved to high-fidelity mockups in [Google Stitch](https://stitch.withgoogle.com/). The UI favors clarity and speed for a busy staff environment.
 
-- **Membros**: cadastro, edição, remoção, filtros e ordenação
-- **Tarefas**: cadastro, edição, remoção e restrição por gênero
-- **Atribuições**: arrastar membros para tarefas por dia (transação atômica)
-- **Relatórios**: PDF em formato de tabela por dia
-- **Dados**: exportação do banco (.db)
+## Tech stack
 
-## Modelo de dados
+- [Flutter](https://flutter.dev/)
+- Local SQLite database, using [sqflite](https://pub.dev/packages/sqflite) package
+- PDF generation for reports, using [pdf](https://pub.dev/packages/pdf) package
 
-- **Member**: id, name, age, gender, church
-- **Task**: id, name, gender_constraint (nullable)
-- **MemberTask**: id, member_id, task_id, date
+## Distribution and releases
 
-## Fluxo de uso
+The app is packaged with [Inno Setup](https://jrsoftware.org/isinfo.php). Releases are automated through GitHub Actions and triggered by tags, producing an installer for Windows.
 
-1. Cadastre membros e tarefas.
-2. Selecione o dia.
-3. Arraste membros para as tarefas.
-4. Gere o PDF do dia quando necessário.
+## Roadmap
 
-## PDF do dia
+- Form capture: read a photo/camera image, extract the content, and prefill the fields
 
-- Orientação: paisagem
-- Layout em tabela com tarefas como colunas
-- Exibe nome do membro e igreja
-- Ignora idade e gênero
-- Tarefas vazias não aparecem
+## Code status
 
-## Exportação do banco
-
-- Exporta o arquivo .db completo
-
-## Instalação
-
-O instalador foi gerado com **Inno Setup**.
-
-## Execução
-
-- Flutter Desktop
-- Banco local SQLite
+This project was largely vibecoded with [Codex](https://openai.com/codex/) and minimal quality supervision. It is functional, but the codebase has uneven structure and test coverage. Refactoring and tests are welcome.
