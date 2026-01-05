@@ -57,10 +57,10 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/darwin
 
 SPEC CHECKSUMS:
-  file_selector_macos: 3e56eaea051180007b900eacb006686fd54da150
-  FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
+  file_selector_macos: cc3858c981fe6889f364731200d6232dac1d812d
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
-  path_provider_foundation: 0b743cbb62d8e47eab856f09262bb8c1ddcfe6ba
+  path_provider_foundation: 2b6b4c569c0fb62ec74538f866245ac84301af46
   sqlite3: 8d708bc63e9f4ce48f0ad9d6269e478c5ced1d9b
   sqlite3_flutter_libs: c7b32a4d17d2cbad19895873ccc815f276b1f125
 

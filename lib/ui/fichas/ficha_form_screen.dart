@@ -717,7 +717,7 @@ class _FichaFormScreenState extends State<FichaFormScreen> {
                             if (_religionAll) ...[
                               const SizedBox(height: 8),
                               DropdownButtonFormField<String>(
-                                initialValue: _religionAllLabel,
+                                value: _religionAllLabel,
                                 items: const [
                                   DropdownMenuItem(
                                     value: 'catolica',
