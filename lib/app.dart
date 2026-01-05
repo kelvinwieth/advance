@@ -4,10 +4,36 @@ import 'package:google_fonts/google_fonts.dart';
 import 'data/app_database.dart';
 import 'ui/entry_screen.dart';
 
-class AvancoApp extends StatelessWidget {
+class AvancoApp extends StatefulWidget {
   final AppDatabase database;
 
   const AvancoApp({super.key, required this.database});
+
+  @override
+  State<AvancoApp> createState() => _AvancoAppState();
+}
+
+class _AvancoAppState extends State<AvancoApp>
+    with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.detached) {
+      widget.database.close();
+    }
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    widget.database.close();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +71,7 @@ class AvancoApp extends StatelessWidget {
         dividerColor: outline,
         cardTheme: const CardThemeData(margin: EdgeInsets.zero, elevation: 0),
       ),
-      home: EntryScreen(database: database),
+      home: EntryScreen(database: widget.database),
     );
   }
 }

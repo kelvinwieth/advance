@@ -1278,7 +1278,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     if (confirmed == true) {
       try {
-        widget.database.clearDatabase();
+        await widget.database.clearDatabase();
         await _loadData();
         _showMessage('Banco limpo.');
       } catch (e) {

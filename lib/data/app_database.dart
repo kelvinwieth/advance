@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
@@ -7,8 +8,9 @@ import 'package:sqlite3/sqlite3.dart';
 import 'models.dart';
 
 class AppDatabase {
-  final Database _db;
+  Database _db;
   final String _dbPath;
+  bool _closed = false;
 
   AppDatabase._(this._db, this._dbPath);
 
@@ -17,7 +19,12 @@ class AppDatabase {
     final dbPath = p.join(dir.path, 'avanco.db');
     final db = sqlite3.open(dbPath);
     db.execute('PRAGMA foreign_keys = ON;');
-    db.execute('PRAGMA journal_mode = WAL;');
+    db.execute('PRAGMA busy_timeout = 2000;');
+    try {
+      db.execute('PRAGMA journal_mode = WAL;');
+    } catch (_) {
+      // Ignore if another connection is still releasing the lock.
+    }
     _migrate(db);
     return AppDatabase._(db, dbPath);
   }
@@ -28,6 +35,31 @@ class AppDatabase {
   }
 
   String get dbPath => _dbPath;
+
+  void close() {
+    if (_closed) return;
+    _closed = true;
+    try {
+      _db.dispose();
+    } catch (_) {}
+  }
+
+  Future<void> importDatabase(String sourcePath) async {
+    final dbPath = _dbPath;
+    _db.dispose();
+    await Isolate.run(() {
+      _copyDatabaseFiles(sourcePath, dbPath);
+    });
+    _db = sqlite3.open(_dbPath);
+    _db.execute('PRAGMA foreign_keys = ON;');
+    _db.execute('PRAGMA busy_timeout = 2000;');
+    try {
+      _db.execute('PRAGMA journal_mode = WAL;');
+    } catch (_) {
+      // Ignore if another connection is still releasing the lock.
+    }
+    _migrate(_db);
+  }
 
   static void _migrate(Database db) {
     db.execute('BEGIN');
@@ -672,18 +704,45 @@ LIMIT ?;
     }
   }
 
-  void clearDatabase() {
-    _db.execute('BEGIN IMMEDIATE');
+  Future<void> clearDatabase() async {
+    final dbPath = _dbPath;
+    _db.dispose();
+    await Isolate.run(() {
+      final db = sqlite3.open(dbPath);
+      db.execute('PRAGMA foreign_keys = ON;');
+      db.execute('PRAGMA busy_timeout = 5000;');
+      const maxAttempts = 5;
+      for (var attempt = 0; attempt < maxAttempts; attempt++) {
+        db.execute('BEGIN EXCLUSIVE;');
+        try {
+          db.execute('DELETE FROM member_tasks;');
+          db.execute('DELETE FROM members;');
+          db.execute('DELETE FROM tasks;');
+          db.execute('DELETE FROM visit_forms;');
+          db.execute('COMMIT;');
+          db.dispose();
+          return;
+        } catch (e) {
+          try {
+            db.execute('ROLLBACK;');
+          } catch (_) {}
+          if (attempt == maxAttempts - 1) {
+            db.dispose();
+            rethrow;
+          }
+          sleep(const Duration(milliseconds: 250));
+        }
+      }
+    });
+    _db = sqlite3.open(dbPath);
+    _db.execute('PRAGMA foreign_keys = ON;');
+    _db.execute('PRAGMA busy_timeout = 2000;');
     try {
-      _db.execute('DELETE FROM member_tasks;');
-      _db.execute('DELETE FROM members;');
-      _db.execute('DELETE FROM tasks;');
-      _db.execute('DELETE FROM visit_forms;');
-      _db.execute('COMMIT');
-    } catch (e) {
-      _db.execute('ROLLBACK');
-      rethrow;
+      _db.execute('PRAGMA journal_mode = WAL;');
+    } catch (_) {
+      // Ignore if another connection is still releasing the lock.
     }
+    _migrate(_db);
   }
 
   void removeAssignment({
@@ -1098,5 +1157,17 @@ INSERT INTO visit_forms (
     }
     File(tempPath).copySync(targetPath);
     File(tempPath).deleteSync();
+  }
+}
+
+void _copyDatabaseFiles(String sourcePath, String dbPath) {
+  File(sourcePath).copySync(dbPath);
+  final walFile = File('$dbPath-wal');
+  final shmFile = File('$dbPath-shm');
+  if (walFile.existsSync()) {
+    walFile.deleteSync();
+  }
+  if (shmFile.existsSync()) {
+    shmFile.deleteSync();
   }
 }
