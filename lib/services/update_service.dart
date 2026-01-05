@@ -38,17 +38,31 @@ class UpdateService {
   }
 
   static int compareVersions(String current, String latest) {
-    final currentParts = current.split('.').map(int.tryParse).toList();
-    final latestParts = latest.split('.').map(int.tryParse).toList();
+    final currentParts = _parseVersionParts(current);
+    final latestParts = _parseVersionParts(latest);
     final length = currentParts.length > latestParts.length
         ? currentParts.length
         : latestParts.length;
     for (var i = 0; i < length; i++) {
-      final c = i < currentParts.length ? (currentParts[i] ?? 0) : 0;
-      final l = i < latestParts.length ? (latestParts[i] ?? 0) : 0;
+      final c = i < currentParts.length ? currentParts[i] : 0;
+      final l = i < latestParts.length ? latestParts[i] : 0;
       if (c != l) return c.compareTo(l);
     }
     return 0;
+  }
+
+  static List<int> _parseVersionParts(String version) {
+    final normalized = version
+        .trim()
+        .replaceFirst(RegExp('^v', caseSensitive: false), '')
+        .split('+')
+        .first
+        .split('-')
+        .first;
+    return normalized.split('.').map((part) {
+      final match = RegExp(r'^\d+').firstMatch(part);
+      return match == null ? 0 : int.parse(match.group(0)!);
+    }).toList();
   }
 
   static Future<void> downloadAndInstall(String url) async {

@@ -23,9 +23,6 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Build Windows release
-        run: flutter build windows --release
-
       - name: Install Inno Setup
         run: choco install innosetup --no-progress -y
 
@@ -43,6 +40,17 @@ jobs:
             $version = $version.Substring(1)
           }
           "version=$version" >> $env:GITHUB_OUTPUT
+
+      - name: Set app version for build
+        shell: pwsh
+        run: |
+          $version = "${{ steps.version.outputs.version }}"
+          $content = Get-Content pubspec.yaml -Raw
+          $updated = [Regex]::Replace($content, '(?m)^version:\s+.*$', "version: $version")
+          Set-Content pubspec.yaml $updated -NoNewline
+
+      - name: Build Windows release
+        run: flutter build windows --release
 
       - name: Build installer
         shell: pwsh
