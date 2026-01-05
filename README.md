@@ -4,7 +4,7 @@ A production desktop app built for the Avanço Missionário event, organized by 
 
 ## Demo
 
-![](https://raw.githubusercontent.com/kelvinwieth/advance/refs/heads/master/docs/demo.mov)
+<video src="https://raw.githubusercontent.com/kelvinwieth/advance/refs/heads/master/docs/demo.mov" controls></video>
 
 ## Why it matters
 
