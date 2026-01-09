@@ -62,12 +62,13 @@ class AppDatabase {
   }
 
   Future<({int inserted, int skipped})> importVisitFormsFromCsv(
-    String csvContent,
-  ) async {
+    String csvContent, {
+    Map<String, String>? headerOverrides,
+  }) async {
     final dbPath = _dbPath;
     _db.dispose();
     final result = await Isolate.run(() {
-      return _importVisitFormsCsv(csvContent, dbPath);
+      return _importVisitFormsCsv(csvContent, dbPath, headerOverrides);
     });
     _db = sqlite3.open(dbPath);
     _db.execute('PRAGMA foreign_keys = ON;');
@@ -1213,6 +1214,7 @@ void _copyDatabaseFiles(String sourcePath, String dbPath) {
 ({int inserted, int skipped}) _importVisitFormsCsv(
   String csvContent,
   String dbPath,
+  Map<String, String>? headerOverrides,
 ) {
   final rows = _parseCsv(csvContent);
   if (rows.length <= 1) {
@@ -1225,8 +1227,25 @@ void _copyDatabaseFiles(String sourcePath, String dbPath) {
     headerIndex[_normalizeHeader(headers[i])] = i;
   }
 
-  String valueFor(List<String> row, List<String> keys) {
-    for (final key in keys) {
+  final overrides = <String, String>{};
+  headerOverrides?.forEach((key, value) {
+    if (value.trim().isEmpty) return;
+    overrides[key] = _normalizeHeader(value);
+  });
+
+  String valueForKey(
+    List<String> row,
+    String canonicalKey,
+    List<String> fallbackKeys,
+  ) {
+    final override = overrides[canonicalKey];
+    if (override != null) {
+      final index = headerIndex[override];
+      if (index != null && index < row.length) {
+        return row[index].trim();
+      }
+    }
+    for (final key in fallbackKeys) {
       final index = headerIndex[key];
       if (index != null && index < row.length) {
         return row[index].trim();
@@ -1251,9 +1270,21 @@ void _copyDatabaseFiles(String sourcePath, String dbPath) {
       }
 
       try {
-        final timestamp = valueFor(row, ['carimbodedatahora']);
-        final dateValue = valueFor(row, ['datadaficha']);
-        final timeValue = valueFor(row, ['horario']);
+        final timestamp = valueForKey(
+          row,
+          'carimbodedatahora',
+          ['carimbodedatahora'],
+        );
+        final dateValue = valueForKey(
+          row,
+          'datadaficha',
+          ['datadaficha'],
+        );
+        final timeValue = valueForKey(
+          row,
+          'horario',
+          ['horario'],
+        );
         final visitAt = _parseVisitDateTime(
           dateValue,
           timeValue,
@@ -1264,32 +1295,49 @@ void _copyDatabaseFiles(String sourcePath, String dbPath) {
           continue;
         }
 
-        final names = valueFor(row, ['nomes']);
-        final address = valueFor(row, ['endereco']);
-        final referencePoint = valueFor(row, ['pontodereferencia']);
-        final neighborhood = valueFor(row, ['bairro']);
-        final city = valueFor(row, ['cidade']);
-        final contacts = valueFor(row, ['contatos']);
-        final literatureText = valueFor(row, ['literaturasdistribuidas']);
+        final names = valueForKey(row, 'nomes', ['nomes']);
+        final address = valueForKey(row, 'endereco', ['endereco']);
+        final referencePoint = valueForKey(
+          row,
+          'pontodereferencia',
+          ['pontodereferencia'],
+        );
+        final neighborhood = valueForKey(row, 'bairro', ['bairro']);
+        final city = valueForKey(row, 'cidade', ['cidade']);
+        final contacts = valueForKey(row, 'contatos', ['contatos']);
+        final literatureText = valueForKey(
+          row,
+          'literaturasdistribuidas',
+          ['literaturasdistribuidas'],
+        );
         final literatureCount = _parseFlexibleInt(literatureText);
 
-        final resultsText = valueFor(
+        final resultsText = valueForKey(
           row,
+          'resultadosdavisita',
           ['resultadosdavisita', 'resultadosdavista'],
         );
         final results = _parseResults(resultsText);
 
-        final ageChildren = _parseFlexibleInt(valueFor(row, ['crianca']));
-        final ageYouth = _parseFlexibleInt(valueFor(row, ['jovem']));
-        final ageAdults = _parseFlexibleInt(valueFor(row, ['adulto']));
-        final ageElderly = _parseFlexibleInt(valueFor(row, ['terceiraidade']));
+        final ageChildren =
+            _parseFlexibleInt(valueForKey(row, 'crianca', ['crianca']));
+        final ageYouth =
+            _parseFlexibleInt(valueForKey(row, 'jovem', ['jovem']));
+        final ageAdults =
+            _parseFlexibleInt(valueForKey(row, 'adulto', ['adulto']));
+        final ageElderly = _parseFlexibleInt(
+          valueForKey(row, 'terceiraidade', ['terceiraidade']),
+        );
 
-        final religionText = valueFor(row, ['religiao']);
+        final religionText =
+            valueForKey(row, 'religiao', ['religiao']);
         final religions = _parseReligions(religionText);
 
-        final notes = valueFor(row, ['observacoesdavista']);
-        final prayerRequests = valueFor(row, ['pedidosdeoracao']);
-        final team = valueFor(row, ['equipe']);
+        final notes =
+            valueForKey(row, 'observacoesdavista', ['observacoesdavista']);
+        final prayerRequests =
+            valueForKey(row, 'pedidosdeoracao', ['pedidosdeoracao']);
+        final team = valueForKey(row, 'equipe', ['equipe']);
 
         if (literatureText.trim().isEmpty || team.trim().isEmpty) {
           skipped++;

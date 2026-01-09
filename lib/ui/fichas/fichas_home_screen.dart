@@ -1,8 +1,10 @@
 import 'dart:io';
+import 'dart:convert';
 
 import 'package:file_selector/file_selector.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
 
 import '../../data/app_database.dart';
 import '../../data/models.dart';
@@ -30,17 +32,50 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
   bool _filterNovaVisita = false;
   DateTime? _filterDate;
   bool _orderAsc = false;
+  Map<String, String> _lastHeaderMapping = {};
 
   @override
   void initState() {
     super.initState();
     _loadData();
+    _loadHeaderMapping();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<File> _mappingFile() async {
+    final dir = await getApplicationSupportDirectory();
+    return File('${dir.path}${Platform.pathSeparator}csv_header_mapping.json');
+  }
+
+  Future<void> _loadHeaderMapping() async {
+    try {
+      final file = await _mappingFile();
+      if (!file.existsSync()) return;
+      final content = await file.readAsString();
+      final data = jsonDecode(content) as Map<String, dynamic>;
+      if (!mounted) return;
+      setState(() {
+        _lastHeaderMapping = data.map(
+          (key, value) => MapEntry(key, value.toString()),
+        );
+      });
+    } catch (_) {}
+  }
+
+  Future<void> _saveHeaderMapping(Map<String, String> mapping) async {
+    try {
+      final file = await _mappingFile();
+      await file.writeAsString(jsonEncode(mapping));
+      if (!mounted) return;
+      setState(() {
+        _lastHeaderMapping = Map<String, String>.from(mapping);
+      });
+    } catch (_) {}
   }
 
   Future<void> _loadData() async {
@@ -92,7 +127,265 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
     });
   }
 
+  List<String> _parseCsvHeader(String input) {
+    final buffer = StringBuffer();
+    final row = <String>[];
+    var inQuotes = false;
+    var i = 0;
+
+    while (i < input.length) {
+      final char = input[i];
+      if (char == '"') {
+        final nextChar = i + 1 < input.length ? input[i + 1] : null;
+        if (inQuotes && nextChar == '"') {
+          buffer.write('"');
+          i += 2;
+          continue;
+        }
+        inQuotes = !inQuotes;
+        i++;
+        continue;
+      }
+
+      if (char == ',' && !inQuotes) {
+        row.add(buffer.toString().trim());
+        buffer.clear();
+        i++;
+        continue;
+      }
+
+      if ((char == '\n' || char == '\r') && !inQuotes) {
+        row.add(buffer.toString().trim());
+        return row;
+      }
+
+      buffer.write(char);
+      i++;
+    }
+
+    if (buffer.isNotEmpty || row.isNotEmpty) {
+      row.add(buffer.toString().trim());
+    }
+    return row;
+  }
+
+  String _normalizeHeader(String value) {
+    var result = value.trim().toLowerCase();
+    const replacements = {
+      'á': 'a',
+      'à': 'a',
+      'â': 'a',
+      'ã': 'a',
+      'é': 'e',
+      'ê': 'e',
+      'í': 'i',
+      'ó': 'o',
+      'ô': 'o',
+      'õ': 'o',
+      'ú': 'u',
+      'ç': 'c',
+    };
+    replacements.forEach((key, replacement) {
+      result = result.replaceAll(key, replacement);
+    });
+    return result.replaceAll(RegExp(r'[^a-z0-9]'), '');
+  }
+
+  Future<Map<String, String>?> _askCsvHeaderMapping([
+    List<String> headers = const [],
+  ]) async {
+    final availableHeaders = headers.where((h) => h.isNotEmpty).toList();
+    final headerLookup = <String, String>{
+      for (final header in availableHeaders) _normalizeHeader(header): header,
+    };
+
+    final fields = [
+      const _CsvField('carimbodedatahora', 'Carimbo de data/hora'),
+      const _CsvField('literaturasdistribuidas', 'Literaturas distribuídas'),
+      const _CsvField('nomes', 'Nomes'),
+      const _CsvField('endereco', 'Endereço'),
+      const _CsvField('pontodereferencia', 'Ponto de referência'),
+      const _CsvField('bairro', 'Bairro'),
+      const _CsvField('cidade', 'Cidade'),
+      const _CsvField('contatos', 'Contatos'),
+      const _CsvField('resultadosdavisita', 'Resultados da visita'),
+      const _CsvField('crianca', 'Criança'),
+      const _CsvField('jovem', 'Jovem'),
+      const _CsvField('adulto', 'Adulto'),
+      const _CsvField('terceiraidade', 'Terceira idade'),
+      const _CsvField('religiao', 'Religião'),
+      const _CsvField('observacoesdavista', 'Observações da visita'),
+      const _CsvField('pedidosdeoracao', 'Pedidos de oração'),
+      const _CsvField('equipe', 'Equipe'),
+      const _CsvField('datadaficha', 'Data da ficha'),
+      const _CsvField('horario', 'Horário'),
+    ];
+
+    final controllers = <String, TextEditingController>{};
+    for (final field in fields) {
+      final suggestion =
+          _lastHeaderMapping[field.key] ??
+          headerLookup[field.key] ??
+          field.label;
+      controllers[field.key] = TextEditingController(text: suggestion);
+    }
+
+    String? errorText;
+    final result = await showDialog<Map<String, String>>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AppDialog(
+              width: 800,
+              title: 'Mapear colunas do CSV',
+              onClose: () => Navigator.of(dialogContext).pop(),
+              actions: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: AppDialog.outlinedStyle(),
+                    child: const Text('Cancelar'),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () {
+                      final mapped = controllers.map(
+                        (key, controller) =>
+                            MapEntry(key, controller.text.trim()),
+                      );
+                      final hasLiterature =
+                          mapped['literaturasdistribuidas']?.isNotEmpty ??
+                          false;
+                      final hasTeam = mapped['equipe']?.isNotEmpty ?? false;
+                      final hasDate =
+                          (mapped['datadaficha']?.isNotEmpty ?? false) ||
+                          (mapped['carimbodedatahora']?.isNotEmpty ?? false);
+                      if (!hasLiterature || !hasTeam || !hasDate) {
+                        setDialogState(() {
+                          errorText =
+                              'Literaturas distribuídas, equipe e data são obrigatórios.';
+                        });
+                        return;
+                      }
+                      Navigator.of(dialogContext).pop(mapped);
+                    },
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Confirmar'),
+                  ),
+                ),
+              ],
+              child: SizedBox(
+                width: 1120,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text(
+                      'Digite como estão os nomes das colunas do seu CSV.',
+                      style: TextStyle(color: Colors.black54),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF7F8FB),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE6E8EF)),
+                      ),
+                      child: Row(
+                        children: const [
+                          Expanded(
+                            child: Text(
+                              'Campo esperado',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                          SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'Coluna do CSV',
+                              style: TextStyle(fontWeight: FontWeight.w600),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 520,
+                      child: ListView.separated(
+                        itemCount: fields.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final field = fields[index];
+                          final controller = controllers[field.key]!;
+                          return Row(
+                            children: [
+                              Expanded(
+                                child: Text(
+                                  field.label,
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: TextField(
+                                  controller: controller,
+                                  decoration: InputDecoration(
+                                    hintText: 'Nome no CSV',
+                                    filled: true,
+                                    fillColor: const Color(0xFFF1F2F6),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    if (errorText != null) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        errorText!,
+                        style: const TextStyle(
+                          color: Color(0xFFDC2626),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+
+    for (final controller in controllers.values) {
+      controller.dispose();
+    }
+
+    return result;
+  }
+
   Future<void> _importCsv() async {
+    final ctx = context;
+    if (!ctx.mounted) return;
+    final mapping = await _askCsvHeaderMapping();
+    if (mapping == null) return;
+    await _saveHeaderMapping(mapping);
+
     final file = await openFile(
       acceptedTypeGroups: const [
         XTypeGroup(label: 'CSV', extensions: ['csv']),
@@ -100,8 +393,6 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
     );
     if (file == null) return;
 
-    final ctx = context;
-    if (!ctx.mounted) return;
     final confirmed = await showDialog<bool>(
       context: ctx,
       barrierDismissible: false,
@@ -143,7 +434,17 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
 
     try {
       final csvContent = await File(file.path).readAsString();
-      final result = await widget.database.importVisitFormsFromCsv(csvContent);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      showDialog<void>(
+        context: ctx,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      final result = await widget.database.importVisitFormsFromCsv(
+        csvContent,
+        headerOverrides: mapping,
+      );
       if (!mounted) return;
       Navigator.of(context).pop();
       await _loadData();
@@ -158,7 +459,9 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
       );
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop();
+      if (Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Falha ao importar o CSV.')),
       );
@@ -541,4 +844,11 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
             },
           );
   }
+}
+
+class _CsvField {
+  final String key;
+  final String label;
+
+  const _CsvField(this.key, this.label);
 }
