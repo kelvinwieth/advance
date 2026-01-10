@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 
 import '../../data/app_database.dart';
 import '../../data/models.dart';
+import '../widgets/app_dialog.dart';
 
 class FichaAnalyticsScreen extends StatefulWidget {
   final AppDatabase database;
@@ -17,6 +19,9 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
   String? _errorMessage;
   VisitAnalytics? _analytics;
   List<VisitNeighborhoodCount> _neighborhoodCounts = [];
+  DateTime? _filterStart;
+  DateTime? _filterEnd;
+  final DateFormat _dateFormat = DateFormat('dd/MM/yyyy');
 
   @override
   void initState() {
@@ -31,8 +36,14 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
     });
 
     try {
-      final analytics = widget.database.fetchVisitAnalytics();
-      final neighborhoodCounts = widget.database.fetchVisitNeighborhoodCounts();
+      final analytics = widget.database.fetchVisitAnalytics(
+        startDate: _filterStart,
+        endDate: _filterEnd,
+      );
+      final neighborhoodCounts = widget.database.fetchVisitNeighborhoodCounts(
+        startDate: _filterStart,
+        endDate: _filterEnd,
+      );
       if (!mounted) return;
       setState(() {
         _analytics = analytics;
@@ -46,6 +57,72 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
         _loading = false;
       });
     }
+  }
+
+  Future<void> _selectSingleDate() async {
+    final now = DateTime.now();
+    final initialDate = _filterStart ?? now;
+    final selected = await showDatePicker(
+      context: context,
+      initialDate: initialDate,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(now.year + 5),
+    );
+    if (selected == null) return;
+    setState(() {
+      _filterStart = DateTime(selected.year, selected.month, selected.day);
+      _filterEnd = _filterStart;
+    });
+    _loadData();
+  }
+
+  Future<void> _selectDateRange() async {
+    final now = DateTime.now();
+    final initialRange = _filterStart != null && _filterEnd != null
+        ? DateTimeRange(start: _filterStart!, end: _filterEnd!)
+        : null;
+    final selected = await showDateRangePicker(
+      context: context,
+      firstDate: DateTime(2020),
+      lastDate: DateTime(now.year + 5),
+      initialDateRange: initialRange,
+    );
+    if (selected == null) return;
+    setState(() {
+      _filterStart = DateTime(
+        selected.start.year,
+        selected.start.month,
+        selected.start.day,
+      );
+      _filterEnd = DateTime(
+        selected.end.year,
+        selected.end.month,
+        selected.end.day,
+      );
+    });
+    _loadData();
+  }
+
+  void _clearDateFilter() {
+    setState(() {
+      _filterStart = null;
+      _filterEnd = null;
+    });
+    _loadData();
+  }
+
+  String _filterLabel() {
+    if (_filterStart == null && _filterEnd == null) {
+      return 'Todos os períodos';
+    }
+    if (_filterStart != null && _filterEnd != null) {
+      final start = _dateFormat.format(_filterStart!);
+      final end = _dateFormat.format(_filterEnd!);
+      if (start == end) return start;
+      return '$start até $end';
+    }
+    final date = _dateFormat.format(_filterStart ?? _filterEnd!);
+    return date;
   }
 
   Widget _buildMetric(
@@ -274,6 +351,76 @@ class _FichaAnalyticsScreenState extends State<FichaAnalyticsScreen> {
                                     ],
                                   ),
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Wrap(
+                              spacing: 12,
+                              runSpacing: 12,
+                              crossAxisAlignment: WrapCrossAlignment.center,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 14,
+                                    vertical: 10,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFF1F5F7),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: const Color(0xFFE6E8EF),
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'Período: ${_filterLabel()}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                      color: Colors.black87,
+                                    ),
+                                  ),
+                                ),
+                                OutlinedButton.icon(
+                                  onPressed: _selectSingleDate,
+                                  icon: const Icon(Icons.event_outlined),
+                                  label: const Text('Data'),
+                                  style: AppDialog.outlinedStyle().copyWith(
+                                    padding: const WidgetStatePropertyAll(
+                                      EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                OutlinedButton.icon(
+                                  onPressed: _selectDateRange,
+                                  icon: const Icon(Icons.date_range_outlined),
+                                  label: const Text('Intervalo'),
+                                  style: AppDialog.outlinedStyle().copyWith(
+                                    padding: const WidgetStatePropertyAll(
+                                      EdgeInsets.symmetric(
+                                        horizontal: 16,
+                                        vertical: 12,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (_filterStart != null || _filterEnd != null)
+                                  OutlinedButton.icon(
+                                    onPressed: _clearDateFilter,
+                                    icon: const Icon(Icons.clear_outlined),
+                                    label: const Text('Limpar'),
+                                    style: AppDialog.outlinedStyle(
+                                      foreground: const Color(0xFF1D1D1D),
+                                    ).copyWith(
+                                      padding: const WidgetStatePropertyAll(
+                                        EdgeInsets.symmetric(
+                                          horizontal: 16,
+                                          vertical: 12,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
                               ],
                             ),
                             const SizedBox(height: 8),

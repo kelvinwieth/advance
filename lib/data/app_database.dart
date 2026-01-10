@@ -521,7 +521,27 @@ WHERE id = ?;
     }
   }
 
-  VisitAnalytics fetchVisitAnalytics() {
+  String _dateOnly(DateTime date) {
+    final year = date.year.toString().padLeft(4, '0');
+    final month = date.month.toString().padLeft(2, '0');
+    final day = date.day.toString().padLeft(2, '0');
+    return '$year-$month-$day';
+  }
+
+  VisitAnalytics fetchVisitAnalytics({
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    final args = <Object?>[];
+    var whereClause = '';
+    if (startDate != null || endDate != null) {
+      final start = startDate ?? endDate!;
+      final end = endDate ?? startDate!;
+      whereClause =
+          'WHERE date(visit_at) >= date(?) AND date(visit_at) <= date(?)';
+      args.add(_dateOnly(start));
+      args.add(_dateOnly(end));
+    }
     final result = _db.select('''
 SELECT
   COUNT(*) AS total_visits,
@@ -538,8 +558,9 @@ SELECT
   COALESCE(SUM(age_youth), 0) AS age_youth,
   COALESCE(SUM(age_adults), 0) AS age_adults,
   COALESCE(SUM(age_elderly), 0) AS age_elderly
-FROM visit_forms;
-''');
+FROM visit_forms
+$whereClause;
+''', args);
     final row = result.first;
     final ageChildren = row['age_children'] as int;
     final ageYouth = row['age_youth'] as int;
@@ -565,17 +586,32 @@ FROM visit_forms;
     );
   }
 
-  List<VisitNeighborhoodCount> fetchVisitNeighborhoodCounts({int limit = 6}) {
+  List<VisitNeighborhoodCount> fetchVisitNeighborhoodCounts({
+    int limit = 6,
+    DateTime? startDate,
+    DateTime? endDate,
+  }) {
+    final args = <Object?>[];
+    var dateClause = '';
+    if (startDate != null || endDate != null) {
+      final start = startDate ?? endDate!;
+      final end = endDate ?? startDate!;
+      dateClause =
+          'AND date(visit_at) >= date(?) AND date(visit_at) <= date(?)';
+      args.add(_dateOnly(start));
+      args.add(_dateOnly(end));
+    }
     final result = _db.select(
       '''
 SELECT neighborhood, COUNT(*) AS total
 FROM visit_forms
 WHERE neighborhood IS NOT NULL AND trim(neighborhood) != ''
+$dateClause
 GROUP BY neighborhood
 ORDER BY total DESC, neighborhood ASC
 LIMIT ?;
 ''',
-      [limit],
+      [...args, limit],
     );
     return result
         .map(
