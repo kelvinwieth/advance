@@ -436,6 +436,44 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
       final csvContent = await File(file.path).readAsString();
       if (!mounted) return;
       Navigator.of(context).pop();
+      final headers = _parseCsvHeader(csvContent);
+      final headerLookup = {
+        for (final header in headers) _normalizeHeader(header): header,
+      };
+      final missing = <String>[];
+      mapping.forEach((key, value) {
+        if (value.trim().isEmpty) return;
+        final normalized = _normalizeHeader(value);
+        if (!headerLookup.containsKey(normalized)) {
+          missing.add(value);
+        }
+      });
+      if (missing.isNotEmpty) {
+        await showDialog<void>(
+          context: ctx,
+          builder: (dialogContext) {
+            return AppDialog(
+              title: 'Colunas não encontradas',
+              onClose: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                'Estas colunas não existem no CSV selecionado:\n'
+                '${missing.join(', ')}\n\n'
+                'Revise o mapeamento e tente novamente.',
+              ),
+              actions: [
+                Expanded(
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(dialogContext).pop(),
+                    style: AppDialog.primaryStyle(),
+                    child: const Text('Entendi'),
+                  ),
+                ),
+              ],
+            );
+          },
+        );
+        return;
+      }
       showDialog<void>(
         context: ctx,
         barrierDismissible: false,
