@@ -9,9 +9,20 @@ class ConfigScreen extends StatelessWidget {
 
   const ConfigScreen({super.key, required this.database});
 
+  String _exportFileName() {
+    final now = DateTime.now();
+    final year = now.year.toString().padLeft(4, '0');
+    final month = now.month.toString().padLeft(2, '0');
+    final day = now.day.toString().padLeft(2, '0');
+    final hour = now.hour.toString().padLeft(2, '0');
+    final minute = now.minute.toString().padLeft(2, '0');
+    final second = now.second.toString().padLeft(2, '0');
+    return 'avanco_$year$month${day}_$hour$minute$second.db';
+  }
+
   Future<void> _exportDatabaseCopy(BuildContext context) async {
     final saveLocation = await getSaveLocation(
-      suggestedName: 'avanco.db',
+      suggestedName: _exportFileName(),
       acceptedTypeGroups: const [
         XTypeGroup(label: 'SQLite', extensions: ['db']),
       ],

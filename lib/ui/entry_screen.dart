@@ -109,6 +109,17 @@ class _EntryScreenState extends State<EntryScreen> {
             builder: (dialogContext) {
               return StatefulBuilder(
                 builder: (context, setModalState) {
+                  void submit() {
+                    FocusScope.of(dialogContext).unfocus();
+                    if (controller.text.trim() != 'molodoy') {
+                      setModalState(() {
+                        errorText = 'Senha incorreta.';
+                      });
+                      return;
+                    }
+                    Navigator.of(dialogContext).pop(true);
+                  }
+
                   return AppDialog(
                     title: 'Acesso às configurações',
                     onClose: () => Navigator.of(dialogContext).pop(false),
@@ -124,15 +135,7 @@ class _EntryScreenState extends State<EntryScreen> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: ElevatedButton(
-                          onPressed: () {
-                            if (controller.text.trim() != 'molodoy') {
-                              setModalState(() {
-                                errorText = 'Senha incorreta.';
-                              });
-                              return;
-                            }
-                            Navigator.of(dialogContext).pop(true);
-                          },
+                          onPressed: submit,
                           style: AppDialog.primaryStyle(),
                           child: const Text('Acessar'),
                         ),
@@ -149,6 +152,7 @@ class _EntryScreenState extends State<EntryScreen> {
                         TextField(
                           controller: controller,
                           obscureText: obscure,
+                          textInputAction: TextInputAction.done,
                           decoration: InputDecoration(
                             labelText: 'Senha',
                             filled: true,
@@ -170,7 +174,7 @@ class _EntryScreenState extends State<EntryScreen> {
                               ),
                             ),
                           ),
-                          onSubmitted: (_) => setModalState(() {}),
+                          onSubmitted: (_) => submit(),
                         ),
                         if (errorText != null) ...[
                           const SizedBox(height: 8),
@@ -189,6 +193,7 @@ class _EntryScreenState extends State<EntryScreen> {
               );
             },
           );
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     controller.dispose();
     if (confirmed == true) {
       if (!context.mounted) return;

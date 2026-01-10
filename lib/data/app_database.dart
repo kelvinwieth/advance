@@ -879,22 +879,22 @@ INSERT INTO members (name, age, gender, church) VALUES
   ('Tatiana Cunha', 30, 'F', 'Princesa Isabel');
 ''');
       _db.execute('''
-INSERT INTO tasks (name, gender_constraint) VALUES
-  ('Lavar Louça', NULL),
-  ('Limpar Salão', NULL),
-  ('Preparar Jantar', NULL),
-  ('Recepção', NULL),
-  ('Organizar Materiais', NULL),
-  ('Som e Mídia', 'M'),
-  ('Decoração', 'F'),
-  ('Apoio Logístico', NULL);
+INSERT INTO tasks (name, gender_constraint, max_members) VALUES
+  ('Lavar Louça', NULL, 5),
+  ('Limpar Salão', NULL, 5),
+  ('Preparar Jantar', NULL, 5),
+  ('Recepção', NULL, 4),
+  ('Organizar Materiais', NULL, 4),
+  ('Som e Mídia', 'M', 4),
+  ('Decoração', 'F', 4),
+  ('Apoio Logístico', NULL, 5);
 ''');
 
       final memberRows = _db.select(
         'SELECT id, gender FROM members ORDER BY id DESC LIMIT 30;',
       );
       final taskRows = _db.select(
-        'SELECT id, gender_constraint FROM tasks ORDER BY id DESC LIMIT 8;',
+        'SELECT id, gender_constraint, max_members FROM tasks ORDER BY id DESC LIMIT 8;',
       );
       final maleIds = <int>[];
       final femaleIds = <int>[];
@@ -917,6 +917,7 @@ INSERT INTO tasks (name, gender_constraint) VALUES
         for (var t = 0; t < tasks.length; t += 1) {
           final taskId = tasks[t]['id'] as int;
           final constraint = tasks[t]['gender_constraint'] as String?;
+          final maxMembers = tasks[t]['max_members'] as int?;
           final pool = constraint == 'M'
               ? maleIds
               : constraint == 'F'
@@ -927,7 +928,10 @@ INSERT INTO tasks (name, gender_constraint) VALUES
 
           final available = pool.where((id) => !used.contains(id)).toList();
           if (available.isEmpty) continue;
-          final count = (2 + (t % 4)).clamp(1, available.length); // up to 5
+          var count = (2 + (t % 4)).clamp(1, available.length); // up to 5
+          if (maxMembers != null) {
+            count = count.clamp(1, maxMembers);
+          }
           for (var j = 0; j < count; j += 1) {
             final memberId = available[(t * 5 + j) % available.length];
             used.add(memberId);
