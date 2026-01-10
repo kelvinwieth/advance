@@ -98,7 +98,8 @@ CREATE TABLE IF NOT EXISTS members (
 CREATE TABLE IF NOT EXISTS tasks (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  gender_constraint TEXT NULL CHECK (gender_constraint IN ('M', 'F'))
+  gender_constraint TEXT NULL CHECK (gender_constraint IN ('M', 'F')),
+  max_members INTEGER NULL CHECK (max_members IS NULL OR max_members > 0)
 );
 ''');
       db.execute('''
@@ -197,6 +198,15 @@ END;
           'ALTER TABLE visit_forms ADD COLUMN literature_count INTEGER NOT NULL DEFAULT 0;',
         );
       }
+      final taskColumns = db.select('PRAGMA table_info(tasks);');
+      final hasMaxMembers = taskColumns.any(
+        (row) => row['name'] == 'max_members',
+      );
+      if (!hasMaxMembers) {
+        db.execute(
+          'ALTER TABLE tasks ADD COLUMN max_members INTEGER NULL;',
+        );
+      }
       db.execute('COMMIT');
     } catch (e) {
       db.execute('ROLLBACK');
@@ -213,7 +223,7 @@ END;
 
   List<Task> fetchTasks() {
     final result = _db.select(
-      'SELECT id, name, gender_constraint FROM tasks ORDER BY id;',
+      'SELECT id, name, gender_constraint, max_members FROM tasks ORDER BY id;',
     );
     return result.map((row) => Task.fromRow(row)).toList();
   }
@@ -657,12 +667,13 @@ LIMIT ?;
   void insertTask({
     required String name,
     required String? genderConstraint,
+    required int? maxMembers,
   }) {
     _db.execute('BEGIN IMMEDIATE');
     try {
       _db.execute(
-        'INSERT INTO tasks (name, gender_constraint) VALUES (?, ?);',
-        [name, genderConstraint],
+        'INSERT INTO tasks (name, gender_constraint, max_members) VALUES (?, ?, ?);',
+        [name, genderConstraint, maxMembers],
       );
       _db.execute('COMMIT');
     } catch (e) {
@@ -675,12 +686,13 @@ LIMIT ?;
     required int id,
     required String name,
     required String? genderConstraint,
+    required int? maxMembers,
   }) {
     _db.execute('BEGIN IMMEDIATE');
     try {
       _db.execute(
-        'UPDATE tasks SET name = ?, gender_constraint = ? WHERE id = ?;',
-        [name, genderConstraint, id],
+        'UPDATE tasks SET name = ?, gender_constraint = ?, max_members = ? WHERE id = ?;',
+        [name, genderConstraint, maxMembers, id],
       );
       _db.execute('COMMIT');
     } catch (e) {

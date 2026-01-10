@@ -105,6 +105,11 @@ class _HomeScreenState extends State<HomeScreen> {
       _showMessage('Este membro já está atribuído a esta tarefa.');
       return;
     }
+    if (task.maxMembers != null &&
+        existingForTask.length >= task.maxMembers!) {
+      final proceed = await _confirmFullTask(task);
+      if (!proceed) return;
+    }
 
     TaskAssignment? existingAssignment;
     for (final entry in _assignments.values.expand((list) => list)) {
@@ -167,6 +172,10 @@ class _HomeScreenState extends State<HomeScreen> {
 
     for (final member in List<Member>.from(availableMembers)) {
       final candidates = _tasks.where((task) {
+        if (task.maxMembers != null &&
+            (taskAssignmentCounts[task.id] ?? 0) >= task.maxMembers!) {
+          return false;
+        }
         if (task.genderConstraint == null) return true;
         return task.genderConstraint == member.gender;
       }).toList();
@@ -221,15 +230,16 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ],
-            child: Text(
-              'Não foi possível preencher '
-              '${tasksWithoutMembers.length} tarefa(s). '
-              'Verifique a quantidade de membros disponíveis e restrições de gênero.',
-            ),
-          );
-        },
-      );
-    }
+          child: Text(
+            'Não foi possível preencher '
+            '${tasksWithoutMembers.length} tarefa(s). '
+            'Verifique a quantidade de membros disponíveis, limites de vagas '
+            'e restrições de gênero.',
+          ),
+        );
+      },
+    );
+  }
   }
 
   void _handleRemoveAssignment(int memberId, int taskId) {
@@ -278,7 +288,19 @@ class _HomeScreenState extends State<HomeScreen> {
       _showMessage('Este membro já está atribuído a esta tarefa.');
       return;
     }
+    if (targetTask.maxMembers != null &&
+        existingForTarget.length >= targetTask.maxMembers!) {
+      _confirmFullTask(targetTask).then((proceed) {
+        if (!proceed) return;
+        _moveAssignment(memberId, fromTaskId, toTaskId);
+      });
+      return;
+    }
 
+    _moveAssignment(memberId, fromTaskId, toTaskId);
+  }
+
+  void _moveAssignment(int memberId, int fromTaskId, int toTaskId) {
     try {
       widget.database.moveAssignment(
         memberId: memberId,
@@ -320,6 +342,42 @@ class _HomeScreenState extends State<HomeScreen> {
           child: const Text(
             'Este membro já possui uma tarefa neste dia. '
             'Deseja atribuir mesmo assim?',
+          ),
+        );
+      },
+    );
+    return result ?? false;
+  }
+
+  Future<bool> _confirmFullTask(Task task) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return AppDialog(
+          title: 'Tarefa lotada',
+          onClose: () => Navigator.of(dialogContext).pop(false),
+          actions: [
+            Expanded(
+              child: OutlinedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(false),
+                style: AppDialog.outlinedStyle(),
+                child: const Text('Cancelar'),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () => Navigator.of(dialogContext).pop(true),
+                style: AppDialog.primaryStyle(),
+                child: const Text('Adicionar mesmo assim'),
+              ),
+            ),
+          ],
+          child: Text(
+            'A tarefa "${task.name}" já atingiu o limite '
+            'de ${task.maxMembers} membro(s). '
+            'Deseja adicionar mais um?',
           ),
         );
       },
@@ -1329,6 +1387,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Future<void> _openAddTaskDialog() async {
     final taskController = TextEditingController();
+    final maxMembersController = TextEditingController();
     bool limitByGender = false;
     String? selectedGender;
     String? errorText;
@@ -1369,6 +1428,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         });
                         return;
                       }
+                      final maxMembersRaw =
+                          maxMembersController.text.trim();
+                      int? maxMembers;
+                      if (maxMembersRaw.isNotEmpty) {
+                        final parsed = int.tryParse(maxMembersRaw);
+                        if (parsed == null || parsed <= 0) {
+                          setModalState(() {
+                            errorText =
+                                'Informe um limite de membros válido.';
+                          });
+                          return;
+                        }
+                        maxMembers = parsed;
+                      }
 
                       try {
                         widget.database.insertTask(
@@ -1376,6 +1449,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           genderConstraint: limitByGender
                               ? selectedGender
                               : null,
+                          maxMembers: maxMembers,
                         );
                         Navigator.of(dialogContext).pop();
                         _loadData();
@@ -1402,6 +1476,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     controller: taskController,
                     decoration: InputDecoration(
                       hintText: 'ex.: Organizar kits de boas-vindas',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Máximo de membros (opcional)',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: maxMembersController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      hintText: 'ex.: 5',
                       filled: true,
                       fillColor: AppDialog.inputFill,
                       border: OutlineInputBorder(
@@ -1512,10 +1606,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     taskController.dispose();
+    maxMembersController.dispose();
   }
 
   Future<void> _openEditTaskDialog(Task task) async {
     final taskController = TextEditingController(text: task.name);
+    final maxMembersController = TextEditingController(
+      text: task.maxMembers?.toString() ?? '',
+    );
     bool limitByGender = task.genderConstraint != null;
     String? selectedGender = task.genderConstraint;
     String? errorText;
@@ -1578,6 +1676,20 @@ class _HomeScreenState extends State<HomeScreen> {
                         });
                         return;
                       }
+                      final maxMembersRaw =
+                          maxMembersController.text.trim();
+                      int? maxMembers;
+                      if (maxMembersRaw.isNotEmpty) {
+                        final parsed = int.tryParse(maxMembersRaw);
+                        if (parsed == null || parsed <= 0) {
+                          setModalState(() {
+                            errorText =
+                                'Informe um limite de membros válido.';
+                          });
+                          return;
+                        }
+                        maxMembers = parsed;
+                      }
 
                       try {
                         widget.database.updateTask(
@@ -1586,6 +1698,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           genderConstraint: limitByGender
                               ? selectedGender
                               : null,
+                          maxMembers: maxMembers,
                         );
                         Navigator.of(dialogContext).pop();
                         _loadData();
@@ -1612,6 +1725,26 @@ class _HomeScreenState extends State<HomeScreen> {
                     controller: taskController,
                     decoration: InputDecoration(
                       hintText: 'ex.: Organizar kits de boas-vindas',
+                      filled: true,
+                      fillColor: AppDialog.inputFill,
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide.none,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Máximo de membros (opcional)',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: maxMembersController,
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    decoration: InputDecoration(
+                      hintText: 'ex.: 5',
                       filled: true,
                       fillColor: AppDialog.inputFill,
                       border: OutlineInputBorder(
@@ -1722,6 +1855,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
 
     taskController.dispose();
+    maxMembersController.dispose();
   }
 
   Future<bool> _confirmDeleteTask() async {

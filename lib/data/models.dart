@@ -28,11 +28,13 @@ class Task {
   final int id;
   final String name;
   final String? genderConstraint;
+  final int? maxMembers;
 
   const Task({
     required this.id,
     required this.name,
     required this.genderConstraint,
+    required this.maxMembers,
   });
 
   factory Task.fromRow(Map<String, Object?> row) {
@@ -40,6 +42,7 @@ class Task {
       id: row['id'] as int,
       name: row['name'] as String,
       genderConstraint: row['gender_constraint'] as String?,
+      maxMembers: row['max_members'] as int?,
     );
   }
 }

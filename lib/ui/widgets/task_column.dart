@@ -118,7 +118,9 @@ class _TaskColumnState extends State<TaskColumn> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
-                        widget.assignments.length.toString(),
+                        widget.task.maxMembers == null
+                            ? widget.assignments.length.toString()
+                            : '${widget.assignments.length}/${widget.task.maxMembers}',
                         style: const TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.w600,
