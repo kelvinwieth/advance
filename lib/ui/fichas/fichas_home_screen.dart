@@ -13,13 +13,8 @@ import 'ficha_analytics_screen.dart';
 import 'ficha_form_screen.dart';
 import 'prayer_requests_screen.dart';
 
-// Imports necessários (provavelmente já estão no seu arquivo)
-import 'dart:io';
-import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:file_selector/file_selector.dart'; // Para desktop
-// import 'package:open_file/open_file.dart'; // Assumindo que você tem o _openFile implementado
 
 class FichasHomeScreen extends StatefulWidget {
   final AppDatabase database;
@@ -537,8 +532,7 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
   }
 
   Future<void> _exportVisitsPdf() async {
-    // 1. Validação inicial (assumindo que sua lista filtrada se chama _filteredVisits)
-    // Se a variável for outra, apenas troque o nome aqui.
+    // 1. Validação inicial
     if (_filteredVisits.isEmpty) {
       _showMessage('Nenhuma visita listada para exportar.');
       return;
@@ -580,22 +574,42 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
       ],
     );
 
-    // 4. Função auxiliar para formatar booleanos em texto legível
+    // Funções auxiliares internas
     String formatBooleans(List<MapEntry<String, bool>> items) {
       final active = items.where((e) => e.value).map((e) => e.key).toList();
       return active.isEmpty ? '-' : active.join(', ');
     }
 
-    // 5. Construção do PDF
+    pw.Widget buildInfoColumn(String label, String value) {
+      return pw.Column(
+        crossAxisAlignment: pw.CrossAxisAlignment.start,
+        children: [
+          pw.Text(
+            label,
+            style: pw.TextStyle(
+              fontSize: 8,
+              fontWeight: pw.FontWeight.bold,
+              color: PdfColors.grey600,
+            ),
+          ),
+          pw.Text(
+            value.isEmpty ? '-' : value,
+            style: const pw.TextStyle(fontSize: 9),
+          ),
+        ],
+      );
+    }
+
+    // 4. Construção do PDF
     pdf.addPage(
       pw.MultiPage(
-        pageFormat: PdfPageFormat.a4, // Retrato é melhor para listas detalhadas
+        pageFormat: PdfPageFormat.a4,
         margin: const pw.EdgeInsets.all(32),
         build: (context) {
           return [
             header,
             ..._filteredVisits.map((visit) {
-              // Prepara os dados de Resultados
+              // Prepara os dados
               final resultsStr = formatBooleans([
                 MapEntry('Evangelho', visit.resultEvangelho),
                 MapEntry('Ponte', visit.resultPonteSalvacao),
@@ -605,7 +619,6 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                 MapEntry('Nova Visita', visit.resultNovaVisita),
               ]);
 
-              // Prepara os dados de Religião
               final religionStr = formatBooleans([
                 MapEntry('Católica', visit.religionCatolica),
                 MapEntry('Espírita', visit.religionEspirita),
@@ -614,120 +627,128 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                 MapEntry('Outros', visit.religionOutros),
               ]);
 
-              // Layout de "Cartão" para cada visita
-              return pw.Container(
-                margin: const pw.EdgeInsets.only(bottom: 12),
-                padding: const pw.EdgeInsets.all(10),
-                decoration: pw.BoxDecoration(
-                  border: pw.Border.all(color: PdfColors.grey300, width: 1),
-                  borderRadius: const pw.BorderRadius.all(
-                    pw.Radius.circular(4),
-                  ),
-                  color: PdfColors.grey50,
-                ),
-                child: pw.Column(
-                  crossAxisAlignment: pw.CrossAxisAlignment.start,
-                  children: [
-                    // Linha 1: ID, Data e Equipe
-                    pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: [
-                        pw.Text(
-                          '#${visit.id} - ${DateFormat('dd/MM/yyyy HH:mm').format(visit.visitAt)}',
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 10,
-                          ),
-                        ),
-                        pw.Text(
-                          'Equipe: ${visit.team}',
-                          style: pw.TextStyle(
-                            fontWeight: pw.FontWeight.bold,
-                            fontSize: 10,
-                            color: PdfColors.blue800,
-                          ),
-                        ),
-                      ],
-                    ),
-                    pw.SizedBox(height: 6),
-
-                    // Linha 2: Nome e Endereço (Destaque)
-                    pw.Text(
-                      visit.names.toUpperCase(),
-                      style: pw.TextStyle(
-                        fontWeight: pw.FontWeight.bold,
-                        fontSize: 12,
+              // IMPORTANTE: O uso do pw.Wrap aqui impede a quebra da ficha no meio.
+              // Se o Container não couber na página atual, o Wrap joga tudo para a próxima.
+              return pw.Wrap(
+                children: [
+                  pw.Container(
+                    margin: const pw.EdgeInsets.only(bottom: 12),
+                    padding: const pw.EdgeInsets.all(10),
+                    decoration: pw.BoxDecoration(
+                      border: pw.Border.all(color: PdfColors.grey300, width: 1),
+                      borderRadius: const pw.BorderRadius.all(
+                        pw.Radius.circular(4),
                       ),
+                      color: PdfColors.grey50,
                     ),
-                    pw.Text(
-                      '${visit.address} - ${visit.neighborhood}, ${visit.city}',
-                      style: const pw.TextStyle(fontSize: 10),
-                    ),
-                    if (visit.referencePoint.isNotEmpty)
-                      pw.Text(
-                        'Ref: ${visit.referencePoint}',
-                        style: pw.TextStyle(
-                          fontSize: 9,
-                          fontStyle: pw.FontStyle.italic,
-                          color: PdfColors.grey700,
-                        ),
-                      ),
-
-                    pw.SizedBox(height: 6),
-                    pw.Divider(thickness: 0.5, color: PdfColors.grey300),
-                    pw.SizedBox(height: 6),
-
-                    // Linha 3: Tabela Interna de Dados (Estatísticas e Resultados)
-                    pw.Table(
+                    child: pw.Column(
+                      crossAxisAlignment: pw.CrossAxisAlignment.start,
                       children: [
-                        pw.TableRow(
+                        // Linha 1: ID, Data e Equipe
+                        pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                           children: [
-                            _buildInfoColumn(
-                              'Faixas Etárias:',
-                              'Crianças: ${visit.ageChildren} · Jovens: ${visit.ageYouth} · Adultos: ${visit.ageAdults} · Idosos: ${visit.ageElderly}',
-                            ),
-                            _buildInfoColumn('Contatos:', visit.contacts),
-                          ],
-                        ),
-                        pw.TableRow(
-                          children: [
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.only(top: 4),
-                              child: _buildInfoColumn(
-                                'Resultados:',
-                                resultsStr,
+                            pw.Text(
+                              '#${visit.id} - ${DateFormat('dd/MM/yyyy HH:mm').format(visit.visitAt)}',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 10,
                               ),
                             ),
-                            pw.Padding(
-                              padding: const pw.EdgeInsets.only(top: 4),
-                              child: _buildInfoColumn('Religião:', religionStr),
+                            pw.Text(
+                              'Equipe: ${visit.team}',
+                              style: pw.TextStyle(
+                                fontWeight: pw.FontWeight.bold,
+                                fontSize: 10,
+                                color: PdfColors.blue800,
+                              ),
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                        pw.SizedBox(height: 6),
 
-                    // Linha 4: Notas e Pedidos (se houver)
-                    if (visit.notes.isNotEmpty ||
-                        visit.prayerRequests.isNotEmpty) ...[
-                      pw.SizedBox(height: 8),
-                      if (visit.notes.isNotEmpty)
+                        // Linha 2: Nome e Endereço
                         pw.Text(
-                          'Obs: ${visit.notes}',
-                          style: const pw.TextStyle(fontSize: 9),
-                        ),
-                      if (visit.prayerRequests.isNotEmpty)
-                        pw.Text(
-                          'Oração: ${visit.prayerRequests}',
+                          visit.names.toUpperCase(),
                           style: pw.TextStyle(
-                            fontSize: 9,
                             fontWeight: pw.FontWeight.bold,
-                            color: PdfColors.red900,
+                            fontSize: 12,
                           ),
                         ),
-                    ],
-                  ],
-                ),
+                        pw.Text(
+                          '${visit.address} - ${visit.neighborhood}, ${visit.city}',
+                          style: const pw.TextStyle(fontSize: 10),
+                        ),
+                        if (visit.referencePoint.isNotEmpty)
+                          pw.Text(
+                            'Ref: ${visit.referencePoint}',
+                            style: pw.TextStyle(
+                              fontSize: 9,
+                              fontStyle: pw.FontStyle.italic,
+                              color: PdfColors.grey700,
+                            ),
+                          ),
+
+                        pw.SizedBox(height: 6),
+                        pw.Divider(thickness: 0.5, color: PdfColors.grey300),
+                        pw.SizedBox(height: 6),
+
+                        // Linha 3: Tabela Interna
+                        pw.Table(
+                          children: [
+                            pw.TableRow(
+                              children: [
+                                buildInfoColumn(
+                                  'Faixas Etárias:',
+                                  'Crianças: ${visit.ageChildren} · Jovens: ${visit.ageYouth} · Adultos: ${visit.ageAdults} · Idosos: ${visit.ageElderly}',
+                                ),
+                                buildInfoColumn('Contatos:', visit.contacts),
+                              ],
+                            ),
+                            pw.TableRow(
+                              children: [
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.only(top: 4),
+                                  child: buildInfoColumn(
+                                    'Resultados:',
+                                    resultsStr,
+                                  ),
+                                ),
+                                pw.Padding(
+                                  padding: const pw.EdgeInsets.only(top: 4),
+                                  child: buildInfoColumn(
+                                    'Religião:',
+                                    religionStr,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+
+                        // Linha 4: Notas e Pedidos
+                        if (visit.notes.isNotEmpty ||
+                            visit.prayerRequests.isNotEmpty) ...[
+                          pw.SizedBox(height: 8),
+                          if (visit.notes.isNotEmpty)
+                            pw.Text(
+                              'Obs: ${visit.notes}',
+                              style: const pw.TextStyle(fontSize: 9),
+                            ),
+                          if (visit.prayerRequests.isNotEmpty)
+                            pw.Text(
+                              'Oração: ${visit.prayerRequests}',
+                              style: pw.TextStyle(
+                                fontSize: 9,
+                                fontWeight: pw.FontWeight.bold,
+                                color: PdfColors.red900,
+                              ),
+                            ),
+                        ],
+                      ],
+                    ),
+                  ),
+                ],
               );
             }),
           ];
@@ -735,7 +756,7 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
       ),
     );
 
-    // 6. Salvar Arquivo (Lógica do Windows/FileSelector)
+    // 5. Salvar Arquivo
     final bytes = await pdf.save();
     final filename =
         'visitas_acev_${DateFormat('yyyyMMdd_HHmm').format(DateTime.now())}.pdf';
@@ -755,30 +776,8 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
     final file = File(saveLocation.path);
     await file.writeAsBytes(bytes);
 
-    // Assumindo que _openFile é o método que você já usa para abrir o PDF
     await _openFile(file.path);
     _showMessage('PDF salvo em ${file.path}');
-  }
-
-  // Pequeno helper para formatar colunas dentro do PDF de forma consistente
-  pw.Widget _buildInfoColumn(String label, String value) {
-    return pw.Column(
-      crossAxisAlignment: pw.CrossAxisAlignment.start,
-      children: [
-        pw.Text(
-          label,
-          style: pw.TextStyle(
-            fontSize: 8,
-            fontWeight: pw.FontWeight.bold,
-            color: PdfColors.grey600,
-          ),
-        ),
-        pw.Text(
-          value.isEmpty ? '-' : value,
-          style: const pw.TextStyle(fontSize: 9),
-        ),
-      ],
-    );
   }
 
   @override
