@@ -30,6 +30,7 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
   String? _errorMessage;
   List<VisitForm> _forms = [];
   bool _filterNovaVisita = false;
+  bool _filterBible = false;
   DateTime? _filterDate;
   bool _orderAsc = false;
   Map<String, String> _lastHeaderMapping = {};
@@ -455,11 +456,6 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
             return AppDialog(
               title: 'Colunas não encontradas',
               onClose: () => Navigator.of(dialogContext).pop(),
-              child: Text(
-                'Estas colunas não existem no CSV selecionado:\n'
-                '${missing.join(', ')}\n\n'
-                'Revise o mapeamento e tente novamente.',
-              ),
               actions: [
                 Expanded(
                   child: ElevatedButton(
@@ -469,6 +465,11 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                   ),
                 ),
               ],
+              child: Text(
+                'Estas colunas não existem no CSV selecionado:\n'
+                '${missing.join(', ')}\n\n'
+                'Revise o mapeamento e tente novamente.',
+              ),
             );
           },
         );
@@ -742,6 +743,55 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                           ),
                         ),
                         const SizedBox(width: 12),
+                        InkWell(
+                          borderRadius: BorderRadius.circular(12),
+                          onTap: () {
+                            setState(() {
+                              _filterBible = !_filterBible;
+                            });
+                          },
+                          child: Container(
+                            height: 44,
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 10,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _filterBible
+                                  ? const Color(0xFFE1F2F4)
+                                  : const Color(0xFFF1F2F6),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: _filterBible
+                                    ? const Color(0xFF8CC9CE)
+                                    : Colors.transparent,
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                if (_filterBible) ...[
+                                  const Icon(
+                                    Icons.check,
+                                    size: 16,
+                                    color: Color(0xFF038A99),
+                                  ),
+                                  const SizedBox(width: 6),
+                                ],
+                                Text(
+                                  'Deseja Bíblia',
+                                  style: TextStyle(
+                                    color: _filterBible
+                                        ? const Color(0xFF1D1D1D)
+                                        : Colors.black87,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
                         Tooltip(
                           message: 'Limpar filtros',
                           child: InkWell(
@@ -749,6 +799,7 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
                             onTap: () {
                               setState(() {
                                 _filterNovaVisita = false;
+                                _filterBible = false;
                                 _filterDate = null;
                                 _orderAsc = false;
                                 _searchController.clear();
@@ -788,6 +839,13 @@ class _FichasHomeScreenState extends State<FichasHomeScreen> {
     final query = _searchController.text.trim().toLowerCase();
     final filtered = _forms.where((form) {
       if (_filterNovaVisita && !form.resultNovaVisita) return false;
+
+      final notes = form.notes.toLowerCase();
+      if (_filterBible &&
+          !(notes.contains('biblia') || notes.contains('bíblia'))) {
+        return false;
+      }
+
       if (_filterDate != null) {
         final visitDate = DateTime(
           form.visitAt.year,
